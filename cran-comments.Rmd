@@ -1,0 +1,21 @@
+---
+title: "CRAN comments"
+author: "Martin Schmettow"
+date: "February 18, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Test environments
+Windows 7
+R 3.2.3
+
+## R CMD check results
+There were no ERRORs or WARNINGs. 
+
+
+## Downstream dependencies
+no such dependencies
