@@ -1,12 +1,12 @@
 Package: bayr
 Type: Package
 Title: dplyr/tidyr based manipulation of MCMC chains
-Version: 0.1.1
-Date: 2016-03-07
+Version: 0.1.3
+Date: 2016-03-09
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
-Description: This package aims at unifying tool set for reporting
-		of Bayesian regression models (generalized linear mixed-effects models).
+Description: This package aims at unifying tool set for reporting of
+		Bayesian regression models (generalized linear mixed-effects models).
 		A set of wrapper functions unifies extraction of MCMC chains
 		from varios Bayesian implementations (currently: MCMCglmm, brms).
 		Posterior distributions are stored in	a common annotated long format
@@ -21,7 +21,9 @@ Suggests:
 		brms
 Depends:
     dplyr,
-    tidyr,
-    stringr,
-    modeest
+    modeest,
+    nlme
+Imports:
+		tidyr,
+    stringr
 RoxygenNote: 5.0.1
