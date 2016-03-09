@@ -31,7 +31,7 @@ if(purp.mcmc){
 						 data = .,
 						 pr = T,
 						 pl = T,
-						 nitt = 3000, thin = 5, burnin = 500)
+						 nitt = 550, thin = 5, burnin = 50)
 	summary(M$Stroop_1$mcgl)
 
 	M$Stroop_1$brms <-
@@ -39,7 +39,7 @@ if(purp.mcmc){
 		brm(RT ~ Condition + age + trial + (1 + Condition|Participant),
 				data = .,
 				pr = T,
-				iter = 3000, warmup = 500, thin = 5)
+				iter = 550, warmup = 50, thin = 5)
 	save(M, D, Dlme, file = "bayr_test.Rda")
 }
 

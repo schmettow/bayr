@@ -10,8 +10,8 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #'
 #' MCMC chains are  extracted from a Bayesian (regression) object
 #' and returned as a posterior object, which is in long format
-#' (chain, iter, parameter, value). Depending on input, it may
-#' contain an additional type classifier.
+#' (chain, iter, parameter, value, type, order). Parameters are classified
+#' as fixef, ranef, grpef and named after a common scheme.
 #'
 #' @usage posterior(model, ...)
 #' @param model Bayesian model object
@@ -31,14 +31,16 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @export
 
 
-posterior <- function (model, ...) {
+posterior <-
+	function (model, ...) {
 	UseMethod("posterior", model)
 }
 
 #' @describeIn posterior extraction from MCMCglmm
 #' @export
 
-posterior.MCMCglmm <- function(model, ...) {
+posterior.MCMCglmm <-
+	function(model, ...) {
 	parameters <-
 		bind_rows(data_frame(parameter = model$X@Dimnames[[2]],
 												 type = "fixef") %>%
@@ -70,7 +72,7 @@ posterior.MCMCglmm <- function(model, ...) {
 
 	out <-
 		bind_rows(fixed, random) %>%
-		mutate(chain = 1) %>%
+		mutate(chain = as.factor(1)) %>%
 		full_join(parameters, by = "parameter") %>%
 		select(chain, iter, parameter = new_name, value, type, order)
 
@@ -83,7 +85,8 @@ posterior.MCMCglmm <- function(model, ...) {
 #' @describeIn posterior extraction from brmsfit
 #' @export
 
-posterior.brmsfit <- function(model, ...){
+posterior.brmsfit <-
+	function(model, ...){
 	samples <-
 		brms::posterior_samples(model, add_chain = T) %>%
 		as_data_frame()
@@ -117,18 +120,21 @@ posterior.brmsfit <- function(model, ...){
 		mutate(parameter = str_replace(parameter, pattern, "")) %>%
 		select(-pattern)
 
-	class(out) <- append(class(out), "posterior")
+	class(out) <-
+		append(class(out), "posterior")
 
 	return(out)
 }
 
+################ FIXEF ###############################
+
 
 #' Fixed effects
 #'
-#' Extraction of fixed effects coefficient table from posterior distributions
+#' Tabular summary of fixed effects coefficients from posterior
 #'
 #' @usage fixef(posterior, loc.func = shorth, ...)
-#' @param posterior posterior distribution object
+#' @param posterior posterior distribution object (or MCMCglmm/brmsfit directly)
 #' @param loc.func function for computing the location
 #' @param ... ignored
 #' @return coefficient table with parameter name, location and CI
@@ -142,7 +148,8 @@ posterior.brmsfit <- function(model, ...){
 #' @importFrom modeest shorth
 #' @export
 
-fixef <- function (posterior, loc.func = shorth, ...) {
+fixef <-
+	function (posterior, loc.func = shorth, ...) {
 	UseMethod("fixef", posterior)
 }
 
@@ -150,7 +157,8 @@ fixef <- function (posterior, loc.func = shorth, ...) {
 #' @export
 
 
-fixef.posterior <- function(posterior, loc.func = shorth, ...) {
+fixef.posterior <-
+	function(posterior, loc.func = shorth, ...) {
 	posterior %>%
 		filter(type == "fixef") %>%
 		group_by(parameter, order) %>%
@@ -166,13 +174,15 @@ fixef.posterior <- function(posterior, loc.func = shorth, ...) {
 #' @export
 
 
-fixef.MCMCglmm <- function(posterior, loc.func = shorth, ...)
+fixef.MCMCglmm <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% fixef(loc.func = loc.func, ...)
 
 #' @describeIn fixef fixed effects extraction
 #' @export
 
-fixef.brmsfit <- function(posterior, loc.func = shorth, ...)
+fixef.brmsfit <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% fixef(loc.func = loc.func, ...)
 
 
@@ -181,8 +191,7 @@ fixef.brmsfit <- function(posterior, loc.func = shorth, ...)
 
 #' Random effects
 #'
-#' Extraction of random effects (lower level) coefficient table from
-#' posterior distributions
+#' Tabular summary of random effects levels from posterior
 #'
 #' @usage ranef(posterior, loc.func = shorth, ...)
 #' @param posterior posterior distribution object
@@ -197,7 +206,8 @@ fixef.brmsfit <- function(posterior, loc.func = shorth, ...)
 #' @importFrom modeest shorth
 #' @export
 
-ranef <- function (posterior, loc.func = shorth, ...) {
+ranef <-
+	function (posterior, loc.func = shorth, ...) {
 	UseMethod("ranef", posterior)
 }
 
@@ -205,7 +215,8 @@ ranef <- function (posterior, loc.func = shorth, ...) {
 #' @describeIn ranef random effects effects extraction
 #' @export
 
-ranef.posterior <- function(posterior, loc.func = shorth, ...) {
+ranef.posterior <-
+	function(posterior, loc.func = shorth, ...) {
 	posterior %>%
 		filter(type == "ranef") %>%
 		group_by(parameter, order) %>%
@@ -219,13 +230,15 @@ ranef.posterior <- function(posterior, loc.func = shorth, ...) {
 #' @describeIn ranef random effects effects extraction
 #' @export
 
-ranef.MCMCglmm <- function(posterior, loc.func = shorth, ...)
+ranef.MCMCglmm <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% ranef(loc.func = loc.func)
 
 #' @describeIn ranef random effects effects extraction
 #' @export
 
-ranef.brmsfit <- function(posterior, loc.func = shorth, ...)
+ranef.brmsfit <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% ranef(loc.func = loc.func)
 
 
@@ -233,10 +246,9 @@ ranef.brmsfit <- function(posterior, loc.func = shorth, ...)
 
 ##################### GRPEF ######################
 
-#' Group-level random effects
+#' Group-level effects
 #'
-#' Extraction of group level standard deviation table from
-#' posterior distributions
+#' Tabular summary of group level coefficients from posterior
 #'
 #' @usage grpef(posterior, loc.func = shorth, ...)
 #' @param posterior posterior distribution object
@@ -251,14 +263,16 @@ ranef.brmsfit <- function(posterior, loc.func = shorth, ...)
 #' @importFrom modeest shorth
 #' @export
 
-grpef <- function (posterior, loc.func = shorth, ...) {
+grpef <-
+	function (posterior, loc.func = shorth, ...) {
 	UseMethod("grpef", posterior)
 }
 
 #' @describeIn grpef group effects extraction
 #' @export
 
-grpef.posterior <- function(posterior, loc.func = shorth, ...) {
+grpef.posterior <-
+	function(posterior, loc.func = shorth, ...) {
 	posterior %>%
 		filter(type == "grpef") %>%
 		group_by(parameter, order) %>%
@@ -270,13 +284,15 @@ grpef.posterior <- function(posterior, loc.func = shorth, ...) {
 #' @describeIn grpef group effects extraction
 #' @export
 
-grpef.MCMCglmm <- function(posterior, loc.func = shorth, ...)
+grpef.MCMCglmm <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% ranef(loc.func = loc.func)
 
 #' @describeIn grpef group effects extraction
 #' @export
 
-grpef.brmsfit <- function(posterior, loc.func = shorth, ...)
+grpef.brmsfit <-
+	function(posterior, loc.func = shorth, ...)
 	posterior(posterior) %>% ranef(loc.func = loc.func)
 
 
