@@ -6,17 +6,17 @@ library(dplyr)
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern"))
 
-#' MCMC chain extraction
+#' posterior extraction (c
 #'
 #' MCMC chains are  extracted from a Bayesian (regression) object
 #' and returned as a posterior object, which is in long format
 #' (chain, iter, parameter, value, type, order). Parameters are classified
 #' as fixef, ranef, grpef and named after a common scheme.
 #'
-#' @usage posterior(model, ...)
+#' @usage tbl_post(model, ...)
 #' @param model Bayesian model object
 #' @param ... ignored
-#' @return posterior object with MCMC chain in long format
+#' @return tbl_post object with MCMC chain in long format
 #'
 #' The MCMC chains are extracted from the model and stored in a
 #' common format. Different to most internal representations, and
@@ -29,15 +29,24 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @export
 
 
-posterior <-
+tbl_post <-
 	function (model, ...) {
-		UseMethod("posterior", model)
+		UseMethod("tbl_post", model)
 	}
 
-#' @describeIn posterior extraction from MCMCglmm
+#' @rdname tbl_post
 #' @export
 
-posterior.MCMCglmm <-
+posterior <-
+	function(model, ...){
+		tbl_post(model, ...)
+	}
+
+
+#' @rdname tbl_post
+#' @export
+
+tbl_post.MCMCglmm <-
 	function(model, ...) {
 		# building a parameter catalogue
 		parameters <-
@@ -81,16 +90,16 @@ posterior.MCMCglmm <-
 			full_join(parameters, by = "parameter") %>%
 			select(chain, iter, parameter = new_name, value, type, order)
 
-		class(out) <- append(class(out), "posterior")
+		class(out) <- append(class(out), "tbl_post")
 
 		return(out)
 	}
 
 
-#' @describeIn posterior extraction from brmsfit
+#' @rdname tbl_post
 #' @export
 
-posterior.brmsfit <-
+tbl_post.brmsfit <-
 	function(model, ...){
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
@@ -126,7 +135,7 @@ posterior.brmsfit <-
 			select(-pattern)
 
 		class(out) <-
-			append(class(out), "posterior")
+			append(class(out), "tbl_post")
 
 		return(out)
 	}

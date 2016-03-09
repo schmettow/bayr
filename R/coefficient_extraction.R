@@ -4,7 +4,8 @@ library(tidyr)
 library(stringr)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern"))
+utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern",
+																 "tbl_coef"))
 
 
 ################ COEF ###############################
@@ -14,13 +15,14 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #'
 #' summary table of fixed, random or group-level coefficients from posterior
 #'
-#' @param object posterior distribution object (or MCMCglmm/brmsfit directly)
-#' @param type type of effect default: fixef (grpef, ranef)
-#' @param estimate function for computing the location estimate (posterior mode)
+#' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
+#' @param type type of coefficient: fixef (grpef, ranef)
+#' @param estimate function for computing the center estimate (posterior mode)
+#' @param interval credibility interval: .95
 #' @param ... ignored
-#' @return coefficient table with parameter name, location and CI
+#' @return coefficient table with parameter name, estimate and interval
 #'
-#' The standard location function is the posterior mode computed
+#' The standard center function is the posterior mode computed
 #' by modeest::shorth
 #'
 #' @author Martin Schmettow
@@ -31,77 +33,113 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @importFrom stats coef
 #' @export
 
-coef.posterior <-
-	function(object, type = "fixef", estimate = shorth, ...) {
-		object %>%
-		filter(type == type) %>%
-		group_by(parameter, order) %>%
-		summarize(location = estimate(value),
-							"l-95% CI" = quantile(value, .025),
-							"u-95% CI" = quantile(value, .975)) %>%
-		ungroup() %>%
-		arrange(order) %>%
-		select(-order)
-}
+coef.tbl_post <-
+	function(object, type = "fixef", estimate = shorth, interval = .95, ...) {
+		lower <- (1-interval)/2
+		upper <- 1-((1-interval)/2)
+		partype <- type
+
+		tbl_coef <-
+			object %>%
+			filter(type == partype) %>%
+			group_by(parameter, order) %>%
+			summarize(center = estimate(value),
+								lower = quantile(value, lower),
+								upper = quantile(value, upper)) %>%
+			ungroup() %>%
+			arrange(order) %>%
+			select(-order)
+
+		class(tbl_coef) <- append("tbl_coef", class(tbl_coef))
+		attr(tbl_coef, "estimate") <- bquote(estimate)
+		attr(tbl_coef, "interval") <- interval
+		attr(tbl_coef, "lower") <- lower
+		attr(tbl_coef, "upper") <- upper
+		attr(tbl_coef, "type") <- type
+		return(tbl_coef)
+	}
+
+#' @export
+
+
+print.tbl_coef <-
+	function(x, digits = NULL, title = T, footnote = T, ...){
+		types <- data_frame(type = c("fixef", "ranef", "grpef"),
+											 name = c("fixed effects","random effects", "group effects"))
+		name <-
+			types %>%
+			filter(type == attr(x, "type")) %>%
+			select(name) %>%
+			as.character()
+
+		if(title) cat(name, " coefficients", "\n***\n")
+		print.data.frame(x, digits = digits, row.names = F)
+		if(footnote) cat("\n*\nestimate with ",
+										 attr(x, "interval")*100,
+										 "% credibility limits")
+
+		cat("\n")
+		invisible(x)
+	}
+
 
 coef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
-		posterior(object) %>% fixef(estimate = estimate, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 coef.brms <-
 	function(object, estimate = shorth, ...)
-		posterior(object) %>% fixef(estimate = estimate, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
-################ COEF ###############################
+################ FIXEF ###############################
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
-fixef.posterior <-
+fixef.tbl_post <-
 	function(object, estimate = shorth, ...)
 		coef(object, type = "fixef", estimate = estimate, ...)
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 fixef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% fixef(estimate = estimate, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 fixef.brmsfit <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% fixef(estimate = estimate, ...)
-
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
 ############## RANEF ##############
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
-ranef.posterior <-
+ranef.tbl_post <-
 	function(object, estimate = shorth, ...)
 		coef(object, type = "ranef", estimate = estimate, ...)
 
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 ranef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate)
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 ranef.brmsfit <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate)
 
 
 
@@ -110,27 +148,27 @@ ranef.brmsfit <-
 
 grpef <- function(object, estimate = shorth, ...) UseMethod("grpef", object)
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
-grpef.posterior <-
+grpef.tbl_post <-
 	function(object, estimate = shorth, ...)
 		coef(object, type = "grpef", estimate = estimate, ...)
 
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 grpef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate)
 
-#' @rdname coef.posterior
+#' @rdname coef.tbl_post
 #' @export
 
 grpef.brmsfit <-
 	function(object, estimate = shorth, ...)
-	posterior(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate)
 
 
 # TODO

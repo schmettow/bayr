@@ -1,7 +1,7 @@
 Package: bayr
 Type: Package
-Title: dplyr/tidyr based manipulation of MCMC chains
-Version: 0.1.3
+Title: unified reporting of Bayesian regression results
+Version: 0.1.4
 Date: 2016-03-09
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
