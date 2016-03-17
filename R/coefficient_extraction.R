@@ -146,6 +146,11 @@ ranef.brmsfit <-
 
 ##################### GRPEF ######################
 
+
+#' @rdname coef.tbl_post
+#' @export
+
+
 grpef <- function(object, estimate = shorth, ...) UseMethod("grpef", object)
 
 #' @rdname coef.tbl_post

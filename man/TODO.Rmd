@@ -1,0 +1,38 @@
+---
+title: "TODO"
+author: "Martin Schmettow"
+date: "14 March 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# v0.5
+
+- export grpef with S3
+- add stan_arm posterior extraction and overloaded functions
+? add prefix "sd_" to all group-level variables
+? rename resid --> error
+- improve table column labels when printing coef tables
+? add column variable to indicate the "origin" of factors.
+	|Condition|Condition_cong
+	|Condition|Condition_incong
+	|Condition|Condition_Intercept
+	|age      |age 
+	(First, check what this means for interaction effects)
+- allow extraction of parts of the posterior (niter = )
+- add extraction of predicted values/linear predictor
+
+V add wide format to posterior extraction (shape = "long")
+V arrange posterior by iteration
+V add correlation parameter
+V fix empty parameter name for Stan's lp__ 
+
+
+
+# v0.4
+
+

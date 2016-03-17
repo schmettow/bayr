@@ -4,19 +4,21 @@ library(dplyr)
 #library(stringr)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern"))
+utils::globalVariables(names = c("type", "parameter", "value",
+																 "new_name", "iter", "pattern"))
 
-#' posterior extraction (c
+#' posterior extraction
 #'
 #' MCMC chains are  extracted from a Bayesian (regression) object
 #' and returned as a posterior object, which is in long format
 #' (chain, iter, parameter, value, type, order). Parameters are classified
 #' as fixef, ranef, grpef and named after a common scheme.
 #'
-#' @usage tbl_post(model, ...)
+#' @usage posterior(model, shape, ...)
 #' @param model Bayesian model object
+#' @param shape return tbl_post in long shape or tbl_df in wide shape
 #' @param ... ignored
-#' @return tbl_post object with MCMC chain in long format
+#' @return tbl_post object with MCMC chain in long format or tbl.df in wide shape
 #'
 #' The MCMC chains are extracted from the model and stored in a
 #' common format. Different to most internal representations, and
@@ -29,21 +31,39 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @export
 
 
+posterior <-
+	function(model, shape = "long", ...){
+		if (!(shape %in%  c("wide", "long"))) warning("shape must be either wide or long")
+		post <-
+			tbl_post(model, ...)
+
+		out <-
+			post %>%
+			arrange(chain, iter, type, parameter)
+		class(out) <- append(class(post), class(out))
+
+		if (shape == "wide")
+			out <-
+			out %>%
+			#mutate(parameter = str_c(type, parameter, sep = "_")) %>%
+			select(iter, parameter, value) %>%
+			tidyr::spread(parameter, value)
+
+		## Attention: Attributes are not preserved!
+		return(out)
+	}
+
+
+#' @rdname posterior
+#' @export
+
 tbl_post <-
 	function (model, ...) {
 		UseMethod("tbl_post", model)
 	}
 
-#' @rdname tbl_post
-#' @export
 
-posterior <-
-	function(model, ...){
-		tbl_post(model, ...)
-	}
-
-
-#' @rdname tbl_post
+#' @rdname posterior
 #' @export
 
 tbl_post.MCMCglmm <-
@@ -96,7 +116,7 @@ tbl_post.MCMCglmm <-
 	}
 
 
-#' @rdname tbl_post
+#' @rdname posterior
 #' @export
 
 tbl_post.brmsfit <-
@@ -107,13 +127,15 @@ tbl_post.brmsfit <-
 
 		par_order <-
 			data_frame(parameter = colnames(samples)) %>%
-			mutate(order = row_number())
+			mutate(order = row_number()) %>%
+			filter(!parameter %in% c("chain", "iter"))
 
 		type_patterns <-
-			data_frame(pattern = c("^b_", "^sd_", "^r_", "^sigma_", "^lp__"),
-								 type = c("fixef", "grpef", "ranef", "grpef", "diag"))
+			data_frame(pattern = c("^b_", "^sd_", "^r_", "^sigma_", "^lp__", "^cor_"),
+								 type = c("fixef", "grpef", "ranef", "grpef", "diag", "cor"))
+
 		type_mapping <-
-			expand.grid(type = type_patterns$type,
+			expand.grid(type = unique(type_patterns$type),
 									parameter = par_order$parameter) %>%
 			mutate(parameter = as.character(parameter),
 						 type = as.character(type)) %>%
@@ -131,6 +153,7 @@ tbl_post.brmsfit <-
 			full_join(par_order, by = "parameter") %>%
 			arrange(order, chain, iter) %>%
 			mutate(parameter = stringr::str_replace(parameter, "^sigma_(.*)", "sigma_resid")) %>%
+			mutate(parameter = stringr::str_replace(parameter, "^lp__(.*)", "lp__log_density")) %>%
 			mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
 			select(-pattern)
 

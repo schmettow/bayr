@@ -5,6 +5,7 @@
 \alias{fixef.MCMCglmm}
 \alias{fixef.brmsfit}
 \alias{fixef.tbl_post}
+\alias{grpef}
 \alias{grpef.MCMCglmm}
 \alias{grpef.brmsfit}
 \alias{grpef.tbl_post}
@@ -27,6 +28,8 @@
 \method{ranef}{MCMCglmm}(object, estimate = shorth, ...)
 
 \method{ranef}{brmsfit}(object, estimate = shorth, ...)
+
+grpef(object, estimate = shorth, ...)
 
 \method{grpef}{tbl_post}(object, estimate = shorth, ...)
 
