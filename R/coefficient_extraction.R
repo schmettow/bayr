@@ -151,7 +151,8 @@ ranef.brmsfit <-
 #' @export
 
 
-grpef <- function(object, estimate = shorth, ...) UseMethod("grpef", object)
+grpef <-
+	function(object, estimate = shorth, ...) UseMethod("grpef", object)
 
 #' @rdname coef.tbl_post
 #' @export
@@ -166,14 +167,28 @@ grpef.tbl_post <-
 
 grpef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% grpef(estimate = estimate)
 
 #' @rdname coef.tbl_post
 #' @export
 
 grpef.brmsfit <-
 	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+########################### FUTURE ##########################
+
+
+# resid_plot_1 <-
+# 	function(object){
+# 		data_frame(fitted = fitted(object)[,1],
+# 							 residual = residuals(object)[,1]) %>%
+# 			ggplot(aes(x = fitted, y = residual)) +
+# 			geom_quantile()
+#
+# 	}
+
 
 
 # TODO

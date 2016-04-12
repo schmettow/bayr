@@ -163,3 +163,51 @@ tbl_post.brmsfit <-
 		return(out)
 	}
 
+
+## TBC
+# tbl_post.stanfit <-
+# 	function(model, ...){
+# 		samples <-
+# 			rstan::extract(model) %>%
+# 			as.data.frame() %>%
+# 			as_data_frame() %>%
+# 			select(starts_with("b_", starts_with("sd_"), starts_with("r_"), starts_with("sigma_"),
+# 												 starts_with("lp__"), starts_with("cor_"), starts_with("eta.")))
+#
+# 		par_order <-
+# 			data_frame(parameter = colnames(samples)) %>%
+# 			mutate(order = row_number()) %>%
+# 			filter(!parameter %in% c("chain", "iter"))
+#
+# 		type_patterns <-
+# 			data_frame(pattern = c("^b_", "^sd_", "^r_", "^sigma_", "^lp__", "^cor_"),
+# 								 type = c("fixef", "grpef", "ranef", "grpef", "diag", "cor"))
+#
+# 		type_mapping <-
+# 			expand.grid(type = unique(type_patterns$type),
+# 									parameter = par_order$parameter) %>%
+# 			mutate(parameter = as.character(parameter),
+# 						 type = as.character(type)) %>%
+# 			full_join(type_patterns, by = "type") %>%
+# 			mutate(match = stringr::str_detect(parameter, pattern)) %>%
+# 			filter(match) %>%
+# 			select(parameter, type, pattern)
+#
+# 		out <-
+# 			samples %>%
+# 			mutate(iter = row_number()) %>%
+# 			tidyr::gather(parameter, value, -iter, -chain) %>%
+# 			mutate(parameter = as.character(parameter)) %>%
+# 			full_join(type_mapping, by = "parameter") %>%
+# 			full_join(par_order, by = "parameter") %>%
+# 			arrange(order, chain, iter) %>%
+# 			mutate(parameter = stringr::str_replace(parameter, "^sigma_(.*)", "sigma_resid")) %>%
+# 			mutate(parameter = stringr::str_replace(parameter, "^lp__(.*)", "lp__log_density")) %>%
+# 			mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
+# 			select(-pattern)
+#
+# 		class(out) <-
+# 			append(class(out), "tbl_post")
+#
+# 		return(out)
+# 	}

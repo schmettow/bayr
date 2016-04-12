@@ -6,15 +6,39 @@ context("coefficient extraction")
 load("bayr_test.Rda")
 C_ <- list() # coefficient tales
 
-test_that("coefficient objects can be extracted without issues",{
+test_that("group coefficients can be extracted without issues",{
 	expect_silent(C_$Stroop_1$brms <<-
-									M$Stroop_1$brms %>% posterior() %>% coef())
+									M$Stroop_1$brms %>% posterior() %>% grpef())
 	expect_silent(C_$Stroop_1$mcgl <<-
-									M$Stroop_1$mcgl %>% posterior() %>% coef())
+									M$Stroop_1$mcgl %>% posterior() %>% grpef())
 	expect_silent(C_$Stroop_2$brms <<-
-									M$Stroop_2$brms %>% posterior() %>% coef())
+									M$Stroop_2$brms %>% posterior() %>% grpef())
 	expect_silent(C_$Stroop_2$mcgl <<-
-									M$Stroop_2$mcgl %>% posterior() %>% coef())
+									M$Stroop_2$mcgl %>% posterior() %>% grpef())
+})
+
+
+test_that("fixed effects coefficients can be extracted without issues",{
+	expect_silent(C_$Stroop_1$brms <<-
+									M$Stroop_1$brms %>% posterior() %>% fixef())
+	expect_silent(C_$Stroop_1$mcgl <<-
+									M$Stroop_1$mcgl %>% posterior() %>% fixef())
+	expect_silent(C_$Stroop_2$brms <<-
+									M$Stroop_2$brms %>% posterior() %>% fixef())
+	expect_silent(C_$Stroop_2$mcgl <<-
+									M$Stroop_2$mcgl %>% posterior() %>% fixef())
+})
+
+
+test_that("random effects coefficients can be extracted without issues",{
+	expect_silent(C_$Stroop_1$brms <<-
+									M$Stroop_1$brms %>% posterior() %>% ranef())
+	expect_silent(C_$Stroop_1$mcgl <<-
+									M$Stroop_1$mcgl %>% posterior() %>% ranef())
+	expect_silent(C_$Stroop_2$brms <<-
+									M$Stroop_2$brms %>% posterior() %>% ranef())
+	expect_silent(C_$Stroop_2$mcgl <<-
+									M$Stroop_2$mcgl %>% posterior() %>% ranef())
 })
 
 
