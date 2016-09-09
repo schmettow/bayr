@@ -88,33 +88,31 @@ tbl_post <-
 #' @rdname posterior
 #' @export
 
-print.tbl_post_ <-
-	function(x){
-		n_iter <- length(unique(x$iter))
-		n_chain <- length(unique(x$chain))
-		fixef <-
-			filter(x, type == "fixef") %>%
-			distinct(parameter)
-		grpef <-
-			filter(x, type == "grpef") %>%
-			distinct(parameter)
-		ranef <-
-			filter(x, type == "ranef") %>%
-			distinct(parameter)
+print.tbl_post <-
+	## TODO: refactor code to work with brms:parnames
+	function(tbl_post){
+		n_iter <- length(unique(tbl_post$iter))
+		n_chain <- length(unique(tbl_post$chain))
+		effects <-
+			tbl_post %>%
+			distinct(type, fixef, nonlin, re_factor, re_unit) %>%
+			group_by(type, nonlin, fixef, re_factor) %>%
+			summarize(units = n()) %>%
+			as.data.frame()
+
 		disp <-
-			filter(x, type == "disp") %>%
+			filter(tbl_post, type == "disp") %>%
 			distinct(parameter)
-		frm <-
-			formula.tools:::as.character.formula(attr(x, "formula"))
-		cat("posterior samples in ", n_chain, " chains with ",
-				n_iter, " samples each\n")
-		cat(frm, "\n\n")
-		cat("fixed: ", fixef$parameter, "\n")
-		cat("group: ", grpef$parameter, "\n")
-#		cat("ranef: ", ranef$parameter, "\n")
-		cat("disp: ", disp$parameter, "\n")
-		cat("\n")
-		invisible(x)
+
+		# frm <-
+		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
+
+		cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n\n")
+		#		cat(frm, "\n\n")
+		cat("Effects: \n")
+		print(effects)
+		# cat("disp: ", disp$parameter, "\n\n")
+		invisible(tbl_post)
 	}
 
 
@@ -251,10 +249,12 @@ tbl_post.brmsfit <-
 		out_fe <-
 			out_id %>%
 			filter(type == "fixef") %>%
-			mutate(nonlin = NA,
-						 re_factor = NA,
-						 re_unit = NA,
-						 fixef = parameter) %>%
+			tidyr::extract(parameter,
+										 into = c("nonlin","fixef"),
+										 "^(.+_){0,1}(.+)$",
+										 remove = F) %>%
+			mutate(re_factor = NA,
+						 re_unit = NA) %>%
 			select_(.dots = ParameterIDCols)
 
 		out_ge <-
@@ -275,7 +275,8 @@ tbl_post.brmsfit <-
 			bind_rows(out_fe, out_re) %>%
 			bind_rows(out_ge) %>%
 			right_join(out, by = c("parameter", "type")) %>%
-			mutate(model = NA) %>%
+			mutate(model = NA,
+						 nonlin = stringr::str_replace(nonlin, "_$", "")) %>%
 			select_(.dots = AllCols)
 
 
