@@ -4,8 +4,7 @@ library(tidyr)
 library(stringr)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern",
-																 "tbl_coef"))
+utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
 
 
 ################ COEF ###############################
@@ -13,10 +12,12 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 
 #' Coefficient extraction
 #'
-#' summary table of fixed, random or group-level coefficients from posterior
+#' summary table of fixed, random or group-level coefficients and fitted values (eta,
+#' only stanfit models) from posterior
 #'
 #' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
 #' @param type type of coefficient: fixef (grpef, ranef)
+#' @param mean function (identity)
 #' @param estimate function for computing the center estimate (posterior mode)
 #' @param interval credibility interval: .95
 #' @param ... ignored
@@ -30,18 +31,23 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @importFrom modeest shorth
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
-#' @importFrom stats coef
+#' @importFrom stats coef fitted quantile
 #' @export
 
 coef.tbl_post <-
-	function(object, type = "fixef", estimate = shorth, interval = .95, ...) {
+	function(object,
+					 type = c("fixef", "disp", "grpef"),
+					 mean.func = identity,
+					 estimate = shorth,
+					 interval = .95, ...) {
 		lower <- (1-interval)/2
 		upper <- 1-((1-interval)/2)
 		partype <- type
 
 		tbl_coef <-
 			object %>%
-			filter(type == partype) %>%
+			filter(type %in% partype) %>%
+			mutate(value = mean.func(value)) %>%
 			group_by(parameter, order) %>%
 			summarize(center = estimate(value),
 								lower = quantile(value, lower),
@@ -59,20 +65,80 @@ coef.tbl_post <-
 		return(tbl_coef)
 	}
 
-#' @export
 
+#' Joining two coefficent tables (NI)
+#'
+#' NOT IMPLEMENTED
+#' creates an overview table of point estimates for models with overlapping
+#' parameter sets
+#'
+#' @param first coefficient table tbl_coef or tbl_compcoef
+#' @param second coefficient table tbl_coef
+#' @param modelnames list of model names
+#' @return data_frame with parameter names and point estimates
+#'
+#' Returns a comparative coefficient table (tbl_coefcomp).
+#' Models are shown in columns, Parameters ordered by the most complex model
+#' Models ordered by number of parameters (nesting?)
+#' Model names are taken via lazy eval, or can be given.
+#'
+#' @author Martin Schmettow
+
+join.tbl_coef <-
+	function(x, y) {
+		error("Not implemented")
+		out <- data_frame()
+		class(out) <- c(class(out), "tbl_coefcomp")
+	}
+
+
+
+join.tbl_coefcomp <-
+	function(x, y) {
+		error("Not implemented")
+		out <- data_frame()
+		class(out) <- c(class(out), "tbl_coefcomp")
+	}
+
+
+#' separating factors an group means model
+#'
+#' NOT IMPLEMENTED
+#' In a model with interaction effects only (group means contrasts)
+#' coefficient names are split into factor variables (and cleaned)
+#'
+#' @param first coefficient table tbl_coef or tbl_compcoef
+#' @param second coefficient table tbl_coef
+#' @param modelnames list of model names
+#' @return data_frame with two or more factor variables, center and CI.
+#'
+#' Returns a data_frame with parameter plit into factors and cleaned.
+#' Prepares for intercation plots
+#'
+#' @author Martin Schmettow
+
+seperate.tbl_coef <-
+	function(x, y) {
+		error("Not implemented")
+		out <- data_frame()
+		class(out) <- c("tbl_df")
+	}
+
+#' @rdname coef.tbl_post
+#' @export
 
 print.tbl_coef <-
 	function(x, digits = NULL, title = T, footnote = T, ...){
-		types <- data_frame(type = c("fixef", "ranef", "grpef"),
-											 name = c("fixed effects","random effects", "group effects"))
-		name <-
+		types <- data_frame(type = c("fixef", "ranef", "grpef", "fitted"),
+											 title_text = c("fixed effects coefs","random effects coefs",
+											 				 "group effects coefs (sd)", "fitted values (linear predictor)"))
+		title_text <-
 			types %>%
 			filter(type == attr(x, "type")) %>%
-			select(name) %>%
+			select(title_text) %>%
 			as.character()
 
-		if(title) cat(name, " coefficients", "\n***\n")
+		if(title) cat(title_text, "\n***\n")
 		print.data.frame(x, digits = digits, row.names = F)
 		if(footnote) cat("\n*\nestimate with ",
 										 attr(x, "interval")*100,
@@ -83,11 +149,31 @@ print.tbl_coef <-
 	}
 
 
+#' @rdname coef.tbl_post
+#' @export
+
 coef.MCMCglmm <-
 	function(object, estimate = shorth, ...)
 		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
+#' @rdname coef.tbl_post
+#' @export
+
 coef.brms <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+coef.stanfit <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+coef.stanreg <-
 	function(object, estimate = shorth, ...)
 		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
@@ -117,6 +203,20 @@ fixef.brmsfit <-
 		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.stanfit <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.stanreg <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
 ############## RANEF ##############
 
 #' @rdname coef.tbl_post
@@ -142,6 +242,19 @@ ranef.brmsfit <-
 		tbl_post(object) %>% ranef(estimate = estimate)
 
 
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.stanfit <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.stanreg <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
 
 
 ##################### GRPEF ######################
@@ -173,6 +286,50 @@ grpef.MCMCglmm <-
 #' @export
 
 grpef.brmsfit <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.stanfit <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.stanreg <-
+	function(object, estimate = shorth, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+##################### FITTED ######################
+
+# dit zijn functies voor voorspelling
+
+
+#' #' @rdname coef.tbl_post
+#' #' @export
+#'
+#'
+#' fitted <-
+#' 	function(object, estimate = shorth, ...) UseMethod("fitted", object)
+
+#' @rdname coef.tbl_post
+#' @export
+
+fitted.tbl_post <-
+	function(object, estimate = shorth, ...)
+		coef(object, type = "fitted", estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+fitted.brmsfit <-
 	function(object, estimate = shorth, ...)
 		tbl_post(object) %>% grpef(estimate = estimate)
 
