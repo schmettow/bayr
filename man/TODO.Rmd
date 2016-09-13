@@ -9,6 +9,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# v0.7.0
+
+- undeprecate MCMCglmm
+- parameter splitting on corr
+- corr() function
+- add/fix dispersion par in print()
+- implement post_pred() 
+
+# v0.6.1
+
+- make order an optional column, making it easier to (re-)construct tbl_post on the fly
+
 
 # v0.5
 
