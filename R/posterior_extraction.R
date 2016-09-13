@@ -253,7 +253,7 @@ tbl_post.brmsfit <-
 			out_id %>%
 			filter(type == "ranef") %>%
 			tidyr::extract(parameter,
-										 into = c("nonlin","re_factor", "re_unit", "fixef"),
+										 into = c("re_factor","nonlin", "re_unit", "fixef"),
 										 "^(.*_){0,1}(.+)\\[(.+),(.+)\\]$",
 										 remove = F) %>%
 			select_(.dots = ParameterIDCols)
@@ -273,7 +273,7 @@ tbl_post.brmsfit <-
 			out_id %>%
 			filter(type == "grpef") %>%
 			tidyr::extract(parameter,
-										 into = c("nonlin","re_factor", "fixef"),
+										 into = c("re_factor","nonlin", "fixef"),
 										 "^(.*_){0,1}(.+)_(.+)$",
 										 remove = F) %>%
 			mutate(re_unit = NA) %>%
@@ -287,7 +287,7 @@ tbl_post.brmsfit <-
 			bind_rows(out_fe, out_re, out_ge) %>%
 			right_join(out, by = c("parameter", "type")) %>%
 			mutate(model = NA,
-						 nonlin = stringr::str_replace(nonlin, "_$", "")) %>%
+						 re_factor = stringr::str_replace(nonlin, "_$", "")) %>%
 			select_(.dots = AllCols)
 
 
