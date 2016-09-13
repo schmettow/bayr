@@ -96,8 +96,8 @@ print.tbl_post <-
 		effects <-
 			tbl_post %>%
 			filter(type %in% c("fixef", "ranef", "grpef")) %>%
-			distinct(type, fixef, nonlin, re_factor, re_unit) %>%
-			group_by(type, nonlin, fixef, re_factor) %>%
+			distinct(model, type, fixef, nonlin, re_factor, re_unit) %>%
+			group_by(model, type, nonlin, fixef, re_factor) %>%
 			summarize(units = n()) %>%
 			as.data.frame()
 		# corr <-
