@@ -13,8 +13,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #'
 #' computing new variables, like dplyr::mutate does it.
 #'
-#' @param tbl_post
-#' @param ...
+#' @param tbl_post posterior table
 #'
 #' NOT IMPLEMENTED
 #' The code is copied from dyplr::mutate_ and adapted to work with
@@ -32,10 +31,28 @@ mutate.tbl_post <-
 		print(class(.data))
 		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
 		dplyr:::mutate_impl(.data, dots)
+		out <- dplyr:::distinct_impl(.data, dots)
+		class(out)[2:length(class(out))]
+		out
 	}
 #
 # D <- data_frame(x = 1:6, y = 3:8, z = 5:10)
 # mymutate(D,s = x + y)
+
+
+#' @export
+#' @rdname mutate.tbl_post
+
+distinct.tbl_post <-
+	function (.data, ..., .dots)
+	{
+		print(class(.data))
+		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
+		out <- dplyr:::distinct_impl(.data, dots)
+		class(out)[2:length(class(out))]
+		out
+	}
+
 
 ########################### FUTURE ##########################
 

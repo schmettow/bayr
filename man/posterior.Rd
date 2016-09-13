@@ -2,25 +2,39 @@
 % Please edit documentation in R/posterior_extraction.R
 \name{posterior}
 \alias{posterior}
+\alias{print.tbl_post}
 \alias{tbl_post}
 \alias{tbl_post.MCMCglmm}
 \alias{tbl_post.brmsfit}
+\alias{tbl_post.data.frame}
+\alias{tbl_post.stanfit}
+\alias{tbl_post.stanreg}
 \title{posterior extraction}
 \usage{
 posterior(model, shape, ...)
 
 tbl_post(model, ...)
 
+\method{print}{tbl_post}(tbl_post)
+
+\method{tbl_post}{data.frame}(model, ...)
+
 \method{tbl_post}{MCMCglmm}(model, ...)
 
 \method{tbl_post}{brmsfit}(model, ...)
+
+\method{tbl_post}{stanfit}(model, ...)
+
+\method{tbl_post}{stanreg}(model, ...)
 }
 \arguments{
 \item{model}{Bayesian model object}
 
 \item{shape}{return tbl_post in long shape or tbl_df in wide shape}
 
-\item{...}{ignored}
+\item{thin}{thinning factor}
+
+\item{type}{select parameter types to store ("fixef", "grpef", "ranef")}
 }
 \value{
 tbl_post object with MCMC chain in long format or tbl.df in wide shape
@@ -29,6 +43,9 @@ The MCMC chains are extracted from the model and stored in a
 common format. Different to most internal representations, and
 mcmc objects from package coda, the chains are stored in a
 long table with the following columns:
+
+chain  iter   parameter   value  type  order
+(fctr) (int)  (chr)       (dbl)  (chr) (int)
 }
 \description{
 MCMC chains are  extracted from a Bayesian (regression) object

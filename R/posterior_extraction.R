@@ -43,7 +43,7 @@ posterior <-
 	function(model = CUE8$M_1_rstanarm,
 					 shape = "long",
 					 thin = 1,
-					 type = c("fixef", "grpef", "ranef"), ...){
+					 type = c("fixef", "grpef", "ranef", "disp", "cor"), ...){
 		if (!(shape %in%  c("wide", "long"))) warning("shape must be either wide or long")
 
 		model_name <- deparse(substitute(model))
@@ -95,14 +95,20 @@ print.tbl_post <-
 		n_chain <- length(unique(tbl_post$chain))
 		effects <-
 			tbl_post %>%
+			filter(type %in% c("fixef", "ranef", "grpef")) %>%
 			distinct(type, fixef, nonlin, re_factor, re_unit) %>%
 			group_by(type, nonlin, fixef, re_factor) %>%
 			summarize(units = n()) %>%
 			as.data.frame()
+		# corr <-
+		# 	tbl_post %>%
+		# 	filter(type == "corr") %>%
+		# 	distinct(type, re_factor, fixef_1, fixef_2,ranef_1, ranef_2)
 
 		disp <-
 			filter(tbl_post, type == "disp") %>%
-			distinct(parameter)
+			distinct(parameter) %>%
+			as.data.frame()
 
 		# frm <-
 		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
@@ -111,7 +117,8 @@ print.tbl_post <-
 		#		cat(frm, "\n\n")
 		cat("Effects: \n")
 		print(effects)
-		# cat("disp: ", disp$parameter, "\n\n")
+		cat("\nDispersion: \n")
+		print(disp)
 		invisible(tbl_post)
 	}
 
@@ -194,6 +201,7 @@ tbl_post.MCMCglmm <-
 
 tbl_post.brmsfit <-
 	function(model, ...){
+		# model = M_2_Dur_corr
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
 			as_data_frame()
@@ -204,8 +212,10 @@ tbl_post.brmsfit <-
 			filter(!parameter %in% c("chain", "iter"))
 
 		type_patterns <-
-			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_", "^sigma", "^lp__", "^cor_"),
-								 type = c("fixef", "fixef", "grpef", "ranef", "disp", "diag", "cor"))
+			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_",
+														 "^sigma$", "^shape$", "^lp__", "^cor_"),
+								 type = c("fixef", "fixef", "grpef",
+								 				 "ranef", "disp", "disp", "diag", "cor"))
 
 		type_mapping <-
 			expand.grid(type = unique(type_patterns$type),
@@ -225,11 +235,13 @@ tbl_post.brmsfit <-
 			full_join(type_mapping, by = "parameter") %>%
 			full_join(par_order, by = "parameter") %>%
 			arrange(order, chain, iter) %>%
-			mutate(parameter = stringr::str_replace(parameter, "^sigma_(.*)", "sigma_resid")) %>%
-			mutate(parameter = stringr::str_replace(parameter, "^lp__(.*)", "lp__log_density")) %>%
+			mutate(parameter = stringr::str_replace(parameter,
+																							"^sigma_(.*)", "sigma_resid")) %>%
+			mutate(parameter = stringr::str_replace(parameter,
+																							"^lp__(.*)", "lp__log_density")) %>%
 			mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
-			select(-pattern) %>%
-			distinct() ### <--- dirty hack. it seems that fixed-effects models iterations get doubled
+			select(-pattern)# %>%
+			#distinct() ### <--- dirty hack. it seems that fixed-effects models iterations get doubled
 
 		## separating parameters
 
@@ -272,8 +284,7 @@ tbl_post.brmsfit <-
 		## putting it back together
 
 		out <-
-			bind_rows(out_fe, out_re) %>%
-			bind_rows(out_ge) %>%
+			bind_rows(out_fe, out_re, out_ge) %>%
 			right_join(out, by = c("parameter", "type")) %>%
 			mutate(model = NA,
 						 nonlin = stringr::str_replace(nonlin, "_$", "")) %>%
@@ -391,6 +402,15 @@ tbl_post.stanreg <-
 		out_id <-
 			out %>%
 			distinct(parameter, type)
+
+		out_disp <-
+			out_id %>%
+			filter(type == "disp") %>%
+			mutate(nonlin = NA,
+						 fixef = NA,
+						 re_factor = NA,
+						 re_unit = NA) %>%
+		select_(.dots = ParameterIDCols)
 
 		out_re <-
 			out_id %>%
