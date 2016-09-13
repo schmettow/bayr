@@ -100,6 +100,7 @@ print.tbl_post <-
 			group_by(model, type, nonlin, fixef, re_factor) %>%
 			summarize(units = n()) %>%
 			as.data.frame()
+
 		# corr <-
 		# 	tbl_post %>%
 		# 	filter(type == "corr") %>%
