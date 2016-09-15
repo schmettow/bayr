@@ -27,8 +27,9 @@
 \alias{ranef.tbl_post}
 \title{Coefficient extraction}
 \usage{
-\method{coef}{tbl_post}(object, type = c("fixef", "disp", "grpef"),
-  mean.func = identity, estimate = shorth, interval = 0.95, ...)
+\method{coef}{tbl_post}(object, model = unique(object$model),
+  type = c("fixef", "disp", "grpef"), mean.func = identity,
+  estimate = shorth, interval = 0.95, ...)
 
 \method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T, ...)
 
@@ -78,6 +79,8 @@ grpef(object, estimate = shorth, ...)
 }
 \arguments{
 \item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}
+
+\item{model}{model}
 
 \item{type}{type of coefficient: fixef (grpef, ranef)}
 

@@ -7,7 +7,7 @@ utils::globalVariables(names = c("type", "parameter", "value",
 																 "new_name", "iter", "pattern"))
 
 
-ParameterIDCols = list("parameter", "type", "fixef", "nonlin", "re_factor", "re_unit")
+ParameterIDCols = list("parameter", "type", "fixef", "nonlin", "re_factor", "re_entity")
 AllCols = append(append(list("model", "chain", "iter", "parameter", "order", "type"), ParameterIDCols), "value")
 
 
@@ -40,7 +40,7 @@ AllCols = append(append(list("model", "chain", "iter", "parameter", "order", "ty
 
 
 posterior <-
-	function(model = CUE8$M_1_rstanarm,
+	function(model,
 					 shape = "long",
 					 thin = 1,
 					 type = c("fixef", "grpef", "ranef", "disp", "cor"), ...){
@@ -66,10 +66,10 @@ posterior <-
 
 		if (shape == "wide"){
 			out <-
-			out %>%
-			#mutate(parameter = str_c(type, parameter, sep = "_")) %>%
-			select(-order, -type) %>%
-			tidyr::spread(parameter, value)
+				out %>%
+				#mutate(parameter = str_c(type, parameter, sep = "_")) %>%
+				select(-order, -type) %>%
+				tidyr::spread(parameter, value)
 		}
 
 		## Attention: Attributes are not preserved!
@@ -96,9 +96,9 @@ print.tbl_post <-
 		effects <-
 			tbl_post %>%
 			filter(type %in% c("fixef", "ranef", "grpef")) %>%
-			distinct(model, type, fixef, nonlin, re_factor, re_unit) %>%
+			distinct(model, type, fixef, nonlin, re_factor, re_entity) %>%
 			group_by(model, type, nonlin, fixef, re_factor) %>%
-			summarize(units = n()) %>%
+			summarize(entities = n()) %>%
 			as.data.frame()
 
 		# corr <-
@@ -138,6 +138,281 @@ tbl_post.data.frame <-
 
 
 
+
+
+#' @rdname posterior
+#' @export
+
+tbl_post.brmsfit <-
+	function(model, ...){
+		samples <-
+			brms::posterior_samples(model, add_chain = T) %>%
+			as_data_frame()
+
+		out <-
+			samples %>%
+			mutate(iter = row_number()) %>%
+			tidyr::gather(parameter, value, -iter, -chain) %>%
+			mutate(parameter = as.character(parameter))
+
+		par_order <-
+			data_frame(parameter = colnames(samples)) %>%
+			mutate(order = row_number()) %>%
+			filter(!parameter %in% c("chain", "iter"))
+
+		type_patterns <-
+			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_",
+														 "^sigma$", "^shape$", "^lp__", "^cor_"),
+								 type = c("fixef", "fixef", "grpef",
+								 				 "ranef", "disp", "disp", "diag", "cor"))
+
+		type_mapping <-
+			expand.grid(type = unique(type_patterns$type),
+									parameter = par_order$parameter) %>%
+			mutate(parameter = as.character(parameter),
+						 type = as.character(type)) %>%
+			full_join(type_patterns, by = "type") %>%
+			mutate(match = stringr::str_detect(parameter, pattern)) %>%
+			filter(match) %>%
+			select(parameter, type, pattern)
+
+		par_all <-
+			out %>%
+			distinct(parameter) %>%
+			full_join(type_mapping, by = "parameter") %>%
+			full_join(par_order, by = "parameter") %>%
+			# mutate(parameter = stringr::str_replace(parameter,
+			# 																				"^sigma_(.*)", "sigma_resid")) %>%
+			# mutate(parameter = stringr::str_replace(parameter,
+			# 																				"^lp__(.*)", "lp__log_density")) %>%
+			# mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
+			select(-pattern)
+
+		## we assume there is always at least one fixef,
+		## otherwise would be creating an empty par_out to start with
+
+		if(any(par_all$type == "fixef")){
+			par_fe <-
+				par_all %>%
+				filter(type == "fixef") %>%
+				tidyr::extract(parameter,
+											 into = c("nonlin","fixef"),
+											 "^b_(?:(.+)_)?+(.+)$",
+											 fill = "left",
+											 remove = F) %>%
+				mutate(re_factor = NA,
+							 re_entity = NA) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- par_fe
+		}
+
+		if(any(par_all$type == "disp")){
+			par_disp <-
+				par_all %>%
+				filter(type == "disp") %>%
+				mutate(nonlin = NA,
+							 fixef = NA,
+							 re_factor = NA,
+							 re_entity = NA) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- bind_rows(par_out, par_disp)
+		}
+
+		if(any(par_all$type == "ranef")){
+			par_re <-
+				par_all %>%
+				filter(type == "ranef") %>%
+				tidyr::extract(parameter,
+											 into = c("re_1", "re_entity","fixef"),
+											 "^r_(.*)\\[(.+),(.+)\\]$",
+											 remove = F) %>%
+				tidyr::extract(re_1,
+											 into = c("re_factor","nonlin"),
+											 "^(.*)(?:__(.+))$",
+											 fill = "left",
+											 remove = F) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- bind_rows(par_out, par_re)
+		}
+
+		if(any(par_all$type == "grpef")){
+			par_ge <-
+				par_all %>%
+				filter(type == "grpef") %>%
+				tidyr::extract(parameter,
+											 into = c("re_factor","coef"),
+											 "^sd_(.+)__(.+)$",
+											 remove = F) %>%
+				tidyr::extract(coef,
+											 into = c("nonlin","fixef"),
+											 "^(?:(.*)_)?(.+)$",
+											 fill = "right",
+											 remove = F) %>%
+				mutate(re_entity = NA) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- bind_rows(par_out, par_ge)
+		}
+
+
+		## TODO: correlations
+
+		if(any(par_all$type == "cor")){
+			par_cor <-
+				par_all %>%
+				filter(type == "cor") %>%
+				mutate(nonlin = NA,
+							 fixef = NA,
+							 re_factor = NA,
+							 re_entity = NA) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- bind_rows(par_out, par_cor)
+		}
+
+		if(any(par_all$type == "diag")){
+			par_diag <-
+				par_all %>%
+				filter(type == "diag") %>%
+				mutate(nonlin = NA,
+							 fixef = NA,
+							 re_factor = NA,
+							 re_entity = NA) %>%
+				select_(.dots = ParameterIDCols)
+			par_out <- bind_rows(par_out, par_diag)
+		}
+
+		par_out <-
+			left_join(par_all,
+								par_out,
+								by = c("parameter", "type")) %>%
+			distinct()
+
+
+
+		## putting it back together
+
+		out <-
+			full_join(out, par_out, by = "parameter") %>%
+			mutate(model = NA) %>% #,
+						 #re_factor = stringr::str_replace(re_factor, "_$", ""),
+						 #nonlin = stringr::str_replace(nonlin, "_$", "")) %>%
+			select_(.dots = AllCols)
+
+
+
+		class(out) <-
+			append("tbl_post", class(out))
+
+
+		return(out)
+	}
+
+
+
+#' @rdname posterior
+#' @export
+
+
+tbl_post.stanreg <-
+	function(model, ...){
+
+		## classifying parameters lm
+
+		if("lm" %in% class(model)) {
+			samples <-
+				rstanarm:::as.data.frame.stanreg(model) %>%
+				as_data_frame()
+
+			out <-
+				samples %>%
+				mutate(chain = NA,
+							 iter = row_number()) %>%
+				tidyr::gather("parameter", "value", -chain, -iter) %>%
+				left_join(data_frame(parameter = colnames(samples)) %>%
+										mutate(order = row_number(),
+													 type = ifelse(parameter %in% c("sigma","shape"),
+													 							"disp", "fixef")),
+									by = "parameter") %>%
+				mutate(parameter = stringr::str_replace(parameter,
+																								"\\(Intercept\\)", "Intercept"),
+							 parameter = stringr::str_replace(parameter,
+							 																 "sigma", "sigma_resid"))
+
+		}
+
+		## classifying parameters lmer
+
+		if("lmerMod" %in% class(model)) {
+			out <-
+				out %>%
+				mutate(type = ifelse(stringr::str_detect(parameter, "^b\\[.*\\]"),
+														 "ranef", type))
+
+		}
+
+		## annotating parameters lm
+
+		par_all <-
+			out %>%
+			distinct(parameter, type)
+
+
+		par_fe <-
+			par_all %>%
+			filter(type == "fixef") %>%
+			mutate(nonlin = NA,
+						 fixef = parameter,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = ParameterIDCols)
+
+		par_disp <-
+			par_all %>%
+			filter(type == "dispa") %>%
+			mutate(nonlin = NA,
+						 fixef = NA,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = ParameterIDCols)
+
+		par_out <- bind_rows(par_fe, par_disp)
+
+		## annotating parameters lmer
+
+		if("lmerMod" %in% class(model)) {
+			par_re <-
+				par_all %>%
+				filter(type == "ranef") %>%
+				tidyr::extract(parameter,
+											 into = c("fixef", "re_factor", "re_entity"),
+											 "^b\\[(.+) (.+):(.+)\\]$",
+											 remove = F) %>%
+				mutate(nonlin = NA) %>%
+				select_(.dots = ParameterIDCols)
+
+			par_out <-
+				bind_rows(par_out, par_re)
+		}
+
+
+
+		## putting it back together
+
+		out <-
+			par_out %>%
+			right_join(out, by = c("parameter", "type")) %>%
+			mutate(model = NA) %>%
+			select_(.dots = AllCols)
+
+
+		class(out) <-
+			append("tbl_post", class(out))
+
+		return(out)
+	}
+
+
+
+
 #' @rdname posterior
 #' @export
 
@@ -155,14 +430,14 @@ tbl_post.MCMCglmm <-
 									mutate(new_name = stringr::str_replace(parameter,
 																												 "(.*)\\.(.*)", "\\2_\\1"),
 												 new_name = stringr::str_replace(parameter,
-												 																"units", "resid"))
+												 																"entities", "resid"))
 			)
 		## extract random effects if these are present
 		if(!is.null(model$Z))	parameters <-
-				parameters %>%
-				bind_rows(data_frame(parameter = model$Z@Dimnames[[2]],
-														 type = "ranef") %>%
-										mutate(new_name = parameter))
+			parameters %>%
+			bind_rows(data_frame(parameter = model$Z@Dimnames[[2]],
+													 type = "ranef") %>%
+									mutate(new_name = parameter))
 
 		parameters <-
 			parameters %>%
@@ -195,258 +470,3 @@ tbl_post.MCMCglmm <-
 
 		return(out)
 	}
-
-
-#' @rdname posterior
-#' @export
-
-tbl_post.brmsfit <-
-	function(model, ...){
-		# model = M_2_Dur_corr
-		samples <-
-			brms::posterior_samples(model, add_chain = T) %>%
-			as_data_frame()
-
-		par_order <-
-			data_frame(parameter = colnames(samples)) %>%
-			mutate(order = row_number()) %>%
-			filter(!parameter %in% c("chain", "iter"))
-
-		type_patterns <-
-			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_",
-														 "^sigma$", "^shape$", "^lp__", "^cor_"),
-								 type = c("fixef", "fixef", "grpef",
-								 				 "ranef", "disp", "disp", "diag", "cor"))
-
-		type_mapping <-
-			expand.grid(type = unique(type_patterns$type),
-									parameter = par_order$parameter) %>%
-			mutate(parameter = as.character(parameter),
-						 type = as.character(type)) %>%
-			full_join(type_patterns, by = "type") %>%
-			mutate(match = stringr::str_detect(parameter, pattern)) %>%
-			filter(match) %>%
-			select(parameter, type, pattern)
-
-		out <-
-			samples %>%
-			mutate(iter = row_number()) %>%
-			tidyr::gather(parameter, value, -iter, -chain) %>%
-			mutate(parameter = as.character(parameter)) %>%
-			full_join(type_mapping, by = "parameter") %>%
-			full_join(par_order, by = "parameter") %>%
-			arrange(order, chain, iter) %>%
-			mutate(parameter = stringr::str_replace(parameter,
-																							"^sigma_(.*)", "sigma_resid")) %>%
-			mutate(parameter = stringr::str_replace(parameter,
-																							"^lp__(.*)", "lp__log_density")) %>%
-			mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
-			select(-pattern)# %>%
-			#distinct() ### <--- dirty hack. it seems that fixed-effects models iterations get doubled
-
-		## separating parameters
-
-		out_id <-
-			out %>%
-			distinct(parameter, type)
-
-		out_re <-
-			out_id %>%
-			filter(type == "ranef") %>%
-			tidyr::extract(parameter,
-										 into = c("re_factor","nonlin", "re_unit", "fixef"),
-										 "^(.*_){0,1}(.+)\\[(.+),(.+)\\]$",
-										 remove = F) %>%
-			select_(.dots = ParameterIDCols)
-
-		out_fe <-
-			out_id %>%
-			filter(type == "fixef") %>%
-			tidyr::extract(parameter,
-										 into = c("nonlin","fixef"),
-										 "^(.+_){0,1}(.+)$",
-										 remove = F) %>%
-			mutate(re_factor = NA,
-						 re_unit = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-		out_ge <-
-			out_id %>%
-			filter(type == "grpef") %>%
-			tidyr::extract(parameter,
-										 into = c("re_factor","nonlin", "fixef"),
-										 "^(.*_){0,1}(.+)_(.+)$",
-										 remove = F) %>%
-			mutate(re_unit = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-
-
-		## putting it back together
-
-		out <-
-			bind_rows(out_fe, out_re, out_ge) %>%
-			right_join(out, by = c("parameter", "type")) %>%
-			mutate(model = NA,
-						 re_factor = stringr::str_replace(nonlin, "_$", "")) %>%
-			select_(.dots = AllCols)
-
-
-
-		class(out) <-
-			append("tbl_post", class(out))
-
-
-		return(out)
-	}
-
-#' @rdname posterior
-#' @export
-
-
-tbl_post.stanfit <-
-	function(model, ...){
-		samples <-
-			rstan::extract(model) %>%
-			as.data.frame() %>%
-			as_data_frame() #%>%
-			# select(dplyr:::starts_with("b_"),
-			# 			 dplyr:::starts_with("sd_"),
-			# 			 dplyr:::starts_with("r_"),
-			# 			 dplyr:::starts_with("sigma_"),
-			# 			 dplyr:::starts_with("lp__"),
-			# 			 dplyr:::starts_with("cor_"),
-			# 			 dplyr:::starts_with("eta."))
-
-		par_order <-
-			data_frame(parameter = colnames(samples)) %>%
-			mutate(order = row_number()) %>%
-			filter(!parameter %in% c("chain", "iter"))
-
-		type_patterns <-
-			data_frame(pattern = c("^b_", "^b.","^sd_", "^r_", "^sigma_",
-														 "^lp__", "^cor_", "eta."),
-								 type = c("fixef", "fixef", "grpef", "ranef", "disp",
-								 				 "diag","cor", "fitted"))
-
-		type_mapping <-
-			expand.grid(type = unique(type_patterns$type),
-									parameter = par_order$parameter) %>%
-			mutate(parameter = as.character(parameter),
-						 type = as.character(type)) %>%
-			full_join(type_patterns, by = "type") %>%
-			mutate(match = stringr::str_detect(parameter, pattern)) %>%
-			filter(match) %>%
-			select(parameter, type, pattern)
-
-		out <-
-			samples %>%
-			mutate(iter = row_number()) %>%
-			tidyr::gather(parameter, value, -iter) %>%
-			mutate(parameter = as.character(parameter)) %>%
-			full_join(type_mapping, by = "parameter") %>%
-			full_join(par_order, by = "parameter") %>%
-			arrange(order, iter) %>%
-			mutate(parameter = stringr::str_replace(parameter,
-																							"^sigma_(.*)", "sigma_resid")) %>%
-			mutate(parameter = stringr::str_replace(parameter,
-																							"^lp__(.*)", "lp__log_density")) %>%
-			mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
-			select(-pattern)
-
-		class(out) <-
-			append("tbl_post", class(out))
-
-		return(out)
-	}
-
-
-
-#' @rdname posterior
-#' @export
-
-
-tbl_post.stanreg <-
-	function(model, ...){
-		if("lm" %in% class(model)) {
-			samples <-
-				rstanarm:::as.data.frame.stanreg(model) %>%
-				as_data_frame()
-
-			out <-
-				samples %>%
-				mutate(chain = NA,
-							 iter = row_number()) %>%
-				tidyr::gather("parameter", "value", -chain, -iter) %>%
-				left_join(data_frame(parameter = colnames(samples)) %>%
-										mutate(order = row_number(),
-													 type = ifelse(parameter %in% c("sigma","shape"),
-													 							"disp", "fixef")),
-									by = "parameter") %>%
-				mutate(parameter = stringr::str_replace(parameter,
-																								"\\(Intercept\\)", "Intercept"),
-							 parameter = stringr::str_replace(parameter,
-							 																 "sigma", "sigma_resid"))
-
-		}
-
-		if("lmerMod" %in% class(model)) {
-			out <-
-				out %>%
-				mutate(type = ifelse(stringr::str_detect(parameter, "^b"),
-														 "ranef", type))
-
-		}
-
-		## separating parameters
-
-		out_id <-
-			out %>%
-			distinct(parameter, type)
-
-		out_disp <-
-			out_id %>%
-			filter(type == "disp") %>%
-			mutate(nonlin = NA,
-						 fixef = NA,
-						 re_factor = NA,
-						 re_unit = NA) %>%
-		select_(.dots = ParameterIDCols)
-
-		out_re <-
-			out_id %>%
-			filter(type == "ranef") %>%
-			tidyr::extract(parameter,
-										 into = c("fixef", "re_factor", "re_unit"),
-										 "^b\\[(.+) (.+):(.+)\\]$",
-										 remove = F) %>%
-			mutate(nonlin = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-		out_fe <-
-			out_id %>%
-			filter(type == "fixef") %>%
-			mutate(nonlin = NA,
-						 fixef = parameter,
-						 re_factor = NA,
-						 re_unit = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-		## putting it back together
-
-		out <-
-			bind_rows(out_fe, out_re) %>%
-			right_join(out, by = c("parameter", "type")) %>%
-			mutate(model = NA) %>%
-			select_(.dots = AllCols)
-
-
-		class(out) <-
-			append("tbl_post", class(out))
-
-		return(out)
-	}
-
-
-
-

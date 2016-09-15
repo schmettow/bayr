@@ -16,6 +16,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' only stanfit models) from posterior
 #'
 #' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
+#' @param model model
 #' @param type type of coefficient: fixef (grpef, ranef)
 #' @param mean function (identity)
 #' @param estimate function for computing the center estimate (posterior mode)
@@ -36,6 +37,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 
 coef.tbl_post <-
 	function(object,
+					 model = unique(object$model),
 					 type = c("fixef", "disp", "grpef"),
 					 mean.func = identity,
 					 estimate = shorth,
@@ -48,12 +50,12 @@ coef.tbl_post <-
 			object %>%
 			filter(type %in% partype) %>%
 			mutate(value = mean.func(value)) %>%
-			group_by(parameter, order) %>%
+			group_by(model, parameter, order) %>%
 			summarize(center = estimate(value),
 								lower = quantile(value, lower),
 								upper = quantile(value, upper)) %>%
 			ungroup() %>%
-			arrange(order) %>%
+			arrange(model, order) %>%
 			select(-order)
 
 		class(tbl_coef) <- append("tbl_coef", class(tbl_coef))

@@ -1,58 +1,81 @@
-
 library(dplyr)
 library(rstanarm)
 library(brms)
+library(bayr)
 
-cases_dir = "../../../../Publications/New_Stats/Cases/"
-load(paste0(cases_dir,"CUE8.Rda"))
-load("../../../../../PUBLICATIONS/Publicatie these Stefan Huijser/Data/M_2_Dur_corr.Rda")
-
-summary(CUE8$M_1)
-summary(CUE8$M_1_rstanarm)
-
+thisdir = getwd()
+cases_dir = paste0(GDRIVE, "Aktenkoffer/Publications/New_Stats/Cases/")
+setwd(cases_dir)
+load("CUE8.Rda")
+load("BrowsingAB.Rda")
+setwd(thisdir)
+load(paste0(GDRIVE, "PUBLICATIONS/Publicatie these Stefan Huijser/Data/Lap15.Rda"))
 
 P_1_brms <- posterior(CUE8$M_1)
-P_1_brms %>%
-	select_(.dots = AllCols)
-
-
-P_1_rstn <- posterior(CUE8$M_1_rstanarm)
-P_1_rstn %>%
-	select_(.dots = AllCols)
-
-
+P_1_brms
+fixef(P_1_brms)
 grpef(P_1_brms)
+ranef(P_1_brms)
+
+P_1_rstn <-
+	posterior(CUE8$M_1_rstanarm)
 
 P_1_rstn
+fixef(P_1_rstn)
+grpef(P_1_rstn)
+ranef(P_1_rstn)
 
-P_1_brms %>%
-	distinct(type, nonlin, fixef, re_factor, re_unit) %>%
-	group_by(type, nonlin, fixef, re_factor) %>%
-	summarize(units = n())
 
-P_1_rstn %>%
-	distinct(type, nonlin, fixef, re_factor, re_unit) %>%
-	group_by(type, nonlin, fixef, re_factor) %>%
-	summarize(units = n())
+
+
 
 
 ## Lap15: non-linear
 
-
 P_2_brms <-
 	posterior(Lap15$M_2_Dur)
 
+P_2_brms
+fixef(P_2_brms)
+grpef(P_2_brms)
+ranef(P_2_brms)
 
-## Testing posterior()
-rm("posterior")
 
-P_3_rstn_p <- bayr::posterior(CUE8$M_1_rstanarm)
-P_3_rstn_t <- bayr:::tbl_post.stanreg(CUE8$M_1_rstanarm)
+### Case BrowsingAB
 
-## The ultimate test case for brms
-## is the Lap15 data with z-transformed preds, as it contains:
-## nonlin, fixef, ranef, unit and correlations between ranef
+M_5 <- stan_glm(ToT ~ Design*age, data = BrowsingAB$BAB1, iter = 200, chains =2)
+tbl_post.stanreg(M_5)
 
-P_4 <- posterior(M_2_Dur_corr)
-unique(P_4$type)
+M_6 <-
+	BrowsingAB$BAB5 %>%
+	stan_glmer(ToT ~ Design*age + (1|Task), data = ., iter = 100, chains =2)
+tbl_post.stanreg(M_6)
 
+M_7 <- brm(ToT ~ Design*age, data = BrowsingAB$BAB1, iter = 200, chains =2)
+tbl_post.brmsfit(M_7)
+
+M_8 <-
+	BrowsingAB$BAB5 %>%
+	mascutils::z_score(age) %>%
+	brm(ToT ~ Design*zage + (1|Task), data = ., iter = 100, chains =2)
+
+P_8 <- tbl_post.brmsfit(M_8)
+unique(P_8$parameter)
+
+
+M_9 <-
+	Lap15$D %>%
+	brm(Lap15$F_nonlinear_Dur,
+		nonlinear = Lap15$F_ME_z,
+		prior = Lap15$F_priors,
+		chains = 2,
+		iter = 200,
+		data = .)
+
+P_9 <- tbl_post.brmsfit(M_9)
+unique(P_9$parameter)
+
+
+posterior(M_7)
+posterior(M_8)
+posterior(M_9)
