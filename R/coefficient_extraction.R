@@ -50,7 +50,7 @@ coef.tbl_post <-
 			object %>%
 			filter(type %in% partype) %>%
 			mutate(value = mean.func(value)) %>%
-			group_by(model, parameter, order) %>%
+			group_by(model, nonlin, fixef, re_factor, re_entity, order) %>%
 			summarize(center = estimate(value),
 								lower = quantile(value, lower),
 								upper = quantile(value, upper)) %>%
@@ -131,17 +131,23 @@ seperate.tbl_coef <-
 
 print.tbl_coef <-
 	function(x, digits = NULL, title = T, footnote = T, ...){
-		types <- data_frame(type = c("fixef", "ranef", "grpef", "fitted"),
-											 title_text = c("fixed effects coefs","random effects coefs",
-											 				 "group effects coefs (sd)", "fitted values (linear predictor)"))
+		types <-
+			data_frame(type = c("fixef",
+													"ranef",
+													"grpef",
+													"fitted"),
+								 title_text = c("fixed effects",
+								 							 "random effects",
+								 							 "factor-level variation (sd)",
+								 							 "fitted values (linear predictor)"))
 		title_text <-
 			types %>%
-			filter(type == attr(x, "type")) %>%
+			filter(type %in% attr(x, "type")) %>%
 			select(title_text) %>%
 			as.character()
 
-		if(title) cat(title_text, "\n***\n")
-		print.data.frame(x, digits = digits, row.names = F)
+		if(title) cat(stringr::str_c(title_text, sep = "|"), "\n***\n")
+		print.data.frame(digits = digits, row.names = F)
 		if(footnote) cat("\n*\nestimate with ",
 										 attr(x, "interval")*100,
 										 "% credibility limits")
