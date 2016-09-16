@@ -147,7 +147,7 @@ print.tbl_coef <-
 			as.character()
 
 		if(title) cat(stringr::str_c(title_text, sep = "|"), "\n***\n")
-		print.data.frame(digits = digits, row.names = F)
+		tibble:::print.tbl_df(x, digits = digits, n = nrow(x))
 		if(footnote) cat("\n*\nestimate with ",
 										 attr(x, "interval")*100,
 										 "% credibility limits")
