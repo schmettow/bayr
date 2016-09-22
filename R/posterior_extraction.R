@@ -65,9 +65,10 @@ posterior <-
 		attr(out, which = "formula") <- formula(model)
 
 		if (shape == "wide"){
+			stop("Wide format currently not implemented")
 			out <-
 				out %>%
-				#mutate(parameter = str_c(type, parameter, sep = "_")) %>%
+				mutate(parameter = str_c(model, nonlin, fixef, re_factor, re_entity, sep = "_")) %>%
 				select(-order, -type) %>%
 				tidyr::spread(parameter, value)
 		}
@@ -90,7 +91,7 @@ tbl_post <-
 
 print.tbl_post <-
 	## TODO: refactor code to work with brms:parnames
-	function(tbl_post){
+	function(tbl_post, kable = by_knitr(), ...){
 		n_iter <- length(unique(tbl_post$iter))
 		n_chain <- length(unique(tbl_post$chain))
 		effects <-
@@ -99,7 +100,8 @@ print.tbl_post <-
 			distinct(model, type, fixef, nonlin, re_factor, re_entity) %>%
 			group_by(model, type, nonlin, fixef, re_factor) %>%
 			summarize(entities = n()) %>%
-			as.data.frame()
+			ungroup() %>%
+			mascutils::discard_all_na()
 
 		# corr <-
 		# 	tbl_post %>%
@@ -109,17 +111,25 @@ print.tbl_post <-
 		disp <-
 			filter(tbl_post, type == "disp") %>%
 			distinct(parameter) %>%
-			as.data.frame()
+			mascutils::discard_all_na()
 
 		# frm <-
 		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
 
-		cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n\n")
-		#		cat(frm, "\n\n")
-		cat("Effects: \n")
-		print(effects)
-		cat("\nDispersion: \n")
-		print(disp)
+		if(kable){ ## prepared for knitr table output, not yet working
+			cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n\n")
+			cat("Effects: \n")
+			print(knitr::kable(effects))
+			cat("\nDispersion: \n")
+			print(knitr::kable(disp))
+		} else {
+			cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n\n")
+			#		cat(frm, "\n\n")
+			cat("Effects: \n")
+			print.data.frame(effects, row.names = F)
+			cat("\nDispersion: \n")
+			print.data.frame(disp, row.names = F)
+		}
 		invisible(tbl_post)
 	}
 

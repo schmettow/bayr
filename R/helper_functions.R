@@ -18,3 +18,18 @@ utils::globalVariables(names = c("type", "parameter", "value",
 
 formula.MCMCglmm <-
 	function(model) model$Fixed$formula
+
+#' checks whether code is run by knitr
+#'
+#' returns TRUe is run by knitr
+#'
+#' @usage by_knitr()
+#'
+#'
+#' @author Martin Schmettow
+
+
+by_knitr <-
+	function() {
+	length(knitr::opts_current$get()) > 0
+}

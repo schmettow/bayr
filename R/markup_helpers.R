@@ -10,47 +10,58 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 ################ COEF ###############################
 
 
-#' mrk_coef
+#' md_coef
 #'
-#' inline markup reporting of estimates with credibility limits (formula)
+#' inline markup reporting of estimates with credibility limits
 #'
 #'
 #' @param tbl_coef coefficient table
-#' @param coef coefficient (row number or name)
+#' @param ... filter formulas, using annotations
+#' @param row row number of parameter
 #' @param center add center estimate (TRUE)
 #' @param interval add interval (TRUE)
 #' @param prefix add prefix term with coef name (not implemented)
 #' @param rounding digits (2)
 #' @return markdown string
 #'
+#' The parameter can alternatively selected by row number, or using a
+#' dplyr-like selection formula. When the selection criteria are ambiguous
+#' an error is thrown
 #'
 #' @author Martin Schmettow
 #' @export
 
-mrk_coef =
-	function(tbl_coef,
-					 coef,
+md_coef =
+	function(tbl_coef, ...,
+					 row = NULL,
 					 center = T,
 					 interval = T,
 					 prefix = F,
 					 round = 2) {
-		if(is.character(coef)){
-			coefpos = which(tbl_coef$parameter == coef)
-			if(length(coefpos) == 0) stop("coefficient ", coef, " not found in table")
+
+		filter_crit = list(...)
+		if(!is.null(row)){
+			if(!is.numeric(row)) stop("row must be integer")
+			if(row < 1 || row > nrow(tbl_coef)) stop("row must be between ", 1, " and ", nrow(tbl_coef))
+			if(length(filter_crit) > 0) warning("selection by row overides selection by filter")
+			tbl_coef = slice(tbl_coef, row)
 		} else {
-			coefpos = coef
+			tbl_coef = filter_(tbl_coef, .dots = filter_crit)
 		}
+
+		if(nrow(tbl_coef) == 0) stop("mrk_coef: parameter does not exist")
+		if(nrow(tbl_coef) > 1)  stop("mrk_coef: parameter is not unique, ", print(tbl_coef))
 
 		out = as.character()
 
-		if(prefix) stop("prefix not yet implemented")
+		if(prefix) warning("prefix not yet implemented")
 
 		if(center) out =
-			str_c(out, round(tbl_coef[[coefpos, 2]], round))
+			stringr::str_c(out, round(tbl_coef[[1, "center"]], round))
 
 		if(interval) out =
-			str_c(out, " [", round(tbl_coef[[coefpos, 3]], round), ", ",
-						round(tbl_coef[[coefpos, 4]], round), "]_{CI",attr(tbl_coef, "interval") * 100 ,"}")
+			stringr::str_c(out, " [", round(tbl_coef[[1, "lower"]], round), ", ",
+						round(tbl_coef[[1, "upper"]], round), "]_{CI",attr(tbl_coef, "interval") * 100 ,"}")
 		out
 	}
 

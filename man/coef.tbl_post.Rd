@@ -31,7 +31,8 @@
   type = c("fixef", "disp", "grpef"), mean.func = identity,
   estimate = shorth, interval = 0.95, ...)
 
-\method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T, ...)
+\method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T,
+  kable = by_knitr(), ...)
 
 \method{coef}{MCMCglmm}(object, estimate = shorth, ...)
 

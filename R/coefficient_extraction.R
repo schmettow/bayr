@@ -130,7 +130,9 @@ seperate.tbl_coef <-
 #' @export
 
 print.tbl_coef <-
-	function(x, digits = NULL, title = T, footnote = T, ...){
+	function(x, digits = NULL, title = T, footnote = T, kable = by_knitr(), ...){
+		out <- mascutils::discard_all_na(x)
+		if(length(unique(x$model)) == 1) out <- dplyr::select(out, -model)
 		types <-
 			data_frame(type = c("fixef",
 													"ranef",
@@ -146,14 +148,20 @@ print.tbl_coef <-
 			select(title_text) %>%
 			as.character()
 
-		if(title) cat(stringr::str_c(title_text, sep = "|"), "\n***\n")
-		tibble:::print.tbl_df(x, digits = digits, n = nrow(x))
-		if(footnote) cat("\n*\nestimate with ",
-										 attr(x, "interval")*100,
-										 "% credibility limits")
+		footnote_text <-
+			paste0("\n*\nestimate with ",
+						 attr(x, "interval")*100,
+						 "% credibility limits")
 
-		cat("\n")
-		invisible(x)
+		if(kable) { ## prepared for knitr table output, not yet working
+			print(knitr::kable(out))
+		} else {
+			if(title) cat(stringr::str_c(title_text, sep = "|"), "\n***\n")
+			print.data.frame(out, digits = 3, row.names = F)
+			if(footnote) cat(footnote_text)
+			cat("\n")
+			invisible(out)
+		}
 	}
 
 
@@ -223,7 +231,7 @@ fixef.stanfit <-
 
 fixef.stanreg <-
 	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
+		posterior(object) %>% fixef(estimate = estimate, ...)
 
 ############## RANEF ##############
 

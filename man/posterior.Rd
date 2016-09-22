@@ -14,7 +14,7 @@ posterior(model, shape, ...)
 
 tbl_post(model, ...)
 
-\method{print}{tbl_post}(tbl_post)
+\method{print}{tbl_post}(tbl_post, kable = by_knitr(), ...)
 
 \method{tbl_post}{data.frame}(model, ...)
 

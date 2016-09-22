@@ -79,10 +79,3 @@ unique(P_9$parameter)
 posterior(M_7)
 posterior(M_8)
 posterior(M_9)
-
-
-P_78 <-	bind_rows(posterior(M_7), posterior(M_8))
-fixef(P_78)
-ranef(P_78)
-grpef(P_78)
-coef.tbl_post(P_78, type = c("fixef", "ranef", "grpef"))
