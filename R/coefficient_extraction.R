@@ -130,9 +130,8 @@ seperate.tbl_coef <-
 #' @export
 
 print.tbl_coef <-
-	function(x, digits = NULL, title = T, footnote = T, kable = by_knitr(), ...){
+	function(x, digits = NULL, title = T, footnote = T, kable = bayr:::by_knitr(), ...){
 		out <- mascutils::discard_all_na(x)
-		if(length(unique(x$model)) == 1) out <- dplyr::select(out, -model)
 		types <-
 			data_frame(type = c("fixef",
 													"ranef",

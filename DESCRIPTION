@@ -1,8 +1,8 @@
 Package: bayr
 Type: Package
 Title: unified reporting of Bayesian regression results
-Version: 0.7.2
-Date: 2016-09-13
+Version: 0.7.3
+Date: 2016-09-29
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
@@ -20,12 +20,11 @@ Suggests:
     testthat,
     MCMCglmm,
 		rstanarm
-Depends:
+Imports:
 		brms (>= 1.0.0),
     dplyr,
     modeest,
-    nlme
-Imports:
+    nlme,
 		tidyr,
     stringr
 RoxygenNote: 5.0.1

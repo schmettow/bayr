@@ -16,7 +16,7 @@ tbl_post(model, ...)
 
 \method{print}{tbl_post}(tbl_post, kable = by_knitr(), ...)
 
-\method{tbl_post}{data.frame}(model, ...)
+\method{tbl_post}{data.frame}(df, ...)
 
 \method{tbl_post}{brmsfit}(model, ...)
 
@@ -32,6 +32,8 @@ tbl_post(model, ...)
 \item{thin}{thinning factor}
 
 \item{type}{select parameter types to store ("fixef", "grpef", "ranef")}
+
+\item{model_name}{provides a name for the model}
 }
 \value{
 tbl_post object with MCMC chain in long format or tbl.df in wide shape

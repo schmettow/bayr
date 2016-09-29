@@ -32,7 +32,7 @@
   estimate = shorth, interval = 0.95, ...)
 
 \method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T,
-  kable = by_knitr(), ...)
+  kable = bayr:::by_knitr(), ...)
 
 \method{coef}{MCMCglmm}(object, estimate = shorth, ...)
 
