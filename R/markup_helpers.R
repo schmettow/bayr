@@ -10,7 +10,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 ################ COEF ###############################
 
 
-#' md_coef
+#' coefficient formula
 #'
 #' inline markup reporting of estimates with credibility limits
 #'
@@ -22,6 +22,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @param interval add interval (TRUE)
 #' @param prefix add prefix term with coef name (not implemented)
 #' @param rounding digits (2)
+#' @param neg output negative estimate
 #' @return markdown string
 #'
 #' The parameter can alternatively selected by row number, or using a
@@ -35,11 +36,14 @@ md_coef =
 	function(tbl_coef, ...,
 					 row = NULL,
 					 center = T,
-					 interval = T,
+					 interval = F,
 					 prefix = F,
-					 round = 2) {
+					 round = 2,
+					 neg = F) {
 
 		filter_crit = list(...)
+
+		if(!c("tbl_coef") %in% class(tbl_coef)) stop("coefficient table required as input, e.g. coef(posterior)")
 		if(!is.null(row)){
 			if(!is.numeric(row)) stop("row must be integer")
 			if(row < 1 || row > nrow(tbl_coef)) stop("row must be between ", 1, " and ", nrow(tbl_coef))
@@ -49,19 +53,48 @@ md_coef =
 			tbl_coef = filter_(tbl_coef, .dots = filter_crit)
 		}
 
-		if(nrow(tbl_coef) == 0) stop("mrk_coef: parameter does not exist")
-		if(nrow(tbl_coef) > 1)  stop("mrk_coef: parameter is not unique, ", print(tbl_coef))
+		if(nrow(tbl_coef) == 0) stop("md_coef: parameter does not exist")
+		if(nrow(tbl_coef) > 1)  stop("md_coef: parameter is not unique, ", print(tbl_coef))
 
 		out = as.character()
 
 		if(prefix) warning("prefix not yet implemented")
 
+		if(neg) {
+			tbl_coef$center <- -tbl_coef$center
+			tbl_coef$lower <- -tbl_coef$lower
+			tbl_coef$upper <- -tbl_coef$upper
+		}
+
 		if(center) out =
 			stringr::str_c(out, round(tbl_coef[[1, "center"]], round))
 
 		if(interval) out =
-			stringr::str_c(out, " [", round(tbl_coef[[1, "lower"]], round), ", ",
-						round(tbl_coef[[1, "upper"]], round), "]_{CI",attr(tbl_coef, "interval") * 100 ,"}")
+			stringr::str_c(out,
+										 " [", round(tbl_coef[[1, "lower"]], round), ", ",
+										 round(tbl_coef[[1, "upper"]], round),
+										 "]_{CI",attr(tbl_coef, "interval") * 100 ,"}")
 		out
+	}
+
+#' @rdname md_coef
+#' @export
+
+frm_coef =
+	function(tbl_coef, ...,
+					 row = NULL,
+					 center = T,
+					 interval = T, # <--
+					 prefix = F,
+					 round = 2,
+					 neg = F) {
+		out = bayr::md_coef(tbl_coef, ...,
+												row = row,
+												center = center,
+												interval = interval,
+												prefix = prefix,
+												round = round,
+												neg = neg)
+		stringr::str_c("$", out, "$")
 	}
 

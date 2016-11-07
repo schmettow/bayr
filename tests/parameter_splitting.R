@@ -1,10 +1,11 @@
-library(dplyr)
+library(tidyverse)
+library(bayr)
 # library(rstanarm)
 # library(brms)
 # library(bayr)
 # library(stringr)
 
-GDRIVE = "c:/Users/schme/Google Drive/"
+GDRIVE = "c:/Users/martin/Google Drive/"
 thisdir = getwd()
 cases_dir = paste0(GDRIVE, "Aktenkoffer/Publications/New_Stats/Cases/")
 setwd(cases_dir)
@@ -28,6 +29,16 @@ parnames(M_$MathurRepl_3)
 posterior(M_$MathurRepl_4)
 parnames(M_$MathurRepl_3)
 
+bayr:::extr_brms_par(CUE8$M_1)
+posterior(CUE8$M_1)
+
+## New method for fes and res
+
+parnames(CUE8$M_1)
+brms:::fixef.brmsfit(CUE8$M_1)
+
+parnames(Lap15$M_3)
+brms:::fixef.brmsfit(Lap15$M_3)
 
 ## Testing tbl_post.data.frame
 ## (recasting tbl_post)
@@ -42,6 +53,8 @@ P_recast ## anno_1 in user annos
 
 ## Testing coef siblings
 
+coef(Lap15$P_2_Dur)
+coef(Lap15$M_2_Dur)
 fixef(Lap15$M_2_Dur)
 grpef(Lap15$M_2_Dur)
 ranef(Lap15$M_2_Dur)

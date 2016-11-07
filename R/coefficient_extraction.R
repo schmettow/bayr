@@ -24,23 +24,21 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @param ... ignored
 #' @return coefficient table with parameter name, estimate and interval
 #'
-#' The standard center function is the posterior mode computed
-#' by modeest::shorth
+#' The standard center function is the posterior median
 #'
 #' @author Martin Schmettow
 #' @import dplyr
-#' @importFrom modeest shorth
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
-#' @importFrom stats coef fitted quantile
+#' @importFrom stats coef median fitted quantile
 #' @export
 
 coef.tbl_post <-
 	function(object,
 					 model = unique(object$model),
-					 type = c("fixef", "disp", "grpef"),
+					 type = c("fixef", "disp", "grpef"), ## maybe deprecate for ~filter
 					 mean.func = identity,
-					 estimate = shorth,
+					 estimate = median,
 					 interval = .95, ...) {
 		lower <- (1-interval)/2
 		upper <- 1-((1-interval)/2)
@@ -50,7 +48,7 @@ coef.tbl_post <-
 			object %>%
 			filter(type %in% partype) %>%
 			mutate(value = mean.func(value)) %>%
-			group_by(model, nonlin, fixef, re_factor, re_entity, order) %>%
+			group_by(model, type, nonlin, fixef, re_factor, re_entity, order) %>%
 			summarize(center = estimate(value),
 								lower = quantile(value, lower),
 								upper = quantile(value, upper)) %>%
@@ -67,6 +65,234 @@ coef.tbl_post <-
 		return(tbl_coef)
 	}
 
+#' @rdname coef.tbl_post
+#' @export
+
+coef.MCMCglmm <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% coef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+coef.brmsfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% coef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+coef.stanfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% coef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+coef.stanreg <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% coef(estimate = estimate, ...)
+
+
+################ FIXEF ###############################
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.tbl_post <-
+	function(object, estimate = median, ...)
+		coef(object, type = "fixef", estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.MCMCglmm <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.brmsfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.stanfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% fixef(estimate = estimate, ...)
+
+#' @rdname coef.tbl_post
+#' @export
+
+fixef.stanreg <-
+	function(object, estimate = median, ...)
+		posterior(object) %>% fixef(estimate = estimate, ...)
+
+############## RANEF ##############
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.tbl_post <-
+	function(object, estimate = median, ...)
+		coef(object, type = "ranef", estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.MCMCglmm <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.brmsfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.stanfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
+
+#' @rdname coef.tbl_post
+#' @export
+
+ranef.stanreg <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% ranef(estimate = estimate)
+
+
+##################### GRPEF ######################
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+
+grpef <-
+	function(object, estimate = median, ...) UseMethod("grpef", object)
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.tbl_post <-
+	function(object, estimate = median, ...)
+		coef(object, type = "grpef", estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.MCMCglmm <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.brmsfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.stanfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+grpef.stanreg <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+#################### PRINT #######################
+
+#' @rdname coef.tbl_post
+#' @export
+
+
+print.tbl_coef <-
+	function(x, digits = NULL, title = T, footnote = T, kable = bayr:::by_knitr()){
+		out <- mascutils::discard_all_na(x) %>%
+			mascutils::discard_redundant()
+		types <-
+			data_frame(type = c("fixef",
+													"ranef",
+													"grpef",
+													"fitted"),
+								 title_text = c("fixed effects",
+								 							 "random effects",
+								 							 "factor-level variation (sd)",
+								 							 "fitted values (linear predictor)"))
+		title_text <-
+			types %>%
+			filter(type %in% attr(x, "type")) %>%
+			select(title_text) %>%
+			as.character()
+
+		footnote_text <-
+			paste0("\n*\nestimate with ",
+						 attr(x, "interval")*100,
+						 "% credibility limits")
+
+		if(kable) { ## prepared for knitr table output, not yet working
+			print(knitr::kable(out, caption = title_text))
+		} else {
+			if(title) cat(stringr::str_c(title_text, sep = "|", collapse = T), "\n***\n")
+			print.data.frame(out, digits = 3, row.names = F)
+			if(footnote) cat(footnote_text)
+			cat("\n")
+			invisible(out)
+		}
+	}
+
+
+
+##################### FITTED ######################
+
+# dit zijn functies voor voorspelling
+
+
+#' #' @rdname coef.tbl_post
+#' #' @export
+#'
+#'
+#' fitted <-
+#' 	function(object, estimate = median, ...) UseMethod("fitted", object)
+
+#' @rdname coef.tbl_post
+#' @export
+
+fitted.tbl_post <-
+	function(object, estimate = median, ...)
+		coef(object, type = "fitted", estimate = estimate, ...)
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+fitted.brmsfit <-
+	function(object, estimate = median, ...)
+		tbl_post(object) %>% grpef(estimate = estimate)
+
+
+########################### FUTURE ##########################
 
 #' Joining two coefficent tables (NI)
 #'
@@ -129,227 +355,6 @@ seperate.tbl_coef <-
 #' @rdname coef.tbl_post
 #' @export
 
-print.tbl_coef <-
-	function(x, digits = NULL, title = T, footnote = T, kable = bayr:::by_knitr(), ...){
-		out <- mascutils::discard_all_na(x)
-		types <-
-			data_frame(type = c("fixef",
-													"ranef",
-													"grpef",
-													"fitted"),
-								 title_text = c("fixed effects",
-								 							 "random effects",
-								 							 "factor-level variation (sd)",
-								 							 "fitted values (linear predictor)"))
-		title_text <-
-			types %>%
-			filter(type %in% attr(x, "type")) %>%
-			select(title_text) %>%
-			as.character()
-
-		footnote_text <-
-			paste0("\n*\nestimate with ",
-						 attr(x, "interval")*100,
-						 "% credibility limits")
-
-		if(kable) { ## prepared for knitr table output, not yet working
-			print(knitr::kable(out))
-		} else {
-			if(title) cat(stringr::str_c(title_text, sep = "|"), "\n***\n")
-			print.data.frame(out, digits = 3, row.names = F)
-			if(footnote) cat(footnote_text)
-			cat("\n")
-			invisible(out)
-		}
-	}
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-coef.MCMCglmm <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
-coef.brms <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
-coef.stanfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
-coef.stanreg <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-
-################ FIXEF ###############################
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.tbl_post <-
-	function(object, estimate = shorth, ...)
-		coef(object, type = "fixef", estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.MCMCglmm <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.brmsfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.stanfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.stanreg <-
-	function(object, estimate = shorth, ...)
-		posterior(object) %>% fixef(estimate = estimate, ...)
-
-############## RANEF ##############
-
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.tbl_post <-
-	function(object, estimate = shorth, ...)
-		coef(object, type = "ranef", estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.MCMCglmm <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
-
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.brmsfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.stanfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
-
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.stanreg <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
-
-
-##################### GRPEF ######################
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-
-grpef <-
-	function(object, estimate = shorth, ...) UseMethod("grpef", object)
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.tbl_post <-
-	function(object, estimate = shorth, ...)
-		coef(object, type = "grpef", estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.MCMCglmm <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.brmsfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.stanfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.stanreg <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
-
-
-##################### FITTED ######################
-
-# dit zijn functies voor voorspelling
-
-
-#' #' @rdname coef.tbl_post
-#' #' @export
-#'
-#'
-#' fitted <-
-#' 	function(object, estimate = shorth, ...) UseMethod("fitted", object)
-
-#' @rdname coef.tbl_post
-#' @export
-
-fitted.tbl_post <-
-	function(object, estimate = shorth, ...)
-		coef(object, type = "fitted", estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-fitted.brmsfit <-
-	function(object, estimate = shorth, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
-
-
-########################### FUTURE ##########################
 
 
 # resid_plot_1 <-

@@ -51,8 +51,7 @@ names(M)
 M$Stroop_2$arm <-
 	stan_lmer(RT ~ Condition + age + trial + (1 + Condition|Participant),
 			data = Dlme$Stroop,
-			algorithm = "fullrank",
-			iter = 150, warmup = 50, thin = 5)
+			iter = 150)
 
 
 ## Stroop ANOVA

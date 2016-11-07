@@ -2,7 +2,7 @@
 % Please edit documentation in R/coefficient_extraction.R
 \name{coef.tbl_post}
 \alias{coef.MCMCglmm}
-\alias{coef.brms}
+\alias{coef.brmsfit}
 \alias{coef.stanfit}
 \alias{coef.stanreg}
 \alias{coef.tbl_post}
@@ -29,54 +29,54 @@
 \usage{
 \method{coef}{tbl_post}(object, model = unique(object$model),
   type = c("fixef", "disp", "grpef"), mean.func = identity,
-  estimate = shorth, interval = 0.95, ...)
+  estimate = median, interval = 0.95, ...)
+
+\method{coef}{MCMCglmm}(object, estimate = median, ...)
+
+\method{coef}{brmsfit}(object, estimate = median, ...)
+
+\method{coef}{stanfit}(object, estimate = median, ...)
+
+\method{coef}{stanreg}(object, estimate = median, ...)
+
+\method{fixef}{tbl_post}(object, estimate = median, ...)
+
+\method{fixef}{MCMCglmm}(object, estimate = median, ...)
+
+\method{fixef}{brmsfit}(object, estimate = median, ...)
+
+\method{fixef}{stanfit}(object, estimate = median, ...)
+
+\method{fixef}{stanreg}(object, estimate = median, ...)
+
+\method{ranef}{tbl_post}(object, estimate = median, ...)
+
+\method{ranef}{MCMCglmm}(object, estimate = median, ...)
+
+\method{ranef}{brmsfit}(object, estimate = median, ...)
+
+\method{ranef}{stanfit}(object, estimate = median, ...)
+
+\method{ranef}{stanreg}(object, estimate = median, ...)
+
+grpef(object, estimate = median, ...)
+
+\method{grpef}{tbl_post}(object, estimate = median, ...)
+
+\method{grpef}{MCMCglmm}(object, estimate = median, ...)
+
+\method{grpef}{brmsfit}(object, estimate = median, ...)
+
+\method{grpef}{stanfit}(object, estimate = median, ...)
+
+\method{grpef}{stanreg}(object, estimate = median, ...)
 
 \method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T,
-  kable = bayr:::by_knitr(), ...)
+  kable = bayr:::by_knitr())
 
-\method{coef}{MCMCglmm}(object, estimate = shorth, ...)
+\method{fitted}{tbl_post}(object, estimate = median, ...)
 
-\method{coef}{brms}(object, estimate = shorth, ...)
-
-\method{coef}{stanfit}(object, estimate = shorth, ...)
-
-\method{coef}{stanreg}(object, estimate = shorth, ...)
-
-\method{fixef}{tbl_post}(object, estimate = shorth, ...)
-
-\method{fixef}{MCMCglmm}(object, estimate = shorth, ...)
-
-\method{fixef}{brmsfit}(object, estimate = shorth, ...)
-
-\method{fixef}{stanfit}(object, estimate = shorth, ...)
-
-\method{fixef}{stanreg}(object, estimate = shorth, ...)
-
-\method{ranef}{tbl_post}(object, estimate = shorth, ...)
-
-\method{ranef}{MCMCglmm}(object, estimate = shorth, ...)
-
-\method{ranef}{brmsfit}(object, estimate = shorth, ...)
-
-\method{ranef}{stanfit}(object, estimate = shorth, ...)
-
-\method{ranef}{stanreg}(object, estimate = shorth, ...)
-
-grpef(object, estimate = shorth, ...)
-
-\method{grpef}{tbl_post}(object, estimate = shorth, ...)
-
-\method{grpef}{MCMCglmm}(object, estimate = shorth, ...)
-
-\method{grpef}{brmsfit}(object, estimate = shorth, ...)
-
-\method{grpef}{stanfit}(object, estimate = shorth, ...)
-
-\method{grpef}{stanreg}(object, estimate = shorth, ...)
-
-\method{fitted}{tbl_post}(object, estimate = shorth, ...)
-
-\method{fitted}{brmsfit}(object, estimate = shorth, ...)
+\method{fitted}{brmsfit}(object, estimate = median, ...)
 }
 \arguments{
 \item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}
@@ -96,15 +96,14 @@ grpef(object, estimate = shorth, ...)
 \value{
 coefficient table with parameter name, estimate and interval
 
-The standard center function is the posterior mode computed
-by modeest::shorth
+The standard center function is the posterior median
 }
 \description{
 summary table of fixed, random or group-level coefficients and fitted values (eta,
 only stanfit models) from posterior
 
 fitted <-
-	function(object, estimate = shorth, ...) UseMethod("fitted", object)
+	function(object, estimate = median, ...) UseMethod("fitted", object)
 }
 \author{
 Martin Schmettow

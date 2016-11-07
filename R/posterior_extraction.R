@@ -63,8 +63,10 @@ posterior <-
 			post %>%
 			filter(!iter %% thin) %>%
 			filter(stringr::str_detect(type, type_regex)) %>%
-			arrange(chain, iter, type, parameter) %>%
-			mutate(model = model_name)
+			arrange(chain, iter, type, parameter)
+
+		## this prohibits model overwriting (tbl_post.data.frame), needs testing
+		if(any(is.na(out$model))) out$model = model_name
 
 		class(out) <- append("tbl_post", class(out))
 		attr(out, which = "formula") <- formula(model)
@@ -171,6 +173,11 @@ tbl_post.data.frame <-
 
 extr_brms_par <-
 	function(model){
+		## use fixef and ranef parnames for check
+		pn_fe <- rownames(brms:::fixef.brmsfit(model))
+		pn_re <- names(brms:::ranef.brmsfit(model))
+
+
 		pars <-
 			model$prior %>%
 			select(-prior, fixef = coef, re_factor = group, nonlin = nlpar) %>%
@@ -184,19 +191,38 @@ extr_brms_par <-
 		pars$parameter <-
 			case_when(
 				pars$class == "b" & pars$nonlin == "" ~
-					str_c(pars$class, "_", pars$fixef),
+					stringr::str_c(pars$class, "_", pars$fixef),
 				pars$class == "b" & pars$nonlin != "" ~
-					str_c(pars$class, "_",pars$nonlin,"_", pars$fixef),
+					stringr::str_c(pars$class, "_",pars$nonlin,"_", pars$fixef),
 				pars$class == "sd" & pars$nonlin == "" ~
-					str_c(pars$class, "_", pars$re_factor, "__", pars$fixef),
+					stringr::str_c(pars$class, "_", pars$re_factor, "__", pars$fixef),
 				pars$class == "sd" & pars$nonlin != "" ~
-					str_c(pars$class, "_", pars$re_factor, "__", pars$nonlin,"_", pars$fixef)
+					stringr::str_c(pars$class, "_", pars$re_factor, "__", pars$nonlin,"_", pars$fixef)
 			)
+
+		## hack for missing b_Intercept (CUE8)
+
+		if("Intercept" %in% pn_fe) {
+			pars <- pars %>% bind_rows(
+				data_frame(
+					parameter = "b_Intercept",
+					type = "fixef",
+					nonlin =NA,
+					fixef = "Intercept",
+					re_factor = NA,
+					re_entity = NA
+				)) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+		}
+
 		pars %>%
-			filter(!str_detect(parameter, "_$")) %>%
+			filter(!stringr::str_detect(parameter, "_$")) %>%
 			mutate(re_entity = NA) %>%
 			mutate_all(funs(ifelse(. == "", NA, .))) %>%
+			distinct() %>%
 			select_(.dots = bayr:::ParameterIDCols)
+
+
 	}
 
 

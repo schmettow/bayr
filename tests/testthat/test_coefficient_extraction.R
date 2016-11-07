@@ -8,37 +8,37 @@ C_ <- list() # coefficient tales
 
 test_that("group coefficients can be extracted without issues",{
 	expect_silent(C_$Stroop_1$brms <<-
-									M$Stroop_1$brms %>% posterior() %>% grpef())
+									M$Stroop_1$brms %>% grpef())
 	expect_silent(C_$Stroop_1$mcgl <<-
-									M$Stroop_1$mcgl %>% posterior() %>% grpef())
+									M$Stroop_1$mcgl %>% grpef())
 	expect_silent(C_$Stroop_2$brms <<-
-									M$Stroop_2$brms %>% posterior() %>% grpef())
+									M$Stroop_2$brms %>% grpef())
 	expect_silent(C_$Stroop_2$mcgl <<-
-									M$Stroop_2$mcgl %>% posterior() %>% grpef())
+									M$Stroop_2$mcgl %>% grpef())
 })
 
 
 test_that("fixed effects coefficients can be extracted without issues",{
 	expect_silent(C_$Stroop_1$brms <<-
-									M$Stroop_1$brms %>% posterior() %>% fixef())
+									M$Stroop_1$brms %>% fixef())
 	expect_silent(C_$Stroop_1$mcgl <<-
-									M$Stroop_1$mcgl %>% posterior() %>% fixef())
+									M$Stroop_1$mcgl %>% fixef())
 	expect_silent(C_$Stroop_2$brms <<-
-									M$Stroop_2$brms %>% posterior() %>% fixef())
+									M$Stroop_2$brms %>% fixef())
 	expect_silent(C_$Stroop_2$mcgl <<-
-									M$Stroop_2$mcgl %>% posterior() %>% fixef())
+									M$Stroop_2$mcgl %>% fixef())
 })
 
 
 test_that("random effects coefficients can be extracted without issues",{
 	expect_silent(C_$Stroop_1$brms <<-
-									M$Stroop_1$brms %>% posterior() %>% ranef())
+									M$Stroop_1$brms %>% ranef())
 	expect_silent(C_$Stroop_1$mcgl <<-
-									M$Stroop_1$mcgl %>% posterior() %>% ranef())
+									M$Stroop_1$mcgl %>% ranef())
 	expect_silent(C_$Stroop_2$brms <<-
-									M$Stroop_2$brms %>% posterior() %>% ranef())
+									M$Stroop_2$brms %>% ranef())
 	expect_silent(C_$Stroop_2$mcgl <<-
-									M$Stroop_2$mcgl %>% posterior() %>% ranef())
+									M$Stroop_2$mcgl %>% ranef())
 })
 
 
