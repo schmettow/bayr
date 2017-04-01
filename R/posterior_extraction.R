@@ -175,7 +175,7 @@ extr_brms_par <-
 	function(model){
 		## use fixef and ranef parnames for check
 		pn_fe <- rownames(brms:::fixef.brmsfit(model))
-		pn_re <- names(brms:::ranef.brmsfit(model))
+		try(pn_re <- names(brms:::ranef.brmsfit(model)), silent = T)
 
 
 		pars <-
@@ -586,8 +586,101 @@ tbl_post_old.brmsfit <-
 
 tbl_post.stanreg <-
 	function(model, ...){
+		# model <- M_cue8_rstn
+		samples <-
+			rstanarm:::as.data.frame.stanreg(model) %>%
+			as_data_frame() %>%
+			mutate(chain = NA,
+						 iter = row_number()) %>%
+			tidyr::gather("parameter", "value", -chain, -iter) %>%
+			mutate(parameter = stringr::str_replace(parameter, "\\(Intercept\\)", "Intercept"),
+						 parameter = stringr::str_replace(parameter, "sigma", "sigma_resid"))
+
+		parnames <-
+			samples %>%
+			select(parameter) %>%
+			distinct() %>%
+			mutate(type = case_when(
+				stringr::str_detect(.$parameter, "sigma_resid") ~ "disp",
+				stringr::str_detect(.$parameter, "^b\\[.*\\]") ~ "ranef",
+				stringr::str_detect(.$parameter, "^Sigma\\[.*\\]") ~ "grpef",
+				TRUE ~ "fixef"),
+				order = row_number())
+
+		par_fe <-
+			parnames %>%
+			filter(type == "fixef") %>%
+			mutate(nonlin = NA,
+						 fixef = parameter,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+
+		par_disp <-
+			parnames %>%
+			filter(type == "disp") %>%
+			mutate(nonlin = NA,
+						 fixef = NA,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+
+		#par_out <- bind_rows(par_fe, par_disp)
+
+		par_re <-
+			parnames %>%
+			filter(type == "ranef") %>%
+			tidyr::extract(parameter,
+										 into = c("fixef", "re_factor", "re_entity"),
+										 "^b\\[(.+) (.+):(.+)\\]$",
+										 remove = F) %>%
+			mutate(nonlin = NA) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+
+		#par_out <- bind_rows(par_out, par_re)
+
+
+
+			par_ge <-
+				parnames %>%
+				filter(type == "grpef") %>%
+				tidyr::extract(parameter,
+											 into = c("re_factor", "fixef"),
+											 "^Sigma\\[(.+):(.+),(.+)\\]$",
+											 remove = F) %>%
+				mutate(nonlin = NA,
+							 re_entity = NA) %>%
+				select_(.dots = bayr:::ParameterIDCols)
+
+			par_out <-
+				bind_rows(par_fe, par_re, par_ge, par_disp) %>%
+				right_join(parnames, by = c("parameter","type"))
+
+
+		## putting it back together
+
+		out <-
+			par_out %>%
+			right_join(samples, by = "parameter") %>%
+			mutate(model = NA) %>%
+			select_(.dots = bayr:::AllCols)
+
+
+		class(out) <-
+			append("tbl_post", class(out))
+
+		return(out)
+	}
+
+
+
+
+tbl_post.stanreg.old <-
+	function(model, ...){
 
 		## classifying parameters lm
+model <- M_cue8_rstn
+
 
 		if("lm" %in% class(model)) {
 			samples <-
@@ -616,8 +709,10 @@ tbl_post.stanreg <-
 		if("lmerMod" %in% class(model)) {
 			out <-
 				out %>%
-				mutate(type = ifelse(stringr::str_detect(parameter, "^b\\[.*\\]"),
-														 "ranef", type))
+				mutate(type = case_when(
+					stringr::str_detect(parameter, "^b\\[.*\\]") ~ "ranef",
+					stringr::str_detect(parameter, "^Sigma\\[.*\\]") ~ "grpef",
+					TRUE ~ type))
 
 		}
 
@@ -639,7 +734,7 @@ tbl_post.stanreg <-
 
 		par_disp <-
 			par_all %>%
-			filter(type == "dispa") %>%
+			filter(type == "disp") %>%
 			mutate(nonlin = NA,
 						 fixef = NA,
 						 re_factor = NA,
@@ -666,6 +761,20 @@ tbl_post.stanreg <-
 		}
 
 
+		if("lmerMod" %in% class(model)) {
+			par_ge <-
+				par_all %>%
+				filter(type == "grpef") %>%
+				tidyr::extract(parameter,
+											 into = c("re_entity", "fixef"),
+											 "^Sigma\\[(.+):(.+),(.+)\\]$",
+											 remove = F) %>%
+				mutate(nonlin = NA) %>%
+				select_(.dots = ParameterIDCols)
+
+			par_out <-
+				bind_rows(par_out, par_re, par_ge)
+		}
 
 		## putting it back together
 

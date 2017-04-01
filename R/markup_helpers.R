@@ -23,6 +23,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @param prefix add prefix term with coef name (not implemented)
 #' @param rounding digits (2)
 #' @param neg output negative estimate
+#' @param mean_fnc mean function (identity)
 #' @return markdown string
 #'
 #' The parameter can alternatively selected by row number, or using a
@@ -39,6 +40,7 @@ md_coef =
 					 interval = F,
 					 prefix = F,
 					 round = 2,
+					 mean_fnc = identity,
 					 neg = F) {
 
 		filter_crit = list(...)
@@ -67,12 +69,12 @@ md_coef =
 		}
 
 		if(center) out =
-			stringr::str_c(out, round(tbl_coef[[1, "center"]], round))
+			stringr::str_c(out, round(mean_fnc(tbl_coef[[1, "center"]]), round))
 
 		if(interval) out =
 			stringr::str_c(out,
-										 " [", round(tbl_coef[[1, "lower"]], round), ", ",
-										 round(tbl_coef[[1, "upper"]], round),
+										 " [", round(mean_fnc(tbl_coef[[1, "lower"]]), round), ", ",
+										 round(mean_fnc(tbl_coef[[1, "upper"]]), round),
 										 "]_{CI",attr(tbl_coef, "interval") * 100 ,"}")
 		out
 	}

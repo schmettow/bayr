@@ -264,32 +264,6 @@ print.tbl_coef <-
 
 
 
-##################### FITTED ######################
-
-# dit zijn functies voor voorspelling
-
-
-#' #' @rdname coef.tbl_post
-#' #' @export
-#'
-#'
-#' fitted <-
-#' 	function(object, estimate = median, ...) UseMethod("fitted", object)
-
-#' @rdname coef.tbl_post
-#' @export
-
-fitted.tbl_post <-
-	function(object, estimate = median, ...)
-		coef(object, type = "fitted", estimate = estimate, ...)
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-fitted.brmsfit <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
 
 
 ########################### FUTURE ##########################

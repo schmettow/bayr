@@ -12,4 +12,3 @@ returns TRUe is run by knitr
 \author{
 Martin Schmettow
 }
-

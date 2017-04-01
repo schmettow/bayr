@@ -2,12 +2,12 @@
 % Please edit documentation in R/posterior_extraction.R
 \name{posterior}
 \alias{posterior}
-\alias{print.tbl_post}
 \alias{tbl_post}
-\alias{tbl_post.MCMCglmm}
-\alias{tbl_post.brmsfit}
+\alias{print.tbl_post}
 \alias{tbl_post.data.frame}
+\alias{tbl_post.brmsfit}
 \alias{tbl_post.stanreg}
+\alias{tbl_post.MCMCglmm}
 \title{posterior extraction}
 \usage{
 posterior(model, shape, ...)
@@ -55,4 +55,3 @@ as fixef, ranef, grpef and named after a common scheme.
 \author{
 Martin Schmettow
 }
-

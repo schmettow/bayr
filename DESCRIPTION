@@ -1,7 +1,7 @@
 Package: bayr
 Type: Package
 Title: unified reporting of Bayesian regression results
-Version: 0.7.5
+Version: 0.8.1
 Date: 2016-10-26
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
@@ -27,4 +27,4 @@ Imports:
     nlme,
 		tidyr,
     stringr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
