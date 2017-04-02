@@ -658,11 +658,12 @@ tbl_post.stanreg <-
 
 
 		## putting it back together
-
+		## and transforming var to sd
 		out <-
 			par_out %>%
 			right_join(samples, by = "parameter") %>%
 			mutate(model = NA) %>%
+			mutate(value = if_else(type == "grpef", sqrt(value), value)) %>%
 			select_(.dots = bayr:::AllCols)
 
 
