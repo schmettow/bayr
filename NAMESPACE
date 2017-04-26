@@ -2,6 +2,7 @@
 
 S3method(coef,MCMCglmm)
 S3method(coef,brmsfit)
+S3method(coef,data.frame)
 S3method(coef,stanfit)
 S3method(coef,stanreg)
 S3method(coef,tbl_post)

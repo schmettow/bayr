@@ -68,6 +68,19 @@ coef.tbl_post <-
 #' @rdname coef.tbl_post
 #' @export
 
+coef.data.frame <-
+	## dirty hack! partype columns not preserved
+	function(df, ...) {
+		if(! all(c("parameter", "center", "lower", "upper") %in% names(df))) stop("not a valid tbl_coef, some columns missing")
+		out = df
+		class(out) = append("tbl_coef", class(out))
+		out
+	}
+
+
+#' @rdname coef.tbl_post
+#' @export
+
 coef.MCMCglmm <-
 	function(object, estimate = median, ...)
 		tbl_post(object) %>% coef(estimate = estimate, ...)
@@ -228,7 +241,7 @@ grpef.stanreg <-
 
 
 print.tbl_coef <-
-	function(x, digits = NULL, title = T, footnote = T, kable = bayr:::by_knitr()){
+	function(x, digits = NULL, title = F, footnote = T, kable = bayr:::by_knitr()){
 		out <- mascutils::discard_all_na(x) %>%
 			mascutils::discard_redundant()
 		types <-
