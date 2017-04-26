@@ -2,6 +2,7 @@
 % Please edit documentation in R/coefficient_extraction.R
 \name{coef.tbl_post}
 \alias{coef.tbl_post}
+\alias{coef.data.frame}
 \alias{coef.MCMCglmm}
 \alias{coef.brmsfit}
 \alias{coef.stanfit}
@@ -28,6 +29,8 @@
 \method{coef}{tbl_post}(object, model = unique(object$model),
   type = c("fixef", "disp", "grpef"), mean.func = identity,
   estimate = median, interval = 0.95, ...)
+
+\method{coef}{data.frame}(df, ...)
 
 \method{coef}{MCMCglmm}(object, estimate = median, ...)
 
@@ -69,7 +72,7 @@ grpef(object, estimate = median, ...)
 
 \method{grpef}{stanreg}(object, estimate = median, ...)
 
-\method{print}{tbl_coef}(x, digits = NULL, title = T, footnote = T,
+\method{print}{tbl_coef}(x, digits = NULL, title = F, footnote = T,
   kable = bayr:::by_knitr())
 }
 \arguments{

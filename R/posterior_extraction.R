@@ -625,20 +625,17 @@ tbl_post.stanreg <-
 						 re_entity = NA) %>%
 			select_(.dots = bayr:::ParameterIDCols)
 
-		#par_out <- bind_rows(par_fe, par_disp)
-
-		par_re <-
-			parnames %>%
-			filter(type == "ranef") %>%
-			tidyr::extract(parameter,
-										 into = c("fixef", "re_factor", "re_entity"),
-										 "^b\\[(.+) (.+):(.+)\\]$",
-										 remove = F) %>%
-			mutate(nonlin = NA) %>%
-			select_(.dots = bayr:::ParameterIDCols)
-
-		#par_out <- bind_rows(par_out, par_re)
-
+		par_out <- bind_rows(par_fe, par_disp)
+		if("lmerMod" %in% class(model)) {
+			par_re <-
+				parnames %>%
+				filter(type == "ranef") %>%
+				tidyr::extract(parameter,
+											 into = c("fixef", "re_factor", "re_entity"),
+											 "^b\\[(.+) (.+):(.+)\\]$",
+											 remove = F) %>%
+				mutate(nonlin = NA) %>%
+				select_(.dots = bayr:::ParameterIDCols)
 
 
 			par_ge <-
@@ -651,9 +648,10 @@ tbl_post.stanreg <-
 				mutate(nonlin = NA,
 							 re_entity = NA) %>%
 				select_(.dots = bayr:::ParameterIDCols)
-
+			par_out <- bind_rows(par_out, par_re, par_ge)
+		}
 			par_out <-
-				bind_rows(par_fe, par_re, par_ge, par_disp) %>%
+				par_out %>%
 				right_join(parnames, by = c("parameter","type"))
 
 
