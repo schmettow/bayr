@@ -2,12 +2,15 @@
 % Please edit documentation in R/predicted_extraction.R
 \name{predict.tbl_post_pred}
 \alias{predict.tbl_post_pred}
+\alias{predict}
 \alias{predict.brmsfit}
 \alias{predict.stanreg}
 \title{Posterior predictions}
 \usage{
 \method{predict}{tbl_post_pred}(object, model = unique(object$model),
   scale = c("resp"), center = median, interval = 0.95, ...)
+
+predict(object, estimate = median, ...)
 
 \method{predict}{brmsfit}(object, center = median, ...)
 

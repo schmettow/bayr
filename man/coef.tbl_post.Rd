@@ -2,16 +2,19 @@
 % Please edit documentation in R/coefficient_extraction.R
 \name{coef.tbl_post}
 \alias{coef.tbl_post}
+\alias{coef}
 \alias{coef.data.frame}
 \alias{coef.MCMCglmm}
 \alias{coef.brmsfit}
 \alias{coef.stanfit}
 \alias{coef.stanreg}
+\alias{fixef}
 \alias{fixef.tbl_post}
 \alias{fixef.MCMCglmm}
 \alias{fixef.brmsfit}
 \alias{fixef.stanfit}
 \alias{fixef.stanreg}
+\alias{ranef}
 \alias{ranef.tbl_post}
 \alias{ranef.MCMCglmm}
 \alias{ranef.brmsfit}
@@ -30,6 +33,8 @@
   type = c("fixef", "disp", "grpef"), mean.func = identity,
   estimate = median, interval = 0.95, ...)
 
+coef(object, estimate = median, ...)
+
 \method{coef}{data.frame}(df, ...)
 
 \method{coef}{MCMCglmm}(object, estimate = median, ...)
@@ -40,6 +45,8 @@
 
 \method{coef}{stanreg}(object, estimate = median, ...)
 
+fixef(object, estimate = median, ...)
+
 \method{fixef}{tbl_post}(object, estimate = median, ...)
 
 \method{fixef}{MCMCglmm}(object, estimate = median, ...)
@@ -49,6 +56,8 @@
 \method{fixef}{stanfit}(object, estimate = median, ...)
 
 \method{fixef}{stanreg}(object, estimate = median, ...)
+
+ranef(object, estimate = median, ...)
 
 \method{ranef}{tbl_post}(object, estimate = median, ...)
 
