@@ -56,9 +56,18 @@ predict.tbl_post_pred <-
 		return(tbl_predicted)
 	}
 
+
+
 #' @rdname predict.tbl_post_pred
 #' @export
-#
+
+predict <-
+	function(object, estimate = median, ...) UseMethod("predict", object)
+
+
+#' @rdname predict.tbl_post_pred
+#' @export
+
 predict.brmsfit <-
 	function(object, center =  median, ...)
 		tbl_post_pred(object) %>% predict(center =  center, ...)
@@ -67,7 +76,7 @@ predict.brmsfit <-
 
 #' @rdname predict.tbl_post_pred
 #' @export
-#
+
 predict.stanreg <-
 	function(object, center =  median, ...)
 		tbl_post_pred(object) %>% predict(center =  center, ...)

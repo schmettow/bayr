@@ -65,6 +65,16 @@ coef.tbl_post <-
 		return(tbl_coef)
 	}
 
+
+#' @rdname coef.tbl_post
+#' @export
+
+
+coef <-
+	function(object, estimate = median, ...) UseMethod("coef", object)
+
+
+
 #' @rdname coef.tbl_post
 #' @export
 
@@ -112,6 +122,12 @@ coef.stanreg <-
 #' @rdname coef.tbl_post
 #' @export
 
+fixef <-
+	function(object, estimate = median, ...) UseMethod("fixef", object)
+
+#' @rdname coef.tbl_post
+#' @export
+
 fixef.tbl_post <-
 	function(object, estimate = median, ...)
 		coef(object, type = "fixef", estimate = estimate, ...)
@@ -147,6 +163,15 @@ fixef.stanreg <-
 		posterior(object) %>% fixef(estimate = estimate, ...)
 
 ############## RANEF ##############
+
+#' @rdname coef.tbl_post
+#' @export
+
+
+ranef <-
+	function(object, estimate = median, ...) UseMethod("ranef", object)
+
+
 
 #' @rdname coef.tbl_post
 #' @export
@@ -241,9 +266,14 @@ grpef.stanreg <-
 
 
 print.tbl_coef <-
-	function(x, digits = NULL, title = F, footnote = T, kable = bayr:::by_knitr()){
-		out <- mascutils::discard_all_na(x) %>%
-			mascutils::discard_redundant()
+	function(x, digits = NULL, title = F, footnote = T,
+					 kable = bayr:::by_knitr()){
+		out <- mascutils::discard_all_na(x)
+		if(nrow(out) > 1)	{
+			out <- mascutils::discard_redundant(out)}
+		else{
+			out <- select(out, -model, -type)
+		}
 		types <-
 			data_frame(type = c("fixef",
 													"ranef",
@@ -253,7 +283,9 @@ print.tbl_coef <-
 								 							 "random effects",
 								 							 "factor-level variation (sd)",
 								 							 "fitted values (linear predictor)"))
-		title_text <-
+		title_text <- ""
+		if(title)
+			title_text <-
 			types %>%
 			filter(type %in% attr(x, "type")) %>%
 			select(title_text) %>%
@@ -273,6 +305,7 @@ print.tbl_coef <-
 			cat("\n")
 			invisible(out)
 		}
+		return(out)
 	}
 
 

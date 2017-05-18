@@ -61,16 +61,10 @@ post_pred <-
 	}
 
 
-#' @rdname post_pred
-#' @export
-
 tbl_post_pred <-
 	function (model, ...) {
 		UseMethod("tbl_post_pred", model)
 	}
-
-#' @rdname post_pred
-#' @export
 
 print.tbl_post_pred <-
 	function(tbl_post_pred, kable = by_knitr(), ...){
@@ -97,9 +91,6 @@ print.tbl_post_pred <-
 	}
 
 
-#' @rdname post_pred
-#' @export
-
 tbl_post_pred.data.frame <-
 	## IDEA: write methods for
 	## - identifying user_annos (all user annos)
@@ -115,7 +106,7 @@ tbl_post_pred.data.frame <-
 
 
 
-tbl_post.generic <-
+tbl_post_pred.generic <-
 	function(sample_matrix){
 		out <-
 			sample_matrix %>%
@@ -136,24 +127,17 @@ tbl_post.generic <-
 		out
 	}
 
-#' @rdname post_pred
-#' @export
-
 tbl_post_pred.brmsfit <-
 	function(model, newdata = NULL, ...){
 		brms:::predict.brmsfit(model, newdata = newdata, summary = F) %>%
-			bayr:::tbl_post.generic()
+			bayr:::tbl_post_pred.generic()
 	}
-
-
-#' @rdname post_pred
-#' @export
 
 
 tbl_post_pred.stanreg <-
 	function(model, newdata = NULL, ...){
 		rstanarm::posterior_predict(model, newdata = newdata) %>%
-			bayr:::tbl_post.generic()
+			bayr:::tbl_post_pred.generic()
 	}
 
 
