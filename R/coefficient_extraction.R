@@ -264,8 +264,37 @@ grpef.stanreg <-
 #' @rdname coef.tbl_post
 #' @export
 
+print.tbl_coef <- function(x){
+	out <- mascutils::discard_all_na(x)
+	if(nrow(out) > 1)	{
+		out <- mascutils::discard_redundant(out)}
+	else if(out$fixef == "Intercept"){
+		out <- select(out, -model, -type)
+	} else {
+		out <- select(out, -model, -type)
+	}
+	print(out)
+	invisible(out)
+}
 
-print.tbl_coef <-
+
+#' @rdname coef.tbl_post
+#' @export
+
+knitr_print.tbl_coef <- function(x){
+	out <- mascutils::discard_all_na(x)
+	if(nrow(out) > 1)	{
+		out <- mascutils::discard_redundant(out)}
+	else if(out$fixef == "Intercept"){
+		out <- select(out, -model, -type)
+	} else {
+		out <- select(out, -model, -type)
+	}
+	knitr::asis_output(knitr::kable(out), digits = 3, row.names = F)
+}
+
+
+print.tbl_coef_EATME <-
 	function(x, digits = NULL, title = F, footnote = T,
 					 kable = bayr:::by_knitr()){
 		out <- mascutils::discard_all_na(x)
