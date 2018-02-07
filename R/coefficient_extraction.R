@@ -31,6 +31,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
 #' @importFrom stats coef median fitted quantile
+#' @importFrom knitr knit_print
 #' @export
 
 coef.tbl_post <-
@@ -39,7 +40,7 @@ coef.tbl_post <-
 					 type = c("fixef", "disp", "grpef"), ## maybe deprecate for ~filter
 					 mean.func = identity,
 					 estimate = median,
-					 interval = .95, ...) {
+					 interval = .95) {
 		lower <- (1-interval)/2
 		upper <- 1-((1-interval)/2)
 		partype <- type
@@ -66,12 +67,9 @@ coef.tbl_post <-
 	}
 
 
-#' @rdname coef.tbl_post
-#' @export
 
-
-coef <-
-	function(object, estimate = median, ...) UseMethod("coef", object)
+# coef <-
+#  	function(object, estimate = median, ...) UseMethod("coef", object)
 
 
 
@@ -264,34 +262,53 @@ grpef.stanreg <-
 #' @rdname coef.tbl_post
 #' @export
 
-print.tbl_coef <- function(x){
-	out <- mascutils::discard_all_na(x)
-	if(nrow(out) > 1)	{
-		out <- mascutils::discard_redundant(out)}
-	else if(out$fixef == "Intercept"){
-		out <- select(out, -model, -type)
+print.tbl_coef <- function(x, ...) {
+	tab <- x
+	if(nrow(tab) > 1)	{
+		tab <- mascutils::discard_redundant(tab)
+	} else if(tab$fixef[1] == "Intercept"){
+		#		warning("Intercept model")
+		tab <- select(tab, fixef, center, lower, upper)
 	} else {
-		out <- select(out, -model, -type)
+		tab <- mascutils::discard_all_na(x)
 	}
+	cap <-
+		paste0("estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	out <-
+		knitr::kable(tab, align = "c") %>%
+		kableExtra::kable_styling(full_width = F) %>%
+		kableExtra::add_footnote(c(cap), notation = "symbol")
 	print(out)
 	invisible(out)
 }
 
-
 #' @rdname coef.tbl_post
 #' @export
 
-knitr_print.tbl_coef <- function(x){
-	out <- mascutils::discard_all_na(x)
-	if(nrow(out) > 1)	{
-		out <- mascutils::discard_redundant(out)}
-	else if(out$fixef == "Intercept"){
-		out <- select(out, -model, -type)
+knit_print.tbl_coef <- function(x, ...) {
+	tab <- x
+	if(nrow(tab) > 1)	{
+		tab <- mascutils::discard_redundant(tab)
+	} else if(tab$fixef[1] == "Intercept"){
+		#		warning("Intercept model")
+		tab <- select(tab, fixef, center, lower, upper)
 	} else {
-		out <- select(out, -model, -type)
+		tab <- mascutils::discard_all_na(x)
 	}
-	knitr::asis_output(knitr::kable(out), digits = 3, row.names = F)
+	cap <-
+		paste0("estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	out <-
+		knitr::kable(tab, align = "c") %>%
+		kableExtra::kable_styling(full_width = F) %>%
+		kableExtra::add_footnote(c(cap), notation = "symbol")
+	print(out)
+	invisible(out)
 }
+
 
 
 print.tbl_coef_EATME <-

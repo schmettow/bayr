@@ -1,8 +1,8 @@
 Package: bayr
 Type: Package
 Title: tidy and unified reporting of Bayesian regression results
-Version: 0.8.4
-Date: 2017-05-17
+Version: 0.8.5
+Date: 2018-02-07
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
@@ -11,8 +11,9 @@ Description: This package aims at unifying tool set for reporting of
     from varios Bayesian implementations (currently: brms, rstanarm).
     Posterior distributions are stored in	a common annotated long format
     with classified parameters to facilitate further
-    processing with dplyr/tidyr and ggplot2. Basic summary functions
-    for coefficient tables are provided.
+    processing with dplyr/tidyr and ggplot2. Reporting functions
+    for posteriors, posterior predictions and coefficient tables are 
+    provided that integrate well with rmarkup documents.
 LazyData: TRUE
 License: GPL-3
 Suggests:

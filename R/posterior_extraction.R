@@ -1,7 +1,3 @@
-#library(dplyr)
-#library(tidyr)
-#library(stringr)
-
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value",
 																 "new_name", "iter", "pattern"))
@@ -37,6 +33,7 @@ AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols
 #'
 #' @author Martin Schmettow
 #' @import dplyr
+#' @importFrom knitr knit_print
 #' @export
 
 
@@ -129,7 +126,7 @@ print.tbl_post <-
 		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
 
 		if(kable){ ## prepared for knitr table output, not yet working
-			cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n")
+			cat("tbl_post: ", n_iter, " samples in ", n_chain, " chains\n\n")
 			cat("Effects: \n")
 			print(knitr::kable(effects))
 			cat("\nDispersion: \n")
@@ -150,6 +147,11 @@ print.tbl_post <-
 		}
 		invisible(tbl_post)
 	}
+
+
+#' @rdname posterior
+#' @export
+knit_print.tbl_post <- function(x, ...) print.tbl_post(x, kable = T)
 
 
 #' @rdname posterior

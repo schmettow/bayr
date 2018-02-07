@@ -4,6 +4,7 @@
 \alias{posterior}
 \alias{tbl_post}
 \alias{print.tbl_post}
+\alias{knit_print.tbl_post}
 \alias{tbl_post.data.frame}
 \alias{tbl_post.brmsfit}
 \alias{tbl_post.stanreg}
@@ -15,6 +16,8 @@ posterior(model, shape, ...)
 tbl_post(model, ...)
 
 \method{print}{tbl_post}(tbl_post, kable = by_knitr(), ...)
+
+\method{knit_print}{tbl_post}(x, ...)
 
 \method{tbl_post}{data.frame}(df, ...)
 
