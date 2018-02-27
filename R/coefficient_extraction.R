@@ -277,9 +277,7 @@ print.tbl_coef <- function(x, ...) {
 					 attr(x, "interval")*100,
 					 "% credibility limits")
 	out <-
-		knitr::kable(tab, align = "c") %>%
-		kableExtra::kable_styling(full_width = F) %>%
-		kableExtra::add_footnote(c(cap), notation = "symbol")
+		knitr::kable(tab, format = "markdown")
 	print(out)
 	invisible(out)
 }
@@ -302,7 +300,7 @@ knit_print.tbl_coef <- function(x, ...) {
 					 attr(x, "interval")*100,
 					 "% credibility limits")
 	out <-
-		knitr::kable(tab, align = "c") %>%
+		knitr::kable(tab, styling = "html") %>%
 		kableExtra::kable_styling(full_width = F) %>%
 		kableExtra::add_footnote(c(cap), notation = "symbol")
 	print(out)
