@@ -588,9 +588,10 @@ tbl_post_old.brmsfit <-
 
 tbl_post.stanreg <-
 	function(model, ...){
+		#model <- IPump$M_wkld
 		# model <- M_cue8_rstn
 		samples <-
-			rstanarm:::as.data.frame.stanreg(model) %>%
+			as.data.frame(model) %>%
 			as_data_frame() %>%
 			mutate(chain = NA,
 						 iter = row_number()) %>%
@@ -606,6 +607,7 @@ tbl_post.stanreg <-
 				stringr::str_detect(.$parameter, "sigma_resid") ~ "disp",
 				stringr::str_detect(.$parameter, "^b\\[.*\\]") ~ "ranef",
 				stringr::str_detect(.$parameter, "^Sigma\\[.*\\]") ~ "grpef",
+				stringr::str_detect(.$parameter, "^shape") ~ "shape",
 				TRUE ~ "fixef"),
 				order = row_number())
 
@@ -627,7 +629,16 @@ tbl_post.stanreg <-
 						 re_entity = NA) %>%
 			select_(.dots = bayr:::ParameterIDCols)
 
-		par_out <- bind_rows(par_fe, par_disp)
+		par_shape <-
+			parnames %>%
+			filter(type == "shape") %>%
+			mutate(nonlin = NA,
+						 fixef = NA,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+
+		par_out <- bind_rows(par_fe, par_disp, par_shape)
 		if("lmerMod" %in% class(model)) {
 			par_re <-
 				parnames %>%
@@ -644,17 +655,21 @@ tbl_post.stanreg <-
 				parnames %>%
 				filter(type == "grpef") %>%
 				tidyr::extract(parameter,
-											 into = c("re_factor", "fixef"),
-											 "^Sigma\\[(.+):(.+),(.+)\\]$",
+											 into = c("re_factor", "fixef", "fixef_2"),
+											 "^Sigma\\[(.+?):(.+),(.+)\\]$",
 											 remove = F) %>%
+				## pulling variance and correlations apart
+				mutate(fixef_2 = if_else(fixef_2 == "(Intercept)", "Intercept", fixef_2),
+							 type = if_else(fixef == fixef_2, "grpef", "corr")) %>%
 				mutate(nonlin = NA,
 							 re_entity = NA) %>%
-				select_(.dots = bayr:::ParameterIDCols)
+				select_(.dots = c(bayr:::ParameterIDCols, "fixef_2"))
 			par_out <- bind_rows(par_out, par_re, par_ge)
 		}
-			par_out <-
-				par_out %>%
-				right_join(parnames, by = c("parameter","type"))
+		par_out <-
+			parnames %>%
+			select(-type) %>%  ## necessary, because above, type is changed (grpef, corr)
+			left_join(par_out, by = c("parameter"))
 
 
 		## putting it back together

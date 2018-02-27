@@ -1,8 +1,8 @@
 Package: bayr
 Type: Package
 Title: tidy and unified reporting of Bayesian regression results
-Version: 0.8.5
-Date: 2018-02-07
+Version: 0.8.6
+Date: 2018-02-27
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
