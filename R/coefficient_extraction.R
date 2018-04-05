@@ -37,7 +37,7 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 coef.tbl_post <-
 	function(object,
 					 model = unique(object$model),
-					 type = c("fixef", "disp", "grpef"), ## maybe deprecate for ~filter
+					 type = c("fixef", "disp", "grpef", "shape"), ## maybe deprecate for ~filter
 					 mean.func = identity,
 					 estimate = median,
 					 interval = .95) {
@@ -49,7 +49,7 @@ coef.tbl_post <-
 			object %>%
 			filter(type %in% partype) %>%
 			mutate(value = mean.func(value)) %>%
-			group_by(model, type, nonlin, fixef, re_factor, re_entity, order) %>%
+			group_by(model, parameter, type, nonlin, fixef, re_factor, re_entity, order) %>%
 			summarize(center = estimate(value),
 								lower = quantile(value, lower),
 								upper = quantile(value, upper)) %>%
@@ -128,7 +128,8 @@ fixef <-
 
 fixef.tbl_post <-
 	function(object, estimate = median, ...)
-		coef(object, type = "fixef", estimate = estimate, ...)
+		coef(object, type = "fixef", estimate = estimate, ...) %>%
+	select(-parameter)
 
 #' @rdname coef.tbl_post
 #' @export
@@ -176,7 +177,8 @@ ranef <-
 
 ranef.tbl_post <-
 	function(object, estimate = median, ...)
-		coef(object, type = "ranef", estimate = estimate, ...)
+		coef(object, type = "ranef", estimate = estimate, ...) %>%
+	select(-parameter)
 
 
 #' @rdname coef.tbl_post
@@ -224,7 +226,8 @@ grpef <-
 
 grpef.tbl_post <-
 	function(object, estimate = median, ...)
-		coef(object, type = "grpef", estimate = estimate, ...)
+		coef(object, type = "grpef", estimate = estimate, ...) %>%
+	select(-parameter)
 
 
 #' @rdname coef.tbl_post
