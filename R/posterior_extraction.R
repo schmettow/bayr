@@ -41,7 +41,7 @@ posterior <-
 	function(model,
 					 shape = "long",
 					 thin = 1,
-					 type = c("fixef", "grpef", "ranef", "disp", "cor"),
+					 type = c("fixef", "grpef", "ranef", "disp", "shape","cor"),
 					 model_name = NA, ...){
 
 		if (!(shape %in%  c("wide", "long"))) warning("shape must be either wide or long")
@@ -60,7 +60,13 @@ posterior <-
 			post %>%
 			filter(!iter %% thin) %>%
 			filter(stringr::str_detect(type, type_regex)) %>%
-			arrange(chain, iter, type, parameter)
+			arrange(chain, iter, type, parameter) %>%
+			mutate(model = as.factor(model),
+						 parameter = as.factor(parameter),
+						 type = as.factor(type),
+						 fixef = as.factor(fixef),
+						 re_factor = as.factor(re_factor),
+						 re_entity = as.factor(re_entity))
 
 		## this prohibits model overwriting (tbl_post.data.frame), needs testing
 		if(any(is.na(out$model))) out$model = model_name
@@ -112,13 +118,18 @@ print.tbl_post <-
 			ungroup() %>%
 			mascutils::discard_all_na()
 
-		# corr <-
-		# 	tbl_post %>%
-		# 	filter(type == "corr") %>%
-		# 	distinct(type, re_factor, fixef_1, fixef_2,ranef_1, ranef_2)
+		cor <-
+			tbl_post %>%
+			filter(type == "cor") %>%
+			distinct(type, re_factor, fixef_1, fixef_2,ranef_1, ranef_2)
 
 		disp <-
 			filter(tbl_post, type == "disp") %>%
+			distinct(parameter) %>%
+			mascutils::discard_all_na()
+
+		shape <-
+			filter(tbl_post, type == "shape") %>%
 			distinct(parameter) %>%
 			mascutils::discard_all_na()
 
@@ -141,6 +152,12 @@ print.tbl_post <-
 
 			cat("\n** Dispersion: \n")
 			print.data.frame(disp, row.names = F)
+
+			cat("\n** Shape: \n")
+			print.data.frame(shape, row.names = F)
+
+			cat("\n** Correlations: \n")
+			print.data.frame(cor, row.names = F)
 
 			cat("\n** User annotations: \n", user_annos)
 
@@ -235,6 +252,8 @@ extr_brms_par <-
 tbl_post.brmsfit <-
 	function(model, ...){
 
+		#model = Chapter_GLM$M_exg
+
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
 			as_data_frame()
@@ -251,10 +270,17 @@ tbl_post.brmsfit <-
 			filter(!parameter %in% c("chain", "iter"))
 
 		type_patterns <-
-			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_",
-														 "^sigma", "^shape$", "^phi$", "^lp__", "^cor_"),
-								 type = c("fixef", "fixef", "grpef",
-								 				 "ranef", "disp", "disp", "disp","diag", "cor"))
+			tribble(~pattern,   ~type,
+							#"^b.",      "fixef",
+							"^b_",      "fixef",
+							"^sd_",     "grpef",
+							"^r_",      "ranef",
+							"^sigma",   "disp",
+							"^shape$",  "shape",
+							"^beta$",   "shape",
+							"^phi$",    "shape",
+							"^lp__",    "diag",
+							"^cor_",    "cor")
 
 		type_mapping <-
 			expand.grid(type = unique(type_patterns$type),
@@ -275,48 +301,22 @@ tbl_post.brmsfit <-
 			distinct(parameter) %>%
 			full_join(type_mapping, by = "parameter") %>%
 			full_join(brms_pars, by = "parameter") %>%
-			# mutate(type = ifelse(!is.na(brms_type), brms.type, type)) %>%
-			# select(-pattern) %>%
 			distinct() %>%
-			# type.y is from brms_extr
-			#mutate(type = if_else(is.na(type.y), type.x, NA_character_)) #%>%
 			select_(.dots = bayr:::ParameterIDCols)
-			# mutate(parameter = stringr::str_replace(parameter,
-			# 																				"^sigma_(.*)", "sigma_resid")) %>%
-			# mutate(parameter = stringr::str_replace(parameter,
-			# 																				"^lp__(.*)", "lp__log_density")) %>%
-			# mutate(parameter = stringr::str_replace(parameter, pattern, "")) %>%
 
-		## we assume there is always at least one fixef,
-		## otherwise would be creating an empty par_samples_long to start with
-
-		# if(any(par_all$type == "fixef")){
-		# 	par_fe <-
-		# 		par_all %>%
-		# 		filter(type == "fixef") %>%
-		# 		tidyr::extract(parameter,
-		# 									 into = c("nonlin","fixef"),
-		# 									 "^b_(?:(.+)_)?+(.+)$",
-		# 									 fill = "left",
-		# 									 remove = F) %>%
-		# 		mutate(re_factor = NA,
-		# 					 re_entity = NA) %>%
-		# 		select_(.dots = ParameterIDCols)
-		# 	par_out <- par_fe
-		# }
 		par_out <-
 			filter(par_all, type %in% c("fixef", "grpef"))
 
 		#if(any(par_all$type == "disp", na.rm = T)){
-			par_disp <-
-				par_all %>%
-				filter(type == "disp") %>%
-				mutate(nonlin = NA,
-							 fixef = NA,
-							 re_factor = NA,
-							 re_entity = NA) %>%
-				select_(.dots = ParameterIDCols)
-			par_out <- bind_rows(par_out, par_disp)
+		par_disp <-
+			par_all %>%
+			filter(type == "disp") %>%
+			mutate(nonlin = NA,
+						 fixef = NA,
+						 re_factor = NA,
+						 re_entity = NA) %>%
+			select_(.dots = bayr:::ParameterIDCols)
+		par_out <- bind_rows(par_out, par_disp)
 		#}
 
 		if(any(par_all$type == "ranef", na.rm = T)){
@@ -339,30 +339,6 @@ tbl_post.brmsfit <-
 			par_out <- bind_rows(par_out, par_re)
 		}
 
-		# if(any(par_all$type == "grpef")){
-		# 	par_ge <-
-		# 		par_all %>%
-		# 		filter(type == "grpef") %>%
-		# 		tidyr::extract(parameter,
-		# 									 into = c("re_factor","coef"),
-		# 									 "^sd_(.+)__(.+)$",
-		# 									 remove = F) %>%
-		# 		tidyr::extract(coef,
-		# 									 into = c("nonlin","fixef"),
-		# 									 "^(?:(.*)_)?(.+)$",
-		# 									 fill = "right",
-		# 									 remove = F) %>%
-		# 		mutate(re_entity = NA) %>%
-		# 		select_(.dots = ParameterIDCols)
-		# 	par_out <- bind_rows(par_out, par_ge)
-		# }
-
-
-		## TODO: correlations,
-		## gives strange error "missing values where T/F needed"
-		## with Mathur_Repl_4
-
-		# if(any(par_all$type == "cor", na.rm = T)){
 			par_cor <-
 				par_all %>%
 				filter(type == "cor") %>%
@@ -370,11 +346,9 @@ tbl_post.brmsfit <-
 							 fixef = NA,
 							 re_factor = NA,
 							 re_entity = NA) %>%
-				select_(.dots = ParameterIDCols)
+				select_(.dots = bayr:::ParameterIDCols)
 			par_out <- bind_rows(par_out, par_cor)
-		#}
 
-		# if(any(par_all$type == "diag", na.rm = T)){
 			par_diag <-
 				par_all %>%
 				filter(type == "diag") %>%
@@ -382,17 +356,22 @@ tbl_post.brmsfit <-
 							 fixef = NA,
 							 re_factor = NA,
 							 re_entity = NA) %>%
-				select_(.dots = ParameterIDCols)
+				select_(.dots = bayr:::ParameterIDCols)
 			par_out <- bind_rows(par_out, par_diag)
-		#}
 
-		# par_out <-
-		# 	left_join(par_all,
-		# 						par_out,
-		# 						by = c("parameter", "type")) %>%
+			par_shape <-
+				par_all %>%
+				filter(type == "shape") %>%
+				mutate(nonlin = NA,
+							 fixef = NA,
+							 re_factor = NA,
+							 re_entity = NA) %>%
+				select_(.dots = bayr:::ParameterIDCols)
+			par_out <- bind_rows(par_out, par_shape)
+
 		par_out <-
 			par_out %>%
-			distinct_(.dots = ParameterIDCols) %>%
+			distinct_(.dots = bayr:::ParameterIDCols) %>%
 			full_join(par_order, by = "parameter")
 
 
@@ -403,9 +382,7 @@ tbl_post.brmsfit <-
 		out <-
 			full_join(samples_long, par_out, by = "parameter") %>%
 			mutate(model = NA) %>% #,
-			#re_factor = stringr::str_replace(re_factor, "_$", ""),
-			#nonlin = stringr::str_replace(nonlin, "_$", "")) %>%
-			select_(.dots = AllCols)
+			select_(.dots = bayr:::AllCols)
 
 
 

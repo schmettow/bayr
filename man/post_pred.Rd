@@ -13,9 +13,9 @@ post_pred(model, scale = "obs", model_name, thin)
 
 \item{model_name}{provides a name for the model}
 
-\item{thin}{thinning factor}
-
 \item{newdata}{new data to predict from}
+
+\item{thin}{thinning factor}
 }
 \value{
 tbl_postpred object with MCMC draws

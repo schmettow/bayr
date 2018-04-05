@@ -43,10 +43,11 @@ post_pred <-
 	function(model,
 					 scale = "obs",
 					 model_name = NA,
+					 newdata = NULL,
 					 thin = 1, ...){
 		if(is.na(model_name)) model_name <- deparse(substitute(model))
 
-		post <- tbl_post_pred(model, ...)
+		post <- tbl_post_pred(model, newdata = NULL, thin = thin, ...)
 
 		if(! all(as.character(bayr:::Cols_pp) %in% names(post)))
 			stop("not a valid tbl_post_pred")
@@ -62,7 +63,7 @@ post_pred <-
 
 
 tbl_post_pred <-
-	function (model, ...) {
+	function (model, newdata, thin) {
 		UseMethod("tbl_post_pred", model)
 	}
 
@@ -128,15 +129,20 @@ tbl_post_pred.generic <-
 	}
 
 tbl_post_pred.brmsfit <-
-	function(model, newdata = NULL, ...){
-		brms:::predict.brmsfit(model, newdata = newdata, summary = F) %>%
+	function(model, newdata, thin, ...){
+		n_iter <- brms::nsamples(model)
+		n_draws <- round(n_iter/thin, 0)
+		draws <- sort(sample.int(n_iter, n_draws, replace = F))
+		brms:::predict.brmsfit(model, newdata = newdata, subset = draws, summary = F) %>%
 			bayr:::tbl_post_pred.generic()
 	}
 
 
 tbl_post_pred.stanreg <-
-	function(model, newdata = NULL, ...){
-		rstanarm::posterior_predict(model, newdata = newdata) %>%
+	function(model, newdata, thin, ...){
+		n_iter <- sum(model$stanfit@sim$n_save)
+		n_draws <- round(n_iter/thin, 0)
+		rstanarm::posterior_predict(model, newdata = newdata, draws = n_draws) %>%
 			bayr:::tbl_post_pred.generic()
 	}
 

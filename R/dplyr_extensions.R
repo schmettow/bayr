@@ -23,7 +23,6 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @author Martin Schmettow
 #' @import dplyr
 #' @import tidyr
-#' @export
 
 mutate.tbl_post <-
 	function (.data, ..., .dots)
@@ -40,7 +39,7 @@ mutate.tbl_post <-
 # mymutate(D,s = x + y)
 
 
-#' @export
+
 #' @rdname mutate.tbl_post
 
 distinct.tbl_post <-
