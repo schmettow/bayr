@@ -73,17 +73,8 @@ print.tbl_post_pred <-
 		n_chain <- length(unique(tbl_post_pred$chain))
 		n_Obs <- length(unique(tbl_post_pred$Obs))
 		scales <- unique(tbl_post_pred$scale)
-
-		# if(kable){ ## prepared for knitr table output, not yet working
-		# 	cat("tbl_post_pred: ", n_iter, " samples in ", n_chain, " chains\n")
-		# 	cat("Effects: \n")
-		# 	print(knitr::kable(effects))
-		# 	cat("\nDispersion: \n")
-		# 	print(knitr::kable(disp))
-		# } else {
-		#
 		cat("** tbl_post_pred : ",
-				n_iter, " samples in ", n_chain, " chains\n** Observations :  ", n_Obs, "\n\n")
+				n_iter, " samples in ", n_chain, " chains\n** Observations:  ", n_Obs, "\n\n")
 
 		tbl_post_pred %>%
 			sample_n(5) %>% print.data.frame()
