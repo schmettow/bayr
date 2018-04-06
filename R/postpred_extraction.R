@@ -19,7 +19,7 @@ Cols_pp = list("model", "chain", "iter", "Obs", "scale", "value") ## columns for
 #' MCMC predicted values are  extracted from a Bayesian (regression) object
 #' and returned as a tbl_post_pred object
 #'
-#' @usage post_pred(model, scale = "obs", model_name, thin)
+#' @usage post_pred(model, scale = "obs", model_name, thin = 1)
 #' @param model Bayesian model object
 #' @param newdata new data to predict from
 #' @param scale "response" or "lin_pred"
@@ -63,23 +63,8 @@ post_pred <-
 
 
 tbl_post_pred <-
-	function (model, newdata, thin) {
+	function (model, ...) {
 		UseMethod("tbl_post_pred", model)
-	}
-
-print.tbl_post_pred <-
-	function(tbl_post_pred, kable = by_knitr(), ...){
-		n_iter <- length(unique(tbl_post_pred$iter))
-		n_chain <- length(unique(tbl_post_pred$chain))
-		n_Obs <- length(unique(tbl_post_pred$Obs))
-		scales <- unique(tbl_post_pred$scale)
-		cat("** tbl_post_pred : ",
-				n_iter, " samples in ", n_chain, " chains\n** Observations:  ", n_Obs, "\n\n")
-
-		tbl_post_pred %>%
-			sample_n(5) %>% print.data.frame()
-
-		invisible(tbl_post_pred)
 	}
 
 
@@ -123,8 +108,8 @@ tbl_post_pred.brmsfit <-
 	function(model, newdata, thin, ...){
 		n_iter <- brms::nsamples(model)
 		n_draws <- round(n_iter/thin, 0)
-		draws <- sort(sample.int(n_iter, n_draws, replace = F))
-		brms:::predict.brmsfit(model, newdata = newdata, subset = draws, summary = F) %>%
+		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
+		brms:::predict.brmsfit(model, newdata = newdata, nsamples = n_draws, summary = F) %>%
 			bayr:::tbl_post_pred.generic()
 	}
 
@@ -138,4 +123,19 @@ tbl_post_pred.stanreg <-
 	}
 
 
+
+print.tbl_post_pred <-
+	function(tbl_post_pred, kable = by_knitr(), ...){
+		n_iter <- length(unique(tbl_post_pred$iter))
+		n_chain <- length(unique(tbl_post_pred$chain))
+		n_Obs <- length(unique(tbl_post_pred$Obs))
+		scales <- unique(tbl_post_pred$scale)
+		cat("** tbl_post_pred : ",
+				n_iter, " samples in ", n_chain, " chains\n** Observations:  ", n_Obs, "\n\n")
+
+		tbl_post_pred %>%
+			sample_n(5) %>% print.data.frame()
+
+		invisible(tbl_post_pred)
+	}
 
