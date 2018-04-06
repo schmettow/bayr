@@ -276,13 +276,13 @@ print.tbl_coef <- function(x, ...) {
 		tab <- mascutils::discard_all_na(x)
 	}
 	cap <-
-		paste0("estimates with ",
+		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
 	out <-
-		knitr::kable(tab, format = "markdown")
+		knitr::kable(tab, caption = cap)
 	print(out)
-	invisible(out)
+	invisible(tab)
 }
 
 #' @rdname coef.tbl_post
@@ -299,15 +299,12 @@ knit_print.tbl_coef <- function(x, ...) {
 		tab <- mascutils::discard_all_na(x)
 	}
 	cap <-
-		paste0("estimates with ",
+		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
-	out <-
-		knitr::kable(tab, styling = "html") %>%
-		kableExtra::kable_styling(full_width = F) %>%
-		kableExtra::add_footnote(c(cap), notation = "symbol")
+	out <-	knitr::kable(tab, caption = cap)
 	print(out)
-	invisible(out)
+	invisible(tab)
 }
 
 
