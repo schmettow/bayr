@@ -309,6 +309,7 @@ knit_print.tbl_coef <- function(x, ...) {
 
 
 
+
 print.tbl_coef_EATME <-
 	function(x, digits = NULL, title = F, footnote = T,
 					 kable = bayr:::by_knitr()){
