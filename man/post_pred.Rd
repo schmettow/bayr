@@ -2,9 +2,15 @@
 % Please edit documentation in R/postpred_extraction.R
 \name{post_pred}
 \alias{post_pred}
+\alias{print.tbl_post_pred}
+\alias{knit_print.tbl_post_pred}
 \title{posterior predictive extraction}
 \usage{
-post_pred(model, scale = "obs", model_name, thin)
+post_pred(model, scale = "obs", model_name, thin = 1)
+
+\method{print}{tbl_post_pred}(x, ...)
+
+\method{knit_print}{tbl_post_pred}(x, ...)
 }
 \arguments{
 \item{model}{Bayesian model object}

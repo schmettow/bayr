@@ -14,12 +14,12 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #'
 #' summary table of predicted values from predictive posterior
 #'
-#' @param object tbl_post_pred object holding the predictive posterior in long format
+#' @param x regression model or tbl_postpred
 #' @param model model
 #' @param scale linpred or resp
 #' @param center function for computing the center estimate (median)
 #' @param interval credibility interval: .95
-#' @param ... ignored
+#' @param ... passing parameters to tbl_postpred (e.g. thin)
 #' @return coefficient table with center and interval estimates per obs
 #'
 #' The standard center function is the posterior median
@@ -30,8 +30,8 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @export
 
 predict.tbl_post_pred <-
-	function(object,
-					 model = unique(object$model),
+	function(x,
+					 model = unique(x$model),
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...) {
@@ -39,13 +39,13 @@ predict.tbl_post_pred <-
 		upper <- 1-((1-interval)/2)
 
 		tbl_predicted <-
-			object %>%
-			group_by(Obs) %>%
+			x %>%
+			group_by(model, Obs) %>%
 			summarize(center = center(value),
 								lower = quantile(value, lower),
 								upper = quantile(value, upper)) %>%
 			ungroup() %>%
-			arrange(Obs)
+			arrange(Obs, model)
 
 		class(tbl_predicted) <- append("tbl_predicted",
 																	 class(tbl_predicted))
@@ -53,6 +53,7 @@ predict.tbl_post_pred <-
 		attr(tbl_predicted, "interval") <- interval
 		attr(tbl_predicted, "lower") <- lower
 		attr(tbl_predicted, "upper") <- upper
+		attr(tbl_predicted, "scale") <- scale
 		return(tbl_predicted)
 	}
 
@@ -62,15 +63,19 @@ predict.tbl_post_pred <-
 #' @export
 
 predict <-
-	function(object, estimate = median, ...) UseMethod("predict", object)
+	function(x, ...) UseMethod("predict", x)
 
 
 #' @rdname predict.tbl_post_pred
 #' @export
 
 predict.brmsfit <-
-	function(object, center =  median, ...)
-		tbl_post_pred(object) %>% predict(center =  center, ...)
+	function(x,
+					 model = unique(x$model),
+					 scale = c("resp"),
+					 center =  median,
+					 interval = .95, ...)
+		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
 
 
 
@@ -78,16 +83,61 @@ predict.brmsfit <-
 #' @export
 
 predict.stanreg <-
-	function(object, center =  median, ...)
-		tbl_post_pred(object) %>% predict(center =  center, ...)
+	function(x,
+					 model = unique(x$model),
+					 scale = c("resp"),
+					 center =  median,
+					 interval = .95, ...)
+		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
+
+
+#' @rdname predict.tbl_post_pred
+#' @export
+
+knit_print.tbl_predicted <- function(x, ...) {
+	n_obs <- length(unique(x$Obs))
+	cap <-
+		stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+					 attr(x, "interval")*100, "% credibility limits (five shown below)")
+	out <-	x %>%
+		sample_n(5) %>%
+		arrange(Obs, model) %>%
+		mascutils::discard_redundant() %>%
+		knitr::kable(caption = cap)
+
+	print(out)
+	invisible(x)
+}
+
+
+#' @rdname predict.tbl_post_pred
+#' @export
+
+
+print.tbl_predicted <- function(x, ...) {
+	n_obs <- length(unique(x$Obs))
+	cap <-
+		stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+									 attr(x, "interval")*100, "% credibility limits (five shown below)")
+	tab <-	x %>%
+		arrange(Obs, model) %>%
+		mascutils::discard_redundant() %>%
+		sample_n(5)
+
+	cat("** ", cap, "\n")
+	print.data.frame(tab)
+	invisible(x)
+}
+
+
 
 
 # predicted.MCMCglmm <-
-# 	function(object, center =  median, ...)
-# 		tbl_post_pred(object) %>% coef(center =  estimate, ...)
+# 	function(x, center =  median, ...)
+# 		tbl_post_pred(x) %>% coef(center =  estimate, ...)
 
 
 # predicted.stanfit <-
-# 	function(object, center =  median, ...)
-# 		tbl_post_pred(object) %>% coef(center =  estimate, ...)
+# 	function(x, center =  median, ...)
+# 		tbl_post_pred(x) %>% coef(center =  estimate, ...)
 
