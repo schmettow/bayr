@@ -82,13 +82,12 @@ predict.brmsfit <-
 #' @rdname predict.tbl_post_pred
 #' @export
 
-predict.stanreg <-
-	function(x,
-					 model = unique(x$model),
-					 scale = c("resp"),
-					 center =  median,
-					 interval = .95, ...)
-		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
+predict.stanreg <-	function(x,
+														model = unique(x$model),
+														scale = c("resp"),
+														center =  median,
+														interval = .95, ...)
+	tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
 
 
 #' @rdname predict.tbl_post_pred
@@ -128,8 +127,6 @@ print.tbl_predicted <- function(x, ...) {
 	print.data.frame(tab)
 	invisible(x)
 }
-
-
 
 
 # predicted.MCMCglmm <-

@@ -155,8 +155,8 @@ knit_print.tbl_post_pred <-
 		n_Obs <- length(unique(x$Obs))
 		scales <- unique(x$scale)
 		cap <- stringr::str_c("posterior predictions: ",
-				n_iter, " samples in ", n_chain, " chains on ", n_Obs, " observations. (five shown below)")
-
+				n_iter, " samples in ", n_chain, " chains on ",
+				n_Obs, " observations. (five shown below)")
 		tab <- x %>%
 			sample_n(5) %>%
 			arrange(model, Obs, chain, iter) %>%
@@ -164,5 +164,4 @@ knit_print.tbl_post_pred <-
 		print(tab)
 		invisible(x)
 	}
-
 
