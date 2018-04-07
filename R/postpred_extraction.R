@@ -63,7 +63,7 @@ post_pred <-
 
 
 tbl_post_pred <-
-	function (model, ...) {
+	function (model, newdata = NULL, thin = 1,  ...) {
 		UseMethod("tbl_post_pred", model)
 	}
 
@@ -81,6 +81,24 @@ tbl_post_pred.data.frame <-
 		out
 	}
 
+
+tbl_post_pred.brmsfit <-
+	function(model, ...){
+		n_iter <- brms::nsamples(model)
+		n_draws <- round(n_iter/thin, 0)
+		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
+		brms:::predict.brmsfit(model, newdata = newdata, nsamples = n_draws, summary = F) %>%
+			bayr:::tbl_post_pred.generic()
+	}
+
+
+tbl_post_pred.stanreg <-
+	function(model, newdata = NULL, thin = 1, ...){
+		n_iter <- sum(model$stanfit@sim$n_save)
+		n_draws <- round(n_iter/thin, 0)
+		rstanarm::posterior_predict(model, newdata = newdata, draws = n_draws) %>%
+			bayr:::tbl_post_pred.generic()
+	}
 
 
 tbl_post_pred.generic <-
@@ -104,38 +122,42 @@ tbl_post_pred.generic <-
 		out
 	}
 
-tbl_post_pred.brmsfit <-
-	function(model, newdata, thin, ...){
-		n_iter <- brms::nsamples(model)
-		n_draws <- round(n_iter/thin, 0)
-		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
-		brms:::predict.brmsfit(model, newdata = newdata, nsamples = n_draws, summary = F) %>%
-			bayr:::tbl_post_pred.generic()
-	}
 
-
-tbl_post_pred.stanreg <-
-	function(model, newdata, thin, ...){
-		n_iter <- sum(model$stanfit@sim$n_save)
-		n_draws <- round(n_iter/thin, 0)
-		rstanarm::posterior_predict(model, newdata = newdata, draws = n_draws) %>%
-			bayr:::tbl_post_pred.generic()
-	}
-
+#' @rdname post_pred
+#' @export
 
 
 print.tbl_post_pred <-
-	function(tbl_post_pred, kable = by_knitr(), ...){
-		n_iter <- length(unique(tbl_post_pred$iter))
-		n_chain <- length(unique(tbl_post_pred$chain))
-		n_Obs <- length(unique(tbl_post_pred$Obs))
-		scales <- unique(tbl_post_pred$scale)
-		cat("** tbl_post_pred : ",
-				n_iter, " samples in ", n_chain, " chains\n** Observations:  ", n_Obs, "\n\n")
+	function(x, ...){
+		n_iter <- length(unique(x$iter))
+		n_chain <- length(unique(x$chain))
+		n_Obs <- length(unique(x$Obs))
+		scales <- unique(x$scale)
+		cap <- stringr::str_c("posterior predictions: ",
+													n_iter, " samples in ", n_chain, " chains on ", n_Obs, " observations. (five shown below)")
+		cat("**", cap, "\n\n")
 
-		tbl_post_pred %>%
+		x %>%
 			sample_n(5) %>% print.data.frame()
 
-		invisible(tbl_post_pred)
+		invisible(x)
 	}
+
+#' @rdname post_pred
+#' @export
+
+knitr_print.tbl_post_pred <-
+	function(x, ...){
+		n_iter <- nrow(distinct(x, iter, chain))
+		n_chain <- length(unique(x$chain))
+		n_Obs <- length(unique(x$Obs))
+		scales <- unique(x$scale)
+		cap <- stringr::str_c("posterior predictions: ",
+				n_iter, " samples in ", n_chain, " chains on", n_Obs, "Observations. (five shown below)")
+
+		tab <- x %>% sample_n(5) %>% kable(caption = cap)
+		print(tab)
+		invisible(x)
+	}
+
 

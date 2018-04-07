@@ -7,17 +7,19 @@
 \alias{predict.stanreg}
 \title{Posterior predictions}
 \usage{
-\method{predict}{tbl_post_pred}(object, model = unique(object$model),
+\method{predict}{tbl_post_pred}(x, model = unique(x$model),
   scale = c("resp"), center = median, interval = 0.95, ...)
 
-predict(object, estimate = median, ...)
+predict(x, ...)
 
-\method{predict}{brmsfit}(object, center = median, ...)
+\method{predict}{brmsfit}(x, model = unique(x$model), scale = c("resp"),
+  center = median, interval = 0.95, ...)
 
-\method{predict}{stanreg}(object, center = median, ...)
+\method{predict}{stanreg}(x, model = unique(x$model), scale = c("resp"),
+  center = median, interval = 0.95, ...)
 }
 \arguments{
-\item{object}{tbl_post_pred object holding the predictive posterior in long format}
+\item{x}{regression model or tbl_postpred}
 
 \item{model}{model}
 
@@ -27,7 +29,7 @@ predict(object, estimate = median, ...)
 
 \item{interval}{credibility interval: .95}
 
-\item{...}{ignored}
+\item{...}{passing parameters to tbl_postpred (e.g. thin)}
 }
 \value{
 coefficient table with center and interval estimates per obs

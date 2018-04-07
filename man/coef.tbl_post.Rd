@@ -30,7 +30,7 @@
 \title{Coefficient extraction}
 \usage{
 \method{coef}{tbl_post}(object, model = unique(object$model),
-  type = c("fixef", "disp", "grpef"), mean.func = identity,
+  type = c("fixef", "disp", "grpef", "shape"), mean.func = identity,
   estimate = median, interval = 0.95)
 
 \method{coef}{data.frame}(df, ...)

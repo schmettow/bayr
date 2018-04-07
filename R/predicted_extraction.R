@@ -14,12 +14,12 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #'
 #' summary table of predicted values from predictive posterior
 #'
-#' @param object tbl_post_pred object holding the predictive posterior in long format
+#' @param x regression model or tbl_postpred
 #' @param model model
 #' @param scale linpred or resp
 #' @param center function for computing the center estimate (median)
 #' @param interval credibility interval: .95
-#' @param ... ignored
+#' @param ... passing parameters to tbl_postpred (e.g. thin)
 #' @return coefficient table with center and interval estimates per obs
 #'
 #' The standard center function is the posterior median
@@ -30,8 +30,8 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @export
 
 predict.tbl_post_pred <-
-	function(object,
-					 model = unique(object$model),
+	function(x,
+					 model = unique(x$model),
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...) {
@@ -39,7 +39,7 @@ predict.tbl_post_pred <-
 		upper <- 1-((1-interval)/2)
 
 		tbl_predicted <-
-			object %>%
+			x %>%
 			group_by(Obs) %>%
 			summarize(center = center(value),
 								lower = quantile(value, lower),
@@ -62,15 +62,19 @@ predict.tbl_post_pred <-
 #' @export
 
 predict <-
-	function(object, estimate = median, ...) UseMethod("predict", object)
+	function(x, ...) UseMethod("predict", x)
 
 
 #' @rdname predict.tbl_post_pred
 #' @export
 
 predict.brmsfit <-
-	function(object, center =  median, ...)
-		tbl_post_pred(object) %>% predict(center =  center, ...)
+	function(x,
+					 model = unique(x$model),
+					 scale = c("resp"),
+					 center =  median,
+					 interval = .95, ...)
+		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
 
 
 
@@ -78,16 +82,20 @@ predict.brmsfit <-
 #' @export
 
 predict.stanreg <-
-	function(object, center =  median, ...)
-		tbl_post_pred(object) %>% predict(center =  center, ...)
+	function(x,
+					 model = unique(x$model),
+					 scale = c("resp"),
+					 center =  median,
+					 interval = .95, ...)
+		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
 
 
 # predicted.MCMCglmm <-
-# 	function(object, center =  median, ...)
-# 		tbl_post_pred(object) %>% coef(center =  estimate, ...)
+# 	function(x, center =  median, ...)
+# 		tbl_post_pred(x) %>% coef(center =  estimate, ...)
 
 
 # predicted.stanfit <-
-# 	function(object, center =  median, ...)
-# 		tbl_post_pred(object) %>% coef(center =  estimate, ...)
+# 	function(x, center =  median, ...)
+# 		tbl_post_pred(x) %>% coef(center =  estimate, ...)
 
