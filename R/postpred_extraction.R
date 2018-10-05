@@ -63,7 +63,7 @@ post_pred <-
 
 
 tbl_post_pred <-
-	function (model, newdata = NULL, thin = 1,  ...) {
+	function (model, ...) {
 		UseMethod("tbl_post_pred", model)
 	}
 
@@ -83,7 +83,7 @@ tbl_post_pred.data.frame <-
 
 
 tbl_post_pred.brmsfit <-
-	function(model, ...){
+	function(model, newdata = NULL, thin = 1, ...){
 		n_iter <- brms::nsamples(model)
 		n_draws <- round(n_iter/thin, 0)
 		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
@@ -122,46 +122,4 @@ tbl_post_pred.generic <-
 		out
 	}
 
-
-#' @rdname post_pred
-#' @export
-
-
-print.tbl_post_pred <-
-	function(x, ...){
-		n_iter <- length(unique(x$iter))
-		n_chain <- length(unique(x$chain))
-		n_Obs <- length(unique(x$Obs))
-		scales <- unique(x$scale)
-		cap <- stringr::str_c("posterior predictions: ",
-													n_iter, " samples in ", n_chain, " chains on ", n_Obs, " observations. (five shown below)")
-		cat("**", cap, "\n\n")
-
-		x %>%
-			sample_n(5) %>%
-			arrange(model, Obs, chain, iter) %>%
-			print.data.frame()
-
-		invisible(x)
-	}
-
-#' @rdname post_pred
-#' @export
-
-knit_print.tbl_post_pred <-
-	function(x, ...){
-		n_iter <- nrow(distinct(x, iter, chain))
-		n_chain <- length(unique(x$chain))
-		n_Obs <- length(unique(x$Obs))
-		scales <- unique(x$scale)
-		cap <- stringr::str_c("posterior predictions: ",
-				n_iter, " samples in ", n_chain, " chains on ",
-				n_Obs, " observations. (five shown below)")
-		tab <- x %>%
-			sample_n(5) %>%
-			arrange(model, Obs, chain, iter) %>%
-			knitr::kable(caption = cap)
-		print(tab)
-		invisible(x)
-	}
 

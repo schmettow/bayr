@@ -15,7 +15,6 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' summary table of predicted values from predictive posterior
 #'
 #' @param x regression model or tbl_postpred
-#' @param model model
 #' @param scale linpred or resp
 #' @param center function for computing the center estimate (median)
 #' @param interval credibility interval: .95
@@ -29,9 +28,9 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @importFrom stats median quantile predict
 #' @export
 
+
 predict.tbl_post_pred <-
 	function(x,
-					 model = unique(x$model),
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...) {
@@ -58,12 +57,13 @@ predict.tbl_post_pred <-
 	}
 
 
-
 #' @rdname predict.tbl_post_pred
 #' @export
 
+
 predict <-
 	function(x, ...) UseMethod("predict", x)
+
 
 
 #' @rdname predict.tbl_post_pred
@@ -71,11 +71,10 @@ predict <-
 
 predict.brmsfit <-
 	function(x,
-					 model = unique(x$model),
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...)
-		tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
+		tbl_post_pred(x, ...) %>% predict(scale, center, interval)
 
 
 
@@ -83,50 +82,11 @@ predict.brmsfit <-
 #' @export
 
 predict.stanreg <-	function(x,
-														model = unique(x$model),
 														scale = c("resp"),
 														center =  median,
 														interval = .95, ...)
-	tbl_post_pred(x, ...) %>% predict(model, scale, center, interval)
+	tbl_post_pred(x, ...) %>% predict(scale, center, interval)
 
-
-#' @rdname predict.tbl_post_pred
-#' @export
-
-knit_print.tbl_predicted <- function(x, ...) {
-	n_obs <- length(unique(x$Obs))
-	cap <-
-		stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
-					 attr(x, "interval")*100, "% credibility limits (five shown below)")
-	out <-	x %>%
-		sample_n(5) %>%
-		arrange(Obs, model) %>%
-		mascutils::discard_redundant() %>%
-		knitr::kable(caption = cap)
-
-	print(out)
-	invisible(x)
-}
-
-
-#' @rdname predict.tbl_post_pred
-#' @export
-
-
-print.tbl_predicted <- function(x, ...) {
-	n_obs <- length(unique(x$Obs))
-	cap <-
-		stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
-									 attr(x, "interval")*100, "% credibility limits (five shown below)")
-	tab <-	x %>%
-		arrange(Obs, model) %>%
-		mascutils::discard_redundant() %>%
-		sample_n(5)
-
-	cat("** ", cap, "\n")
-	print.data.frame(tab)
-	invisible(x)
-}
 
 
 # predicted.MCMCglmm <-

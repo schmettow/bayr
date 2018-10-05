@@ -5,8 +5,8 @@
 \alias{frm_coef}
 \title{coefficient formula}
 \usage{
-md_coef(tbl_coef, ..., row = NULL, center = T, interval = F, prefix = F,
-  round = 2, mean_fnc = identity, neg = F)
+md_coef(tbl_coef, ..., row = NULL, center = T, interval = F,
+  prefix = F, round = 2, mean_fnc = identity, neg = F)
 
 frm_coef(tbl_coef, ..., row = NULL, center = T, interval = T,
   prefix = F, round = 2, neg = F)
