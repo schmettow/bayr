@@ -1,6 +1,4 @@
-library(dplyr)
-library(tidyr)
-library(stringr)
+library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
@@ -31,51 +29,49 @@ print.tbl_coef <- function(x, ...) {
 	invisible(tab)
 }
 
-#' @rdname coef.tbl_post
-#' @export
 
-print.tbl_coef_EATME <-
-	function(x, digits = NULL, title = F, footnote = T,
-					 kable = bayr:::by_knitr()){
-		out <- mascutils::discard_all_na(x)
-		if(nrow(out) > 1)	{
-			out <- mascutils::discard_redundant(out)}
-		else{
-			out <- select(out, -model, -type)
-		}
-		types <-
-			data_frame(type = c("fixef",
-													"ranef",
-													"grpef",
-													"fitted"),
-								 title_text = c("fixed effects",
-								 							 "random effects",
-								 							 "factor-level variation (sd)",
-								 							 "fitted values (linear predictor)"))
-		title_text <- ""
-		if(title)
-			title_text <-
-			types %>%
-			filter(type %in% attr(x, "type")) %>%
-			select(title_text) %>%
-			as.character()
-
-		footnote_text <-
-			paste0("\n*\nestimate with ",
-						 attr(x, "interval")*100,
-						 "% credibility limits")
-
-		if(kable) { ## prepared for knitr table output, not yet working
-			print(knitr::kable(out, caption = title_text))
-		} else {
-			if(title) cat(stringr::str_c(title_text, sep = "|", collapse = T), "\n***\n")
-			print.data.frame(out, digits = 3, row.names = F)
-			if(footnote) cat(footnote_text)
-			cat("\n")
-			invisible(out)
-		}
-		return(out)
-	}
+# print.tbl_coef_EATME <-
+# 	function(x, digits = NULL, title = F, footnote = T,
+# 					 kable = bayr:::by_knitr()){
+# 		out <- mascutils::discard_all_na(x)
+# 		if(nrow(out) > 1)	{
+# 			out <- mascutils::discard_redundant(out)}
+# 		else{
+# 			out <- select(out, -model, -type)
+# 		}
+# 		types <-
+# 			data_frame(type = c("fixef",
+# 													"ranef",
+# 													"grpef",
+# 													"fitted"),
+# 								 title_text = c("fixed effects",
+# 								 							 "random effects",
+# 								 							 "factor-level variation (sd)",
+# 								 							 "fitted values (linear predictor)"))
+# 		title_text <- ""
+# 		if(title)
+# 			title_text <-
+# 			types %>%
+# 			filter(type %in% attr(x, "type")) %>%
+# 			select(title_text) %>%
+# 			as.character()
+#
+# 		footnote_text <-
+# 			paste0("\n*\nestimate with ",
+# 						 attr(x, "interval")*100,
+# 						 "% credibility limits")
+#
+# 		if(kable) { ## prepared for knitr table output, not yet working
+# 			print(knitr::kable(out, caption = title_text))
+# 		} else {
+# 			if(title) cat(stringr::str_c(title_text, sep = "|", collapse = T), "\n***\n")
+# 			print.data.frame(out, digits = 3, row.names = F)
+# 			if(footnote) cat(footnote_text)
+# 			cat("\n")
+# 			invisible(out)
+# 		}
+# 		return(out)
+# 	}
 
 
 #' @rdname posterior
@@ -133,7 +129,8 @@ prep_print_tbl_post <-
 		res$cor <-
 			tbl_post %>%
 			filter(type == "cor") %>%
-			distinct(type, re_factor, fixef_1, fixef_2,ranef_1, ranef_2)
+			distinct(parameter) %>%
+			mascutils::discard_all_na()
 
 		res$disp <-
 			filter(tbl_post, type == "disp") %>%
@@ -185,7 +182,8 @@ print.tbl_predicted <-
 		tab <-	x %>%
 			sample_n(5) %>%
 			arrange(Obs, model) %>%
-			mascutils::discard_redundant()
+			mascutils::discard_redundant() %>%
+			mascutils::discard_all_na()
 
 		cat("** ", cap, "\n")
 		print.data.frame(tab)
@@ -203,22 +201,24 @@ print.tbl_predicted <-
 
 knit_print.tbl_post <- function(x, ...) {
 	tbls <- bayr:::prep_print_tbl_post(x)
-	res <- paste0("\n** tbl_post: ", tbls$n_iter,
+	res <- paste0("\n\n** tbl_post: ", tbls$n_iter,
 								" samples in ", tbls$n_chain, " chains\n\n",
 								collapse ="\n")
 
-	if(nrow(tbls$effects)) res <- c(res, "\n\n", knitr::kable(tbls$effects,
-																														cap = "Coefficients"))
-	if(nrow(tbls$disp)) res <- c(res, "\n\n", knitr::kable(tbls$disp,
-																												 cap = "Dispersion"))
-	if(nrow(tbls$shape)) res <- c(res, "\n\n", knitr::kable(tbls$shape,
-																													cap = "Shape"))
-	if(nrow(tbls$cor)) res <- c(res, "\n\n", knitr::kable(tbls$cor,
-																												cap = "Correlations"))
+	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects,
+																														cap = "Coefficients"), "\n")
+	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp,
+																												 cap = "Dispersion"), "\n")
+	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape,
+																													cap = "Shape"), "\n")
+	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor,
+																												cap = "Correlations"), "\n")
 
-	res <- paste0(res, "\n\n", collapse = "\n")
-	knitr::asis_output(res)
-}
+	out <- paste0(res, collapse = "\n")
+
+	knitr::asis_output(out)
+
+	}
 
 
 
@@ -233,9 +233,10 @@ knit_print.tbl_coef <- function (x, ...)
 		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
-	tab = mascutils::discard_redundant(x)
+	tab = mascutils::discard_redundant(x) %>%
+		mascutils::discard_all_na()
 
-	res = paste(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
 							collapse = "\n")
 	knitr::asis_output(res)
 }
@@ -256,9 +257,10 @@ knit_print.tbl_post_pred <-
 		tab <- x %>%
 			sample_n(5) %>%
 			arrange(model, Obs, chain, iter) %>%
-			mascutils::discard_redundant()
+			mascutils::discard_redundant() %>%
+			mascutils::discard_all_na()
 
-		res = paste(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
+		res = paste0(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
 								collapse = "\n")
 		knitr::asis_output(res)
 	}
@@ -269,21 +271,20 @@ knit_print.tbl_post_pred <-
 
 knit_print.tbl_predicted <-
 	function(x, ...) {
-	n_obs <- length(unique(x$Obs))
-	cap <-
-		stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
-									 attr(x, "interval")*100, "% credibility limits (five shown below)")
+	n_obs <- nrow(x)
+	cap <- paste0(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+									 attr(x, "interval")*100, "% credibility limits (five shown below)", collapse = "")
 	tab <-	x %>%
 		sample_n(5) %>%
 		arrange(Obs, model) %>%
-		mascutils::discard_redundant()
+		mascutils::discard_redundant() %>%
+		mascutils::discard_all_na()
 
-	res = paste(c("", "", knitr::kable(tab, caption = cap, ...)), "\n\n",
-							collapse = "\n")
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, ...)), collapse = "\n")
 	knitr::asis_output(res)
 }
 
-
+# knit_print.tbl_predicted
 
 
 

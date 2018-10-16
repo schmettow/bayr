@@ -8,7 +8,6 @@
 \alias{tbl_post.data.frame}
 \alias{tbl_post.brmsfit}
 \alias{tbl_post.stanreg}
-\alias{tbl_post.MCMCglmm}
 \title{posterior extraction}
 \usage{
 \method{print}{tbl_post}(tbl_post, ...)
@@ -24,8 +23,6 @@ tbl_post(model, ...)
 \method{tbl_post}{brmsfit}(model, ...)
 
 \method{tbl_post}{stanreg}(model, ...)
-
-\method{tbl_post}{MCMCglmm}(model, ...)
 }
 \arguments{
 \item{model}{Bayesian model object}

@@ -4,7 +4,6 @@
 \alias{print.tbl_predicted}
 \alias{knit_print.tbl_predicted}
 \alias{predict.tbl_post_pred}
-\alias{predict}
 \alias{predict.brmsfit}
 \alias{predict.stanreg}
 \title{Posterior predictions}
@@ -15,8 +14,6 @@
 
 \method{predict}{tbl_post_pred}(x, scale = c("resp"), center = median,
   interval = 0.95, ...)
-
-predict(x, ...)
 
 \method{predict}{brmsfit}(x, scale = c("resp"), center = median,
   interval = 0.95, ...)
