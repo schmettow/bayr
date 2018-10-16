@@ -26,7 +26,6 @@
 \alias{grpef.stanfit}
 \alias{grpef.stanreg}
 \alias{print.tbl_coef}
-\alias{print.tbl_coef_EATME}
 \alias{knit_print.tbl_coef}
 \title{Coefficient extraction}
 \usage{
@@ -81,9 +80,6 @@ grpef(object, estimate = median, ...)
 \method{grpef}{stanreg}(object, estimate = median, ...)
 
 \method{print}{tbl_coef}(x, ...)
-
-\method{print}{tbl_coef_EATME}(x, digits = NULL, title = F,
-  footnote = T, kable = bayr:::by_knitr())
 
 \method{knit_print}{tbl_coef}(x, ...)
 }

@@ -1,3 +1,5 @@
+library(tidyverse)
+
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value",
 																 "new_name", "iter", "pattern"))
@@ -594,179 +596,179 @@ tbl_post.stanreg <-
 
 
 
-tbl_post.stanreg.old <-
-	function(model, ...){
-
-		## classifying parameters lm
-model <- M_cue8_rstn
-
-
-		if("lm" %in% class(model)) {
-			samples <-
-				rstanarm:::as.data.frame.stanreg(model) %>%
-				as_data_frame()
-
-			out <-
-				samples %>%
-				mutate(chain = NA,
-							 iter = row_number()) %>%
-				tidyr::gather("parameter", "value", -chain, -iter) %>%
-				left_join(data_frame(parameter = colnames(samples)) %>%
-										mutate(order = row_number(),
-													 type = ifelse(parameter %in% c("sigma","shape"),
-													 							"disp", "fixef")),
-									by = "parameter") %>%
-				mutate(parameter = stringr::str_replace(parameter,
-																								"\\(Intercept\\)", "Intercept"),
-							 parameter = stringr::str_replace(parameter,
-							 																 "sigma", "sigma_resid"))
-
-		}
-
-		## classifying parameters lmer
-
-		if("lmerMod" %in% class(model)) {
-			out <-
-				out %>%
-				mutate(type = case_when(
-					stringr::str_detect(parameter, "^b\\[.*\\]") ~ "ranef",
-					stringr::str_detect(parameter, "^Sigma\\[.*\\]") ~ "grpef",
-					TRUE ~ type))
-
-		}
-
-		## annotating parameters lm
-
-		par_all <-
-			out %>%
-			distinct(parameter, type)
-
-
-		par_fe <-
-			par_all %>%
-			filter(type == "fixef") %>%
-			mutate(nonlin = NA,
-						 fixef = parameter,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-		par_disp <-
-			par_all %>%
-			filter(type == "disp") %>%
-			mutate(nonlin = NA,
-						 fixef = NA,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = ParameterIDCols)
-
-		par_out <- bind_rows(par_fe, par_disp)
-
-		## annotating parameters lmer
-
-		if("lmerMod" %in% class(model)) {
-			par_re <-
-				par_all %>%
-				filter(type == "ranef") %>%
-				tidyr::extract(parameter,
-											 into = c("fixef", "re_factor", "re_entity"),
-											 "^b\\[(.+) (.+):(.+)\\]$",
-											 remove = F) %>%
-				mutate(nonlin = NA) %>%
-				select_(.dots = ParameterIDCols)
-
-			par_out <-
-				bind_rows(par_out, par_re)
-		}
-
-
-		if("lmerMod" %in% class(model)) {
-			par_ge <-
-				par_all %>%
-				filter(type == "grpef") %>%
-				tidyr::extract(parameter,
-											 into = c("re_entity", "fixef"),
-											 "^Sigma\\[(.+):(.+),(.+)\\]$",
-											 remove = F) %>%
-				mutate(nonlin = NA) %>%
-				select_(.dots = ParameterIDCols)
-
-			par_out <-
-				bind_rows(par_out, par_re, par_ge)
-		}
-
-		## putting it back together
-
-		out <-
-			par_out %>%
-			right_join(out, by = c("parameter", "type")) %>%
-			mutate(model = NA) %>%
-			select_(.dots = AllCols)
-
-
-		class(out) <-
-			append("tbl_post", class(out))
-
-		return(out)
-	}
-
-
-
-
-#' @rdname posterior
-#' @export
-
-tbl_post.MCMCglmm <-
-	function(model, ...) {
-		warning("MCMCglmm is out-of-sync: parameter splitting not implemented. Class tbl_post_v1")
-		# building a parameter catalogue
-		parameters <-
-			bind_rows(data_frame(parameter = model$X@Dimnames[[2]],
-													 type = "fixef") %>%
-									mutate(new_name = stringr::str_replace(parameter,
-																												 "\\(Intercept\\)", "Intercept")),
-								data_frame(parameter = colnames(model$VCV),
-													 type = "grpef") %>%
-									mutate(new_name = stringr::str_replace(parameter,
-																												 "(.*)\\.(.*)", "\\2_\\1"),
-												 new_name = stringr::str_replace(parameter,
-												 																"entities", "resid"))
-			)
-		## extract random effects if these are present
-		if(!is.null(model$Z))	parameters <-
-			parameters %>%
-			bind_rows(data_frame(parameter = model$Z@Dimnames[[2]],
-													 type = "ranef") %>%
-									mutate(new_name = parameter))
-
-		parameters <-
-			parameters %>%
-			mutate(order = row_number())
-
-		fixed <-
-			as.data.frame(model$Sol) %>%
-			as_data_frame() %>%
-			mutate(iter = row_number()) %>%
-			tidyr::gather(parameter, value, -iter) %>%
-			mutate(parameter = as.character(parameter))
-
-		random <-
-			as.data.frame(model$VCV) %>%
-			as_data_frame() %>%
-			mutate(iter = row_number()) %>%
-			tidyr::gather(parameter, value, -iter) %>%
-			mutate(value = sqrt(value),
-						 parameter = as.character(parameter))
-
-		out <-
-			bind_rows(fixed, random) %>%
-			mutate(chain = as.factor(1)) %>%
-			full_join(parameters, by = "parameter") %>%
-			select(chain, iter, parameter = new_name, value, type, order)
-
-		class(out) <-
-			append("tbl_post_v1", class(out))
-
-
-		return(out)
-	}
+#' tbl_post.stanreg.old <-
+#' 	function(model, ...){
+#'
+#' 		## classifying parameters lm
+#' model <- M_cue8_rstn
+#'
+#'
+#' 		if("lm" %in% class(model)) {
+#' 			samples <-
+#' 				rstanarm:::as.data.frame.stanreg(model) %>%
+#' 				as_data_frame()
+#'
+#' 			out <-
+#' 				samples %>%
+#' 				mutate(chain = NA,
+#' 							 iter = row_number()) %>%
+#' 				tidyr::gather("parameter", "value", -chain, -iter) %>%
+#' 				left_join(data_frame(parameter = colnames(samples)) %>%
+#' 										mutate(order = row_number(),
+#' 													 type = ifelse(parameter %in% c("sigma","shape"),
+#' 													 							"disp", "fixef")),
+#' 									by = "parameter") %>%
+#' 				mutate(parameter = stringr::str_replace(parameter,
+#' 																								"\\(Intercept\\)", "Intercept"),
+#' 							 parameter = stringr::str_replace(parameter,
+#' 							 																 "sigma", "sigma_resid"))
+#'
+#' 		}
+#'
+#' 		## classifying parameters lmer
+#'
+#' 		if("lmerMod" %in% class(model)) {
+#' 			out <-
+#' 				out %>%
+#' 				mutate(type = case_when(
+#' 					stringr::str_detect(parameter, "^b\\[.*\\]") ~ "ranef",
+#' 					stringr::str_detect(parameter, "^Sigma\\[.*\\]") ~ "grpef",
+#' 					TRUE ~ type))
+#'
+#' 		}
+#'
+#' 		## annotating parameters lm
+#'
+#' 		par_all <-
+#' 			out %>%
+#' 			distinct(parameter, type)
+#'
+#'
+#' 		par_fe <-
+#' 			par_all %>%
+#' 			filter(type == "fixef") %>%
+#' 			mutate(nonlin = NA,
+#' 						 fixef = parameter,
+#' 						 re_factor = NA,
+#' 						 re_entity = NA) %>%
+#' 			select_(.dots = ParameterIDCols)
+#'
+#' 		par_disp <-
+#' 			par_all %>%
+#' 			filter(type == "disp") %>%
+#' 			mutate(nonlin = NA,
+#' 						 fixef = NA,
+#' 						 re_factor = NA,
+#' 						 re_entity = NA) %>%
+#' 			select_(.dots = ParameterIDCols)
+#'
+#' 		par_out <- bind_rows(par_fe, par_disp)
+#'
+#' 		## annotating parameters lmer
+#'
+#' 		if("lmerMod" %in% class(model)) {
+#' 			par_re <-
+#' 				par_all %>%
+#' 				filter(type == "ranef") %>%
+#' 				tidyr::extract(parameter,
+#' 											 into = c("fixef", "re_factor", "re_entity"),
+#' 											 "^b\\[(.+) (.+):(.+)\\]$",
+#' 											 remove = F) %>%
+#' 				mutate(nonlin = NA) %>%
+#' 				select_(.dots = ParameterIDCols)
+#'
+#' 			par_out <-
+#' 				bind_rows(par_out, par_re)
+#' 		}
+#'
+#'
+#' 		if("lmerMod" %in% class(model)) {
+#' 			par_ge <-
+#' 				par_all %>%
+#' 				filter(type == "grpef") %>%
+#' 				tidyr::extract(parameter,
+#' 											 into = c("re_entity", "fixef"),
+#' 											 "^Sigma\\[(.+):(.+),(.+)\\]$",
+#' 											 remove = F) %>%
+#' 				mutate(nonlin = NA) %>%
+#' 				select_(.dots = ParameterIDCols)
+#'
+#' 			par_out <-
+#' 				bind_rows(par_out, par_re, par_ge)
+#' 		}
+#'
+#' 		## putting it back together
+#'
+#' 		out <-
+#' 			par_out %>%
+#' 			right_join(out, by = c("parameter", "type")) %>%
+#' 			mutate(model = NA) %>%
+#' 			select_(.dots = AllCols)
+#'
+#'
+#' 		class(out) <-
+#' 			append("tbl_post", class(out))
+#'
+#' 		return(out)
+#' 	}
+#'
+#'
+#'
+#'
+#' #' @rdname posterior
+#' #' @export
+#'
+#' tbl_post.MCMCglmm <-
+#' 	function(model, ...) {
+#' 		warning("MCMCglmm is out-of-sync: parameter splitting not implemented. Class tbl_post_v1")
+#' 		# building a parameter catalogue
+#' 		parameters <-
+#' 			bind_rows(data_frame(parameter = model$X@Dimnames[[2]],
+#' 													 type = "fixef") %>%
+#' 									mutate(new_name = stringr::str_replace(parameter,
+#' 																												 "\\(Intercept\\)", "Intercept")),
+#' 								data_frame(parameter = colnames(model$VCV),
+#' 													 type = "grpef") %>%
+#' 									mutate(new_name = stringr::str_replace(parameter,
+#' 																												 "(.*)\\.(.*)", "\\2_\\1"),
+#' 												 new_name = stringr::str_replace(parameter,
+#' 												 																"entities", "resid"))
+#' 			)
+#' 		## extract random effects if these are present
+#' 		if(!is.null(model$Z))	parameters <-
+#' 			parameters %>%
+#' 			bind_rows(data_frame(parameter = model$Z@Dimnames[[2]],
+#' 													 type = "ranef") %>%
+#' 									mutate(new_name = parameter))
+#'
+#' 		parameters <-
+#' 			parameters %>%
+#' 			mutate(order = row_number())
+#'
+#' 		fixed <-
+#' 			as.data.frame(model$Sol) %>%
+#' 			as_data_frame() %>%
+#' 			mutate(iter = row_number()) %>%
+#' 			tidyr::gather(parameter, value, -iter) %>%
+#' 			mutate(parameter = as.character(parameter))
+#'
+#' 		random <-
+#' 			as.data.frame(model$VCV) %>%
+#' 			as_data_frame() %>%
+#' 			mutate(iter = row_number()) %>%
+#' 			tidyr::gather(parameter, value, -iter) %>%
+#' 			mutate(value = sqrt(value),
+#' 						 parameter = as.character(parameter))
+#'
+#' 		out <-
+#' 			bind_rows(fixed, random) %>%
+#' 			mutate(chain = as.factor(1)) %>%
+#' 			full_join(parameters, by = "parameter") %>%
+#' 			select(chain, iter, parameter = new_name, value, type, order)
+#'
+#' 		class(out) <-
+#' 			append("tbl_post_v1", class(out))
+#'
+#'
+#' 		return(out)
+#' 	}

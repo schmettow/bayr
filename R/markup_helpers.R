@@ -1,6 +1,4 @@
-library(dplyr)
-library(tidyr)
-library(stringr)
+library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
@@ -31,8 +29,6 @@ print.tbl_coef <- function(x, ...) {
 	invisible(tab)
 }
 
-#' @rdname coef.tbl_post
-#' @export
 
 print.tbl_coef_EATME <-
 	function(x, digits = NULL, title = F, footnote = T,
@@ -133,7 +129,8 @@ prep_print_tbl_post <-
 		res$cor <-
 			tbl_post %>%
 			filter(type == "cor") %>%
-			distinct(type, re_factor, fixef_1, fixef_2,ranef_1, ranef_2)
+			distinct(parameter) %>%
+			mascutils::discard_all_na()
 
 		res$disp <-
 			filter(tbl_post, type == "disp") %>%
@@ -185,7 +182,8 @@ print.tbl_predicted <-
 		tab <-	x %>%
 			sample_n(5) %>%
 			arrange(Obs, model) %>%
-			mascutils::discard_redundant()
+			mascutils::discard_redundant() %>%
+			mascutils::discard_all_na()
 
 		cat("** ", cap, "\n")
 		print.data.frame(tab)
@@ -233,7 +231,9 @@ knit_print.tbl_coef <- function (x, ...)
 		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
-	tab = mascutils::discard_redundant(x)
+	tab = mascutils::discard_redundant(x) %>%
+		mascutils::discard_redundant() %>%
+		mascutils::discard_all_na()
 
 	res = paste(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
 							collapse = "\n")
@@ -256,7 +256,8 @@ knit_print.tbl_post_pred <-
 		tab <- x %>%
 			sample_n(5) %>%
 			arrange(model, Obs, chain, iter) %>%
-			mascutils::discard_redundant()
+			mascutils::discard_redundant() %>%
+			mascutils::discard_all_na()
 
 		res = paste(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
 								collapse = "\n")
@@ -276,7 +277,8 @@ knit_print.tbl_predicted <-
 	tab <-	x %>%
 		sample_n(5) %>%
 		arrange(Obs, model) %>%
-		mascutils::discard_redundant()
+		mascutils::discard_redundant() %>%
+		mascutils::discard_all_na()
 
 	res = paste(c("", "", knitr::kable(tab, caption = cap, ...)), "\n\n",
 							collapse = "\n")
