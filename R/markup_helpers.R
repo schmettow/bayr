@@ -205,13 +205,13 @@ knit_print.tbl_post <- function(x, ...) {
 								" samples in ", tbls$n_chain, " chains\n\n",
 								collapse ="\n")
 
-	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects,
+	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects, format = "markdown",
 																														cap = "Coefficients"), "\n")
-	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp,
+	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp, format = "markdown",
 																												 cap = "Dispersion"), "\n")
-	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape,
+	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape, format = "markdown",
 																													cap = "Shape"), "\n")
-	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor,
+	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor, format = "markdown",
 																												cap = "Correlations"), "\n")
 
 	out <- paste0(res, collapse = "\n")
@@ -236,7 +236,7 @@ knit_print.tbl_coef <- function (x, ...)
 	tab = mascutils::discard_redundant(x) %>%
 		mascutils::discard_all_na()
 
-	res = paste0(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
 							collapse = "\n")
 	knitr::asis_output(res)
 }
@@ -260,7 +260,7 @@ knit_print.tbl_post_pred <-
 			mascutils::discard_redundant() %>%
 			mascutils::discard_all_na()
 
-		res = paste0(c("", "", knitr::kable(tab, caption = cap, ...), "\n\n"),
+		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
 								collapse = "\n")
 		knitr::asis_output(res)
 	}
@@ -280,7 +280,7 @@ knit_print.tbl_predicted <-
 		mascutils::discard_redundant() %>%
 		mascutils::discard_all_na()
 
-	res = paste0(c("", "", knitr::kable(tab, caption = cap, ...)), collapse = "\n")
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...)), collapse = "\n")
 	knitr::asis_output(res)
 }
 

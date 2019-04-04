@@ -151,7 +151,7 @@ extr_brms_par <-
 
 		if("Intercept" %in% pn_fe) {
 			pars <- pars %>% bind_rows(
-				data_frame(
+				tibble(
 					parameter = "b_Intercept",
 					type = "fixef",
 					nonlin =NA,
@@ -180,11 +180,11 @@ extr_brms_par <-
 tbl_post.brmsfit <-
 	function(model, ...){
 
-		#model = Chapter_GLM$M_exg
+		#model = M_1_b
 
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
-			as_data_frame()
+			as_tibble()
 
 		samples_long <-
 			samples %>%
@@ -193,7 +193,7 @@ tbl_post.brmsfit <-
 			mutate(parameter = as.character(parameter))
 
 		par_order <-
-			data_frame(parameter = colnames(samples)) %>%
+			tibble(parameter = colnames(samples)) %>%
 			mutate(order = row_number()) %>%
 			filter(!parameter %in% c("chain", "iter"))
 
@@ -326,7 +326,7 @@ tbl_post_old.brmsfit <-
 	function(model, ...){
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
-			as_data_frame()
+			as_tibble()
 
 		out <-
 			samples %>%
@@ -335,12 +335,12 @@ tbl_post_old.brmsfit <-
 			mutate(parameter = as.character(parameter))
 
 		par_order <-
-			data_frame(parameter = colnames(samples)) %>%
+			tibble(parameter = colnames(samples)) %>%
 			mutate(order = row_number()) %>%
 			filter(!parameter %in% c("chain", "iter"))
 
 		type_patterns <-
-			data_frame(pattern = c("^b.","^b_", "^sd_", "^r_",
+			tibble(pattern = c("^b.","^b_", "^sd_", "^r_",
 														 "^sigma", "^shape$", "^phi$", "^lp__", "^cor_"),
 								 type = c("fixef", "fixef", "grpef",
 								 				 "ranef", "disp", "disp", "disp","diag", "cor"))
@@ -497,7 +497,7 @@ tbl_post.stanreg <-
 		# model <- M_cue8_rstn
 		samples <-
 			as.data.frame(model) %>%
-			as_data_frame() %>%
+			as_tibble() %>%
 			mutate(chain = NA,
 						 iter = row_number()) %>%
 			tidyr::gather("parameter", "value", -chain, -iter) %>%
@@ -606,14 +606,14 @@ tbl_post.stanreg <-
 #' 		if("lm" %in% class(model)) {
 #' 			samples <-
 #' 				rstanarm:::as.data.frame.stanreg(model) %>%
-#' 				as_data_frame()
+#' 				as_tibble()
 #'
 #' 			out <-
 #' 				samples %>%
 #' 				mutate(chain = NA,
 #' 							 iter = row_number()) %>%
 #' 				tidyr::gather("parameter", "value", -chain, -iter) %>%
-#' 				left_join(data_frame(parameter = colnames(samples)) %>%
+#' 				left_join(tibble(parameter = colnames(samples)) %>%
 #' 										mutate(order = row_number(),
 #' 													 type = ifelse(parameter %in% c("sigma","shape"),
 #' 													 							"disp", "fixef")),
@@ -723,11 +723,11 @@ tbl_post.stanreg <-
 #' 		warning("MCMCglmm is out-of-sync: parameter splitting not implemented. Class tbl_post_v1")
 #' 		# building a parameter catalogue
 #' 		parameters <-
-#' 			bind_rows(data_frame(parameter = model$X@Dimnames[[2]],
+#' 			bind_rows(tibble(parameter = model$X@Dimnames[[2]],
 #' 													 type = "fixef") %>%
 #' 									mutate(new_name = stringr::str_replace(parameter,
 #' 																												 "\\(Intercept\\)", "Intercept")),
-#' 								data_frame(parameter = colnames(model$VCV),
+#' 								tibble(parameter = colnames(model$VCV),
 #' 													 type = "grpef") %>%
 #' 									mutate(new_name = stringr::str_replace(parameter,
 #' 																												 "(.*)\\.(.*)", "\\2_\\1"),
@@ -737,7 +737,7 @@ tbl_post.stanreg <-
 #' 		## extract random effects if these are present
 #' 		if(!is.null(model$Z))	parameters <-
 #' 			parameters %>%
-#' 			bind_rows(data_frame(parameter = model$Z@Dimnames[[2]],
+#' 			bind_rows(tibble(parameter = model$Z@Dimnames[[2]],
 #' 													 type = "ranef") %>%
 #' 									mutate(new_name = parameter))
 #'
@@ -747,14 +747,14 @@ tbl_post.stanreg <-
 #'
 #' 		fixed <-
 #' 			as.data.frame(model$Sol) %>%
-#' 			as_data_frame() %>%
+#' 			as_tibble() %>%
 #' 			mutate(iter = row_number()) %>%
 #' 			tidyr::gather(parameter, value, -iter) %>%
 #' 			mutate(parameter = as.character(parameter))
 #'
 #' 		random <-
 #' 			as.data.frame(model$VCV) %>%
-#' 			as_data_frame() %>%
+#' 			as_tibble() %>%
 #' 			mutate(iter = row_number()) %>%
 #' 			tidyr::gather(parameter, value, -iter) %>%
 #' 			mutate(value = sqrt(value),
