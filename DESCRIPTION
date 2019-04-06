@@ -1,8 +1,8 @@
 Package: bayr
 Type: Package
 Title: tidy and unified reporting of Bayesian regression results
-Version: 0.8.11
-Date: 2019-04-04
+Version: 0.8.12
+Date: 2019-04-06
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
@@ -27,4 +27,4 @@ Imports:
     nlme,
     tidyr,
     stringr
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

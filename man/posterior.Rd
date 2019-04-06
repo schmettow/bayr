@@ -5,7 +5,6 @@
 \alias{knit_print.tbl_post}
 \alias{posterior}
 \alias{tbl_post}
-\alias{tbl_post.data.frame}
 \alias{tbl_post.brmsfit}
 \alias{tbl_post.stanreg}
 \title{posterior extraction}
@@ -17,8 +16,6 @@
 posterior(model, shape, ...)
 
 tbl_post(model, ...)
-
-\method{tbl_post}{data.frame}(df, ...)
 
 \method{tbl_post}{brmsfit}(model, ...)
 
