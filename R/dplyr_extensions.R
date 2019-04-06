@@ -21,16 +21,16 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @import dplyr
 #' @import tidyr
 
-mutate.tbl_post <-
-	function (.data, ..., .dots)
-	{
-		print(class(.data))
-		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
-		dplyr:::mutate_impl(.data, dots)
-		out <- dplyr:::distinct_impl(.data, dots)
-		class(out)[2:length(class(out))]
-		out
-	}
+# mutate.tbl_post <-
+# 	function (.data, ..., .dots)
+# 	{
+# 		print(class(.data))
+# 		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
+# 		dplyr:::mutate_impl(.data, dots)
+# 		out <- dplyr:::distinct_impl(.data, dots)
+# 		class(out)[2:length(class(out))]
+# 		out
+# 	}
 #
 # D <- data_frame(x = 1:6, y = 3:8, z = 5:10)
 # mymutate(D,s = x + y)
@@ -42,7 +42,6 @@ mutate.tbl_post <-
 distinct.tbl_post <-
 	function (.data, ..., .dots)
 	{
-		print(class(.data))
 		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
 		out <- dplyr:::distinct_impl(.data, dots)
 		class(out)[2:length(class(out))]
