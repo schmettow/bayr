@@ -5,34 +5,34 @@ library(rstanarm)
 library(brms)
 library(mascutils)
 
-context("posterior extraction")
+context("creating parameter tables")
 
 load("M_1.Rda")
 
 M_1 <- list(M_1_s, M_1_b)
 
-test_that("low-level posterior extraction works without issues",{
-	expect_silent(bayr:::tbl_post.brmsfit(M_1_b))
+test_that("coef works without issues",{
+	expect_silent(bayr::fixef(P_1_b))
 	expect_silent(bayr:::tbl_post.stanreg(M_1_s))
 	expect_silent(bayr:::tbl_post(M_1_b))
 })
 
-test_that("user-level posterior extraction works without issues",{
-	expect_silent(P_1_b <<- bayr::posterior(M_1_b))
-	expect_silent(P_1_s <<- bayr::posterior(M_1_s))
-})
-
-
-test_that("posterior object inherits from tbl_df (dplyr)",{
-	expect_is(P_1_s, class = c("tbl_post", "tbl_df"))
-	expect_is(P_1_b, class = c("tbl_post", "tbl_df"))
-})
-
-test_that("posterior object print",{
-	expect_silent(bayr:::prep_print_tbl_post(P_1_s))
-	expect_output(bayr:::print.tbl_post(P_1_s), regexp = "tbl_post")
-	expect_silent(bayr:::knit_print.tbl_post(P_1_s))
-})
+# test_that("user-level posterior extraction works without issues",{
+# 	expect_silent(P_1_b <<- bayr::posterior(M_1_b))
+# 	expect_silent(P_1_s <<- bayr::posterior(M_1_s))
+# })
+#
+#
+# test_that("posterior object inherits from tbl_df (dplyr)",{
+# 	expect_is(P_1_s, class = c("tbl_post", "tbl_df"))
+# 	expect_is(P_1_b, class = c("tbl_post", "tbl_df"))
+# })
+#
+# test_that("posterior object print",{
+# 	expect_silent(bayr:::prep_print_tbl_post(P_1_s))
+# 	expect_output(bayr:::print.tbl_post(P_1_s), regexp = "tbl_post")
+# 	expect_silent(bayr:::knit_print.tbl_post(P_1_s))
+# })
 
 # test_that("posterior returns chain iter parameter value type order",{
 # 	expect_equal(P_$Stroop_1$brms %>% names(),
