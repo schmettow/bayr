@@ -80,6 +80,7 @@ print.tbl_coef <- function(x, ...) {
 print.tbl_post <-
 	## TODO: add formula and corr
 	function(tbl_post, ...){
+
 		tbls <- prep_print_tbl_post(tbl_post)
 		# frm <-
 		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
@@ -108,6 +109,9 @@ print.tbl_post <-
 
 prep_print_tbl_post <-
 	function(tbl_post){
+
+		#tbl_post <- P_1_s
+
 		res <- list()
 
 		res$n_iter <- length(unique(tbl_post$iter))
@@ -118,6 +122,7 @@ prep_print_tbl_post <-
 
 		res$effects <-
 			tbl_post %>%
+			as_tibble() %>%
 			filter(type %in% c("fixef", "ranef", "grpef")) %>%
 			distinct(model, parameter, type, fixef, nonlin, re_factor, re_entity) %>%
 			mutate(parameter = ifelse(type == "ranef", "", parameter)) %>%
@@ -128,19 +133,25 @@ prep_print_tbl_post <-
 
 		res$cor <-
 			tbl_post %>%
+			as_tibble() %>%
 			filter(type == "cor") %>%
 			distinct(parameter) %>%
 			mascutils::discard_all_na()
 
 		res$disp <-
-			filter(tbl_post, type == "disp") %>%
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type == "error") %>%
 			distinct(parameter) %>%
 			mascutils::discard_all_na()
 
 		res$shape <-
-			filter(tbl_post, type == "shape") %>%
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type == "shape") %>%
 			distinct(parameter) %>%
 			mascutils::discard_all_na()
+
 		res
 	}
 
