@@ -155,8 +155,8 @@ tbl_post.data.frame <-
 	## - keep attribute user_annos (keep user annos)
 	function(df, ...) {
 		if(! all(as.character(bayr:::AllCols) %in% names(df))) stop("not a valid tbl_post, some columns missing")
-		out = df
-		class(out) = append("tbl_post", class(out))
+		out <- df
+		class(out) <- append("tbl_post", class(out))
 		out
 	}
 

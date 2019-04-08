@@ -34,6 +34,13 @@ test_that("posterior object print",{
 	expect_silent(bayr:::knit_print.tbl_post(P_1_s))
 })
 
+test_that("extracting random scores",{
+	expect_silent(R_1 <<- re_scores(P_1_s, "Intercept", "Part"))
+	expect_s3_class(R_1, "tbl_post")
+})
+
+
+
 # test_that("posterior returns chain iter parameter value type order",{
 # 	expect_equal(P_$Stroop_1$brms %>% names(),
 # 							 c("chain","iter","parameter","value","type","order"))
