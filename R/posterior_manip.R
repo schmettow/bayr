@@ -16,7 +16,7 @@ AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols
 #'
 #' @usage re_scores(tbl_post, fixef, ranef)
 #' @param tbl_post posterior (tbl_post)
-#' @param re_factor random factor (char)
+#' @param type set type of coefficient (ranef)
 #' @return tbl_post
 #'
 #' Random coefficients are created as differences to the group mean.
@@ -33,15 +33,11 @@ AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols
 
 
 re_scores <-
-	function(tbl_post, re_factor){
-
-		#tbl_post <- P_1 %>% filter(iter < 3)
-
+	function(tbl_post, type = "ranef"){
 		tbl_ranef <-
 			tbl_post %>%
 			as_tibble() %>%
-			dplyr::filter(type == "ranef",
-										re_factor == re_factor)
+			dplyr::filter(type == "ranef")
 		#select(model, chain, iter, fixef, nonlin, re_factor, re_entity, value)
 
 		tbl_fixef <-
@@ -56,7 +52,7 @@ re_scores <-
 			dplyr::left_join(tbl_fixef,
 											 by = c("model", "chain", "iter", "fixef", "nonlin")) %>%
 			dplyr::mutate(value = fe_value + value,
-										type = "score") %>%
+										type = type) %>%
 			dplyr::select(-fe_value) %>%
 			bayr:::tbl_post.data.frame()
 
