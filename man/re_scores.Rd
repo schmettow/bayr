@@ -9,7 +9,7 @@ re_scores(tbl_post, fixef, ranef)
 \arguments{
 \item{tbl_post}{posterior (tbl_post)}
 
-\item{re_factor}{random factor (char)}
+\item{type}{set type of coefficient (ranef)}
 }
 \value{
 tbl_post
