@@ -2,9 +2,9 @@
 % Please edit documentation in R/posterior_manip.R
 \name{re_scores}
 \alias{re_scores}
-\title{total random effects scores}
+\title{absolute random effects scores}
 \usage{
-re_scores(tbl_post, fixef, ranef)
+re_scores(tbl_post)
 }
 \arguments{
 \item{tbl_post}{posterior (tbl_post)}
@@ -14,7 +14,7 @@ re_scores(tbl_post, fixef, ranef)
 \value{
 tbl_post
 
-Random coefficients are created as differences to the group mean.
+Random coefficients are estimated as differences to the population level coefficient.
 In some situations one needs the total (or absolute) score.
 
 Example: It is typical for psychometric settings to think of item and
@@ -22,7 +22,7 @@ person scores. An average person has an IQ of 100,
 but would have a zero in terms of random effects.
 }
 \description{
-sums over random effects and their respective population-level effects
+posterior distribution of absolute random effects
 }
 \author{
 Martin Schmettow

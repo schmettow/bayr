@@ -10,16 +10,16 @@ ParameterIDCols = list("parameter", "type", "nonlin", "fixef", "re_factor", "re_
 AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols), "value")
 
 
-#' total random effects scores
+#' absolute random effects scores
 #'
-#' sums over random effects and their respective population-level effects
+#' posterior distribution of absolute random effects
 #'
-#' @usage re_scores(tbl_post, fixef, ranef)
+#' @usage re_scores(tbl_post)
 #' @param tbl_post posterior (tbl_post)
 #' @param type set type of coefficient (ranef)
 #' @return tbl_post
 #'
-#' Random coefficients are created as differences to the group mean.
+#' Random coefficients are estimated as differences to the population level coefficient.
 #' In some situations one needs the total (or absolute) score.
 #'
 #' Example: It is typical for psychometric settings to think of item and
