@@ -2,6 +2,44 @@ library(tidyverse)
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
 
+################ MASCUTILS overloaded ###############################
+
+#' Removing redundant variables
+#'
+#' all variables that do not vary are discarded
+#'
+#' @param D data frame
+#' @param except vector of column names to keep
+#' @return data frame
+#'
+#' @export
+#' @author Martin Schmettow
+#' @importFrom mascutils discard_redundant
+
+discard_redundant.tbl_clu <- function(object, except = c())
+	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
+
+#' @rdname discard_redundant.tbl_clu
+#' @export
+discard_redundant.tbl_coef <- function(object, except = c())
+	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
+
+#' @rdname discard_redundant.tbl_clu
+#' @export
+discard_redundant.tbl_post_pred <- function(object, except = c())
+	as_tibble(object) %>% discard_redundant(except = c(except, "Obs","value"))
+
+#' @rdname discard_redundant.tbl_clu
+#' @export
+discard_redundant.tbl_predicted <- function(object, except = c())
+	as_tibble(object) %>% discard_redundant(except = c(except, "Obs", "center", "lower", "upper"))
+
+#' @rdname discard_redundant.tbl_clu
+#' @export
+discard_redundant.tbl_post <- function(object, except = c())
+	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "value"))
+
+
 
 ################ DPLYR overloaded ###############################
 
