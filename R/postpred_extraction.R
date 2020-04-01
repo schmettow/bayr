@@ -40,7 +40,7 @@ post_pred <-
 					 thin = 1, ...){
 		if(is.na(model_name)) model_name <- deparse(substitute(model))
 
-		post <- tbl_post_pred(model, newdata = NULL, thin = thin, ...)
+		post <- tbl_post_pred(model, newdata = newdata, thin = thin, ...)
 
 		if(! all(as.character(bayr:::Cols_pp) %in% names(post)))
 			stop("not a valid tbl_post_pred")
