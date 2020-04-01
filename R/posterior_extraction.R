@@ -247,10 +247,10 @@ tbl_post.brmsfit <-
 							"^b_",      "fixef",
 							"^sd_",     "grpef",
 							"^r_",      "ranef",
-							"^sigma",   "error",
-							"^shape$",  "error",
-							"^beta$",   "error",
-							"^phi$",    "error",
+							"^sigma",   "disp",
+							"^shape$",  "shape",
+							"^beta$",   "shape",
+							"^phi$",    "shape",
 							"^lp__",    "mcmc",
 							"^cor_",    "cor")
 
@@ -303,7 +303,7 @@ tbl_post.brmsfit <-
 				tidyr::extract(re_1,
 											 into = c("re_factor","nonlin"),
 											 "^(.+)(?:__(.+))$",
-											 fill = "left",
+											 #fill = "left",
 											 remove = F) %>%
 				## hotfix for when there is no nonlin
 				mutate(re_factor = ifelse(is.na(re_factor), re_1, re_factor)) %>%
