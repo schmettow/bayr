@@ -4,6 +4,128 @@ library(tidyverse)
 # utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
 
 
+
+
+
+################ CLU ###############################
+
+#' center-lower-upper table
+#'
+#' returns a summary table for estimates with median (center) and 95% limits'
+#' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
+#' @param model name of model
+#' @param type type of coefficient: fixef (grpef, ranef)
+#' @param mean.func function (identity)
+#' @param estimate function for computing the center estimate (posterior mode)
+#' @param interval credibility interval: .95
+#' @param ... ignored
+#' @return coefficient table with parameter name, estimate and interval.
+#' @author Martin Schmettow
+#' @import dplyr
+#' @importFrom nlme fixef
+#' @importFrom nlme ranef
+#' @importFrom stats coef median fitted quantile
+#' @importFrom knitr knit_print
+#' @export
+
+
+clu <-
+  	function(object, ...) UseMethod("clu", object)
+
+#' @rdname clu
+#' @export
+
+
+clu.tbl_post <-
+	function(object,
+					 model = unique(object$model),
+					 type = c("fixef", "ranef", "disp", "shape"),
+					 mean.func = identity,
+					 center = median,
+					 interval = .95) {
+		lower <- (1-interval)/2
+		upper <- 1-((1-interval)/2)
+		partype <- type
+
+		tbl_clu <-
+			object %>%
+			filter(type %in% partype) %>%
+			mutate(value = mean.func(value)) %>%
+			group_by(model, parameter, type, nonlin, fixef, re_factor, re_entity, order) %>%
+			summarize(center = center(value),
+								lower = quantile(value, lower),
+								upper = quantile(value, upper)) %>%
+			ungroup() %>%
+			arrange(model, order) %>%
+			select(-order)
+
+		class(tbl_clu) <- append("tbl_clu", class(tbl_clu))
+		attr(tbl_clu, "estimate") <- bquote(estimate)
+		attr(tbl_clu, "interval") <- interval
+		attr(tbl_clu, "lower") <- lower
+		attr(tbl_clu, "upper") <- upper
+		attr(tbl_clu, "type") <- type
+		return(tbl_clu)
+	}
+
+
+
+# clu_1.tbl_post <- function(tbl_post){
+# 	out <-
+# 		tbl_post %>%
+# 		group_by(parameter) %>%
+# 		summarize(center = median(value),
+# 							lower = quantile(value, .05, na.rm = T),
+# 							upper = quantile(value, .95, na.rm = T))
+# 	class(out) = append("tbl_clu", class(out))
+# 	out
+# }
+
+
+#' @rdname clu
+#' @export
+
+clu.data.frame <-
+	## dirty hack! partype columns not preserved
+	function(df, ...) {
+		if(! all(c("parameter", "center", "lower", "upper") %in% names(df))) stop("not a valid tbl_clu, some columns missing")
+		out = df
+		class(out) = append("tbl_clu", class(out))
+		out
+	}
+
+
+#' @rdname clu
+#' @export
+
+clu.MCMCglmm <-
+	function(object, ...)
+		tbl_post(object) %>% clu()
+
+#' @rdname clu
+#' @export
+
+clu.brmsfit <-
+	function(object, ...)
+		tbl_post(object) %>% clu()
+
+#' @rdname clu
+#' @export
+
+clu.stanfit <-
+	function(object, ...)
+		tbl_post(object) %>% clu()
+
+#' @rdname clu
+#' @export
+
+clu.stanreg <-
+	function(object, ...)
+		tbl_post(object) %>% clu()
+
+
+
+
 ################ COEF ###############################
 
 
@@ -15,7 +137,7 @@ library(tidyverse)
 #' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
 #' @param model model
 #' @param type type of coefficient: fixef (grpef, ranef)
-#' @param mean function (identity)
+#' @param mean.func function (identity)
 #' @param estimate function for computing the center estimate (posterior mode)
 #' @param interval credibility interval: .95
 #' @param ... ignored
@@ -34,7 +156,7 @@ library(tidyverse)
 coef.tbl_post <-
 	function(object,
 					 model = unique(object$model),
-					 type = c("fixef", "disp", "grpef", "shape"), ## maybe deprecate for ~filter
+					 type = c("fixef", "ranef"), ## maybe deprecate for ~filter
 					 mean.func = identity,
 					 estimate = median,
 					 interval = .95) {
@@ -89,6 +211,7 @@ coef.data.frame <-
 coef.MCMCglmm <-
 	function(object, estimate = median, ...)
 		tbl_post(object) %>% coef(estimate = estimate, ...)
+
 
 #' @rdname coef.tbl_post
 #' @export
@@ -157,6 +280,46 @@ fixef.stanfit <-
 fixef.stanreg <-
 	function(object, estimate = median, ...)
 		posterior(object) %>% fixef(estimate = estimate, ...)
+
+
+
+################ FIXEF MULTILEVEL ###############################
+
+#' Multi-level coefficient table
+#'
+#' produces a CLU table of population-level effects together with
+#' random effects standard deviation for all random factor levels.
+#'
+#' @param object tbl_post (brms, rstanarm) object holding the posterior in long format
+#' @param model model
+#' @param ... passed on to grpef and fixef
+#' @return coefficient table with standard deviations
+#'
+#'
+#' @author Martin Schmettow
+#' @import dplyr
+#' @export
+
+
+fixef_ml <-
+	function(object, ...){
+		model <- posterior(object)
+		T_grpef <-
+			grpef(model, ...) %>%
+			select(fixef, re_factor, SD = center) %>%
+			mutate(re_factor = str_c("SD_", re_factor)) %>%
+			spread(re_factor, SD)
+
+		bayr::fixef(model, ...)  %>%
+			left_join(T_grpef) %>%
+			mascutils::discard_redundant()
+	}
+
+
+
+
+
+
 
 ############## RANEF ##############
 
