@@ -29,9 +29,14 @@
 \alias{knit_print.tbl_coef}
 \title{Coefficient extraction}
 \usage{
-\method{coef}{tbl_post}(object, model = unique(object$model),
-  type = c("fixef", "disp", "grpef", "shape"), mean.func = identity,
-  estimate = median, interval = 0.95)
+\method{coef}{tbl_post}(
+  object,
+  model = unique(object$model),
+  type = c("fixef", "ranef"),
+  mean.func = identity,
+  estimate = median,
+  interval = 0.95
+)
 
 \method{coef}{data.frame}(df, ...)
 
@@ -90,13 +95,13 @@ grpef(object, estimate = median, ...)
 
 \item{type}{type of coefficient: fixef (grpef, ranef)}
 
+\item{mean.func}{function (identity)}
+
 \item{estimate}{function for computing the center estimate (posterior mode)}
 
 \item{interval}{credibility interval: .95}
 
 \item{...}{ignored}
-
-\item{mean}{function (identity)}
 }
 \value{
 coefficient table with parameter name, estimate and interval

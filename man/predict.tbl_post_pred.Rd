@@ -12,14 +12,11 @@
 
 \method{knit_print}{tbl_predicted}(x, ...)
 
-\method{predict}{tbl_post_pred}(x, scale = c("resp"), center = median,
-  interval = 0.95, ...)
+\method{predict}{tbl_post_pred}(x, scale = c("resp"), center = median, interval = 0.95, ...)
 
-\method{predict}{brmsfit}(x, scale = c("resp"), center = median,
-  interval = 0.95, ...)
+\method{predict}{brmsfit}(x, scale = c("resp"), center = median, interval = 0.95, ...)
 
-\method{predict}{stanreg}(x, scale = c("resp"), center = median,
-  interval = 0.95, ...)
+\method{predict}{stanreg}(x, scale = c("resp"), center = median, interval = 0.95, ...)
 }
 \arguments{
 \item{x}{regression model or tbl_postpred}
