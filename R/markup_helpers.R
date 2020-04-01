@@ -6,13 +6,13 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 
 #################### PRINT #######################
 
-#' @rdname coef.tbl_post
+#' @rdname clu
 #' @export
 
-print.tbl_coef <- function(x, ...) {
+print.tbl_clu <- function(x, ...) {
 	tab <- x
 	if(nrow(tab) > 1)	{
-		tab <- mascutils::discard_redundant(tab)
+		tab <- discard_redundant(tab)
 	} else if(tab$fixef[1] == "Intercept"){
 		#		warning("Intercept model")
 		tab <- select(tab, fixef, center, lower, upper)
@@ -30,12 +30,37 @@ print.tbl_coef <- function(x, ...) {
 }
 
 
+#' @rdname coef.tbl_post
+#' @export
+
+print.tbl_coef <- function(x, ...) {
+	tab <- x
+	if(nrow(tab) > 1)	{
+		tab <- discard_redundant(tab)
+	} else if(tab$fixef[1] == "Intercept"){
+		#		warning("Intercept model")
+		tab <- select(tab, fixef, center, lower, upper)
+	} else {
+		tab <- mascutils::discard_all_na(x)
+	}
+	cap <-
+		paste0("Estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	out <-
+		knitr::kable(tab, caption = cap)
+	print(out)
+	invisible(tab)
+}
+
+
+
 # print.tbl_coef_EATME <-
 # 	function(x, digits = NULL, title = F, footnote = T,
 # 					 kable = bayr:::by_knitr()){
 # 		out <- mascutils::discard_all_na(x)
 # 		if(nrow(out) > 1)	{
-# 			out <- mascutils::discard_redundant(out)}
+# 			out <- discard_redundant(out)}
 # 		else{
 # 			out <- select(out, -model, -type)
 # 		}
@@ -173,7 +198,7 @@ print.tbl_post_pred <-
 		cat("**", cap, "\n\n")
 
 		x %>%
-			sample_n(5) %>%
+			sample_n(min(n_Obs, 5)) %>%
 			arrange(model, Obs, chain, iter) %>%
 			print.data.frame()
 
@@ -186,14 +211,14 @@ print.tbl_post_pred <-
 
 print.tbl_predicted <-
 	function(x, ...) {
-		n_obs <- length(unique(x$Obs))
+		n_Obs <- length(unique(x$Obs))
 		cap <-
-			stringr::str_c(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+			stringr::str_c(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
 										 attr(x, "interval")*100, "% credibility limits (five shown below)")
 		tab <-	x %>%
-			sample_n(5) %>%
+			sample_n(min(n_Obs, 5)) %>%
 			arrange(Obs, model) %>%
-			mascutils::discard_redundant() %>%
+			discard_redundant() %>%
 			mascutils::discard_all_na()
 
 		cat("** ", cap, "\n")
@@ -233,6 +258,27 @@ knit_print.tbl_post <- function(x, ...) {
 
 
 
+#' @rdname clu
+#' @export
+
+
+
+knit_print.tbl_clu <- function (x, ...)
+{
+	cap =
+		paste0("Estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	tab = discard_redundant(x) %>%
+		mascutils::discard_all_na()
+
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
+							 collapse = "\n")
+	knitr::asis_output(res)
+}
+
+
+
 #' @rdname coef.tbl_post
 #' @export
 
@@ -244,7 +290,7 @@ knit_print.tbl_coef <- function (x, ...)
 		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
-	tab = mascutils::discard_redundant(x) %>%
+	tab = discard_redundant(x) %>%
 		mascutils::discard_all_na()
 
 	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
@@ -266,9 +312,9 @@ knit_print.tbl_post_pred <-
 													n_iter, " samples in ", n_chain, " chains on ",
 													n_Obs, " observations. (five shown below)")
 		tab <- x %>%
-			sample_n(5) %>%
+			sample_n(min(n_Obs, 5)) %>%
 			arrange(model, Obs, chain, iter) %>%
-			mascutils::discard_redundant() %>%
+			discard_redundant() %>%
 			mascutils::discard_all_na()
 
 		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
@@ -282,13 +328,13 @@ knit_print.tbl_post_pred <-
 
 knit_print.tbl_predicted <-
 	function(x, ...) {
-	n_obs <- nrow(x)
-	cap <- paste0(n_obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+	n_Obs <- nrow(x)
+	cap <- paste0(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
 									 attr(x, "interval")*100, "% credibility limits (five shown below)", collapse = "")
 	tab <-	x %>%
-		sample_n(5) %>%
+		sample_n(min(n_Obs, 5)) %>%
 		arrange(Obs, model) %>%
-		mascutils::discard_redundant() %>%
+		discard_redundant() %>%
 		mascutils::discard_all_na()
 
 	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...)), collapse = "\n")
