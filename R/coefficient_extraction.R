@@ -306,7 +306,7 @@ fixef_ml <-
 		model <- posterior(object)
 		T_grpef <-
 			grpef(model, ...) %>%
-			select(fixef, re_factor, SD = center) %>%
+			select(model, fixef, re_factor, SD = center) %>%
 			mutate(re_factor = str_c("SD_", re_factor)) %>%
 			spread(re_factor, SD)
 
