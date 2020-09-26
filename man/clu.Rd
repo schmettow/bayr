@@ -17,9 +17,8 @@ clu(object, ...)
 \method{clu}{tbl_post}(
   object,
   model = unique(object$model),
-  type = c("fixef", "ranef", "disp", "shape"),
   mean.func = identity,
-  center = median,
+  estimate = median,
   interval = 0.95
 )
 
@@ -44,16 +43,14 @@ clu(object, ...)
 
 \item{model}{name of model}
 
-\item{type}{type of coefficient: fixef (grpef, ranef)}
-
 \item{mean.func}{function (identity)}
 
-\item{interval}{credibility interval: .95}
-
 \item{estimate}{function for computing the center estimate (posterior mode)}
+
+\item{interval}{credibility interval: .95}
 }
 \value{
-coefficient table with parameter name, estimate and interval.
+CLU table (tbl_clu) with parameter name, estimate and interval.
 }
 \description{
 returns a summary table for estimates with median (center) and 95% limits'

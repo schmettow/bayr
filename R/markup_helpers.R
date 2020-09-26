@@ -1,7 +1,7 @@
-library(tidyverse)
+#library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
+
 
 
 #################### PRINT #######################
@@ -9,25 +9,47 @@ utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter
 #' @rdname clu
 #' @export
 
+# print.tbl_clu.old <- function(x, ...) {
+# 	tab <- x
+# 	if(nrow(tab) > 1)	{
+# 		tab <- discard_redundant(tab)
+# 	} else if(!is.null(tab$fixef) & tab$fixef[1] == "Intercept"){
+# 		#		warning("Intercept model")
+# 		tab <- select(tab, fixef, center, lower, upper)
+# 	} else {
+# 		tab <- mascutils::discard_all_na(x)
+# 	}
+# 	cap <-
+# 		paste0("Estimates with ",
+# 					 attr(x, "interval")*100,
+# 					 "% credibility limits")
+# 	out <-
+# 		knitr::kable(tab, caption = cap)
+# 	print(out)
+# 	invisible(tab)
+# }
+
 print.tbl_clu <- function(x, ...) {
-	tab <- x
-	if(nrow(tab) > 1)	{
-		tab <- discard_redundant(tab)
-	} else if(tab$fixef[1] == "Intercept"){
-		#		warning("Intercept model")
-		tab <- select(tab, fixef, center, lower, upper)
-	} else {
-		tab <- mascutils::discard_all_na(x)
-	}
+	cols <- c()
+	types <- unique(x$type)
+	if(length(unique(x$model)) > 1) cols <- union(cols, "model")
+	if("fixef" %in% types)          cols <- union(cols, "fixef")
+	if("grpef" %in% types)          cols <- union(cols, c("fixef", "re_factor"))
+	if("ranef" %in% types)          cols <- union(cols, c("fixef", "re_factor", "re_entity"))
+	if("disp"  %in% types)          cols <- union(cols, c("parameter","disp"))
+	cols <- c(cols, "center", "lower", "upper")
+	out <- x %>% select_(.dots = cols)
+	if(dim(out)[2] == 0) warning("Empty CLU table. Do you need to adjust filters applied to posterior object?")
 	cap <-
 		paste0("Estimates with ",
 					 attr(x, "interval")*100,
 					 "% credibility limits")
 	out <-
-		knitr::kable(tab, caption = cap)
+		knitr::kable(out, caption = cap)
 	print(out)
-	invisible(tab)
+	invisible(out)
 }
+
 
 
 #' @rdname coef.tbl_post
@@ -160,21 +182,21 @@ prep_print_tbl_post <-
 			tbl_post %>%
 			as_tibble() %>%
 			filter(type == "cor") %>%
-			distinct(parameter) %>%
+			distinct(model, parameter) %>%
 			mascutils::discard_all_na()
 
 		res$disp <-
 			tbl_post %>%
 			as_tibble() %>%
 			filter(type == "error") %>%
-			distinct(parameter) %>%
+			distinct(model, parameter) %>%
 			mascutils::discard_all_na()
 
 		res$shape <-
 			tbl_post %>%
 			as_tibble() %>%
 			filter(type == "shape") %>%
-			distinct(parameter) %>%
+			distinct(model, parameter) %>%
 			mascutils::discard_all_na()
 
 		res

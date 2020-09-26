@@ -1,12 +1,11 @@
-library(tidyverse)
+#library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value",
-																 "new_name", "iter", "pattern"))
+#utils::globalVariables(names = c("type", "parameter", "value",
+#																 "new_name", "iter", "pattern"))
 
-
-ParameterIDCols = list("parameter", "type", "nonlin", "fixef", "re_factor", "re_entity")
-AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols), "value")
+ParameterIDCols = c("parameter", "type", "nonlin", "fixef", "re_factor", "re_entity")
+AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 
 
 #' posterior extraction
@@ -44,7 +43,7 @@ posterior <-
 					 shape = "long",
 					 thin = 1,
 					 type = c("fixef", "grpef", "ranef", "disp", "shape","cor"),
-					 model_name = NA, ...){
+					 model_name = NA_character_, ...){
 
 
 		if (!(shape %in%  c("wide", "long"))) warning("shape must be either wide or long")
@@ -55,7 +54,7 @@ posterior <-
 			tbl_post(model, ...) %>%
 			as_tibble()
 
-		if(! all(as.character(bayr:::AllCols) %in% names(post)))
+		if(! all(as.character(AllCols) %in% names(post)))
 			stop("not a valid tbl_post")
 
 		type_regex <- stringr::str_c(type, collapse = "|")
@@ -119,25 +118,25 @@ tbl_post <-
 # 	annotations <-
 # 		tibble(parameter = pars$conditional,
 # 									type = "fixef",
-# 									nonlin = NA,
-# 									re_factor = NA,
-# 									re_entity = NA) %>%
+# 									nonlin = NA_character_,
+# 									re_factor = NA_character_,
+# 									re_entity = NA_character_) %>%
 # 		mutate(fixef = stringr::str_remove(parameter, "^b_"),
 # 					 fixef = stringr::str_replace(fixef, ".", ":")) %>%
-# 		select_(.dots = bayr:::ParameterIDCols)
+# 		select(all_of(ParameterIDCols))
 #
 # 	ranef <-
 # 		tibble(parameter = pars$random,
 # 					 type = "ranef",
 #
-# 					 nonlin = NA) %>%
+# 					 nonlin = NA_character_) %>%
 # 		filter(stringr::str_detect(parameter, "^r_")) %>%
 # 		tidyr::separate(col = parameter,
 # 										into = c("r_", "re_factor", "re_entity", "fixef"),
 # 										remove = F,
 # 										extra = "merge") %>%
 # 		mutate(fixef = stringr::str_remove(fixef, ".$")) %>%
-# 		select_(.dots = bayr:::ParameterIDCols)
+# 		select(all_of(ParameterIDCols))
 #
 # 	disp <-
 #
@@ -154,7 +153,7 @@ tbl_post.data.frame <-
 	## - registering user annos (explicit user annos)
 	## - keep attribute user_annos (keep user annos)
 	function(df, ...) {
-		if(! all(as.character(bayr:::AllCols) %in% names(df))) stop("not a valid tbl_post, some columns missing")
+		if(! all(as.character(AllCols) %in% names(df))) stop("not a valid tbl_post, some columns missing")
 		out <- df
 		class(out) <- append("tbl_post", class(out))
 		out
@@ -162,8 +161,12 @@ tbl_post.data.frame <-
 
 ## extracting some parameter annotations from brms model prior
 
+
 extr_brms_par <-
 	function(model){
+
+		# model <- M_tot
+
 		## use fixef and ranef parnames for check
 		pn_fe <- rownames(brms:::fixef.brmsfit(model))
 		try(pn_re <- names(brms:::ranef.brmsfit(model)), silent = T)
@@ -198,20 +201,20 @@ extr_brms_par <-
 				tibble(
 					parameter = "b_Intercept",
 					type = "fixef",
-					nonlin =NA,
+					nonlin =NA_character_,
 					fixef = "Intercept",
-					re_factor = NA,
-					re_entity = NA
+					re_factor = NA_character_,
+					re_entity = NA_character_
 				)) %>%
-			select_(.dots = bayr:::ParameterIDCols)
+				select(all_of(ParameterIDCols))
 		}
 
 		pars %>%
 			filter(!stringr::str_detect(parameter, "_$")) %>%
-			mutate(re_entity = NA) %>%
-			mutate_all(funs(ifelse(. == "", NA, .))) %>%
+			mutate(re_entity = NA_character_) %>%
+			mutate_all(funs(ifelse(. == "", NA_character_, .))) %>%
 			distinct() %>%
-			select_(.dots = bayr:::ParameterIDCols)
+			select(all_of(ParameterIDCols))
 
 
 	}
@@ -225,6 +228,7 @@ tbl_post.brmsfit <-
 	function(model, ...){
 
 		#model = M_1_b
+		#model = M_tot
 
 		samples <-
 			brms::posterior_samples(model, add_chain = T) %>%
@@ -274,7 +278,7 @@ tbl_post.brmsfit <-
 			full_join(type_mapping, by = "parameter") %>%
 			full_join(brms_pars, by = "parameter") %>%
 			distinct() %>%
-			select_(.dots = bayr:::ParameterIDCols)
+			select(all_of(ParameterIDCols))
 
 		par_out <-
 			filter(par_all, type %in% c("fixef", "disp", "grpef"))
@@ -283,11 +287,11 @@ tbl_post.brmsfit <-
 		par_disp <-
 			par_all %>%
 			filter(type == "disp") %>%
-			mutate(nonlin = NA,
-						 fixef = NA,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = bayr:::ParameterIDCols)
+			mutate(nonlin = NA_character_,
+						 fixef = NA_character_,
+						 re_factor = NA_character_,
+						 re_entity = NA_character_) %>%
+			select(all_of(ParameterIDCols))
 		par_out <- bind_rows(par_out, par_disp)
 		#}
 
@@ -307,43 +311,43 @@ tbl_post.brmsfit <-
 											 remove = F) %>%
 				## hotfix for when there is no nonlin
 				mutate(re_factor = ifelse(is.na(re_factor), re_1, re_factor)) %>%
-				select_(.dots = ParameterIDCols)
+				select(all_of(ParameterIDCols))
 			par_out <- bind_rows(par_out, par_re)
 		}
 
 			par_cor <-
 				par_all %>%
 				filter(type == "cor") %>%
-				mutate(nonlin = NA,
-							 fixef = NA,
-							 re_factor = NA,
-							 re_entity = NA) %>%
-				select_(.dots = bayr:::ParameterIDCols)
+				mutate(nonlin = NA_character_,
+							 fixef = NA_character_,
+							 re_factor = NA_character_,
+							 re_entity = NA_character_) %>%
+				select(all_of(ParameterIDCols))
 			par_out <- bind_rows(par_out, par_cor)
 
 			par_diag <-
 				par_all %>%
 				filter(type == "diag") %>%
-				mutate(nonlin = NA,
-							 fixef = NA,
-							 re_factor = NA,
-							 re_entity = NA) %>%
-				select_(.dots = bayr:::ParameterIDCols)
+				mutate(nonlin = NA_character_,
+							 fixef = NA_character_,
+							 re_factor = NA_character_,
+							 re_entity = NA_character_) %>%
+				select(all_of(ParameterIDCols))
 			par_out <- bind_rows(par_out, par_diag)
 
 			par_shape <-
 				par_all %>%
 				filter(type == "shape") %>%
-				mutate(nonlin = NA,
-							 fixef = NA,
-							 re_factor = NA,
-							 re_entity = NA) %>%
-				select_(.dots = bayr:::ParameterIDCols)
+				mutate(nonlin = NA_character_,
+							 fixef = NA_character_,
+							 re_factor = NA_character_,
+							 re_entity = NA_character_) %>%
+				select(all_of(ParameterIDCols))
 			par_out <- bind_rows(par_out, par_shape)
 
 		par_out <-
 			par_out %>%
-			dplyr::distinct_(.dots = bayr:::ParameterIDCols) %>%
+			dplyr::distinct_(.dots = ParameterIDCols) %>%
 			full_join(par_order, by = "parameter")
 
 
@@ -353,8 +357,8 @@ tbl_post.brmsfit <-
 
 		out <-
 			full_join(samples_long, par_out, by = "parameter") %>%
-			mutate(model = NA) %>% #,
-			select_(.dots = bayr:::AllCols)
+			mutate(model = NA_character_) %>% #,
+			select(all_of(AllCols))
 
 
 
@@ -376,12 +380,12 @@ tbl_post.brmsfit <-
 tbl_post.stanreg <-
 	function(model, ...){
 
-		#model <- M_1_s
+#		model <- M_1_s
 
 		samples <-
 			as.data.frame(model) %>%
 			as_tibble() %>%
-			mutate(chain = NA,
+			mutate(chain = NA_integer_,
 						 iter = row_number()) %>%
 			tidyr::gather("parameter", "value", -chain, -iter) %>%
 			mutate(parameter = stringr::str_replace(parameter, "\\(Intercept\\)", "Intercept"),
@@ -402,31 +406,32 @@ tbl_post.stanreg <-
 		par_fe <-
 			parnames %>%
 			filter(type == "fixef") %>%
-			mutate(nonlin = NA,
+			mutate(nonlin = NA_character_,
 						 fixef = parameter,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = bayr:::ParameterIDCols)
+						 re_factor = NA_character_,
+						 re_entity = NA_character_) %>%
+			select(all_of(ParameterIDCols))
 
 		par_disp <-
 			parnames %>%
 			filter(type == "disp") %>%
-			mutate(nonlin = NA,
-						 fixef = NA,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = bayr:::ParameterIDCols)
+			mutate(nonlin = NA_character_,
+						 fixef = NA_character_,
+						 re_factor = NA_character_,
+						 re_entity = NA_character_) %>%
+			select(all_of(ParameterIDCols))
 
 		par_shape <-
 			parnames %>%
 			filter(type == "shape") %>%
-			mutate(nonlin = NA,
-						 fixef = NA,
-						 re_factor = NA,
-						 re_entity = NA) %>%
-			select_(.dots = bayr:::ParameterIDCols)
+			mutate(nonlin = NA_character_,
+						 fixef = NA_character_,
+						 re_factor = NA_character_,
+						 re_entity = NA_character_) %>%
+			select(all_of(ParameterIDCols))
 
 		par_out <- bind_rows(par_fe, par_disp, par_shape)
+
 		if("lmerMod" %in% class(model)) {
 			par_re <-
 				parnames %>%
@@ -435,8 +440,8 @@ tbl_post.stanreg <-
 											 into = c("fixef", "re_factor", "re_entity"),
 											 "^b\\[(.+) (.+):(.+)\\]$",
 											 remove = F) %>%
-				mutate(nonlin = NA) %>%
-				select_(.dots = bayr:::ParameterIDCols)
+				mutate(nonlin = NA_character_) %>%
+				select(all_of(ParameterIDCols))
 
 
 			par_ge <-
@@ -449,9 +454,9 @@ tbl_post.stanreg <-
 				## pulling variance and correlations apart
 				mutate(fixef_2 = if_else(fixef_2 == "(Intercept)", "Intercept", fixef_2),
 							 type = if_else(fixef == fixef_2, "grpef", "corr")) %>%
-				mutate(nonlin = NA,
-							 re_entity = NA) %>%
-				select_(.dots = c(bayr:::ParameterIDCols, "fixef_2"))
+				mutate(nonlin = NA_character_,
+							 re_entity = NA_character_) %>%
+				select(all_of(c(ParameterIDCols, "fixef_2")))
 			par_out <- bind_rows(par_out, par_re, par_ge)
 		}
 
@@ -465,10 +470,10 @@ tbl_post.stanreg <-
 		out <-
 			par_out %>%
 			right_join(samples, by = "parameter") %>%
-			mutate(model = NA) %>%
+			mutate(model = NA_character_) %>%
 			mascutils::update_by(type == "grpef",
 													 value = sqrt(value)) %>%
-			select_(.dots = bayr:::AllCols)
+			select(all_of(AllCols))
 
 		# ## splitting by type for post-processing
 		#

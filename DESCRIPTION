@@ -1,8 +1,8 @@
 Package: bayr
 Type: Package
 Title: tidy and unified reporting of Bayesian regression results
-Version: 0.8.20
-Date: 2020-04-01
+Version: 0.9.0
+Date: 2020-09-26
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
@@ -16,15 +16,15 @@ Description: This package aims at unifying tool set for reporting of
     provided that integrate well with markup documents.
 LazyData: TRUE
 License: GPL-3
-Depends: R (>= 3.1.0)
+Depends: R (>= 4.0.0)
 Suggests:
     ggplot2,
     testthat,
 Imports:
     rstanarm (>= 2.14.1),
-    brms (>= 1.0.0),
-    dplyr,
+    brms (>= 2.0.0),
+    dplyr (>= 1.0.0),
     nlme,
     tidyr,
     stringr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1

@@ -1,6 +1,6 @@
-library(tidyverse)
-## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
+# library(tidyverse)
+# ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
+# utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
 
 ################ MASCUTILS overloaded ###############################
 

@@ -1,7 +1,7 @@
-library(tidyverse)
+#library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern"))
+#utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern"))
 
 Cols_pp = list("model", "Obs", "chain", "iter", "scale", "value") ## columns for a postpred object to be valid
 

@@ -1,4 +1,4 @@
-library(tidyverse)
+#library(tidyverse)
 #
 # ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 # utils::globalVariables(names = c("type", "parameter", "value", "new_name", "iter", "pattern","tbl_coef"))
@@ -14,12 +14,11 @@ library(tidyverse)
 #' returns a summary table for estimates with median (center) and 95% limits'
 #' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
 #' @param model name of model
-#' @param type type of coefficient: fixef (grpef, ranef)
 #' @param mean.func function (identity)
 #' @param estimate function for computing the center estimate (posterior mode)
 #' @param interval credibility interval: .95
 #' @param ... ignored
-#' @return coefficient table with parameter name, estimate and interval.
+#' @return CLU table (tbl_clu) with parameter name, estimate and interval.
 #' @author Martin Schmettow
 #' @import dplyr
 #' @importFrom nlme fixef
@@ -29,44 +28,72 @@ library(tidyverse)
 #' @export
 
 
+
 clu <-
   	function(object, ...) UseMethod("clu", object)
 
 #' @rdname clu
 #' @export
 
+clu.tbl_post <- function(object,
+												 model = unique(object$model),
+												 mean.func = identity,
+												 estimate = median,
+												 interval = .95){
+	lower <- (1-interval)/2
+	upper <- 1-((1-interval)/2)
+	tbl_clu <-
+		object %>%
+		mutate(value = mean.func(value)) %>%
+		group_by(model, parameter, type, nonlin, fixef, re_factor, re_entity, order) %>%
+		summarize(center = estimate(value),
+							lower = quantile(value, lower),
+							upper = quantile(value, upper)) %>%
+		ungroup() %>%
+		arrange(model, order) %>%
+		select(-order)
+	class(tbl_clu) <- append("tbl_clu", class(tbl_clu))
+	attr(tbl_clu, "estimate") <- bquote(estimate)
+	attr(tbl_clu, "interval") <- interval
+	attr(tbl_clu, "lower") <- lower
+	attr(tbl_clu, "upper") <- upper
+	return(tbl_clu)
+}
 
-clu.tbl_post <-
-	function(object,
-					 model = unique(object$model),
-					 type = c("fixef", "ranef", "disp", "shape"),
-					 mean.func = identity,
-					 center = median,
-					 interval = .95) {
-		lower <- (1-interval)/2
-		upper <- 1-((1-interval)/2)
-		partype <- type
 
-		tbl_clu <-
-			object %>%
-			filter(type %in% partype) %>%
-			mutate(value = mean.func(value)) %>%
-			group_by(model, parameter, type, nonlin, fixef, re_factor, re_entity, order) %>%
-			summarize(center = center(value),
-								lower = quantile(value, lower),
-								upper = quantile(value, upper)) %>%
-			ungroup() %>%
-			arrange(model, order) %>%
-			select(-order)
 
-		class(tbl_clu) <- append("tbl_clu", class(tbl_clu))
-		attr(tbl_clu, "estimate") <- bquote(estimate)
-		attr(tbl_clu, "interval") <- interval
-		attr(tbl_clu, "lower") <- lower
-		attr(tbl_clu, "upper") <- upper
-		attr(tbl_clu, "type") <- type
-		return(tbl_clu)
-	}
+
+# clu.tbl_post.old <-
+# 	function(object,
+# 					 model = unique(object$model),
+# 					 type = NA,
+# 					 mean.func = identity,
+# 					 center = median,
+# 					 interval = .95) {
+# 		lower <- (1-interval)/2
+# 		upper <- 1-((1-interval)/2)
+#
+# 		if(!is.na(type)) object <- filter(object, type %in% partype)
+#
+# 		tbl_clu <-
+# 			object %>%
+# 			mutate(value = mean.func(value)) %>%
+# 			group_by(model, parameter, type, nonlin, fixef, re_factor, re_entity, order) %>%
+# 			summarize(center = center(value),
+# 								lower = quantile(value, lower),
+# 								upper = quantile(value, upper)) %>%
+# 			ungroup() %>%
+# 			arrange(model, order) %>%
+# 			select(-order)
+#
+# 		class(tbl_clu) <- append("tbl_clu", class(tbl_clu))
+# 		attr(tbl_clu, "estimate") <- bquote(estimate)
+# 		attr(tbl_clu, "interval") <- interval
+# 		attr(tbl_clu, "lower") <- lower
+# 		attr(tbl_clu, "upper") <- upper
+# 		attr(tbl_clu, "type") <- type
+# 		return(tbl_clu)
+# 	}
 
 
 

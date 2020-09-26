@@ -26,6 +26,7 @@ load("M_1.Rda")
 save(M_1_b, M_1_s, file = "M_1.Rda")
 
 P_1_s <- bayr:::tbl_post.stanreg(model = M_1_s)
+
 P_1_b <- bayr:::tbl_post.brmsfit(model = M_1_b)
 
 bayr:::prep_print_tbl_post(P_1_s)

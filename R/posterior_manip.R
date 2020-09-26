@@ -1,13 +1,13 @@
-library(tidyverse)
+#library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-utils::globalVariables(names = c("type", "parameter", "value",
-																 "new_name", "iter", "pattern"))
+# utils::globalVariables(names = c("type", "parameter", "value",
+#																 "new_name", "iter", "pattern"))
 
 
 DrawIDCols <- c("model", "chain", "iter")
-ParameterIDCols = list("parameter", "type", "nonlin", "fixef", "re_factor", "re_entity")
-AllCols = append(append(list("model", "chain", "iter", "order"), ParameterIDCols), "value")
+# ParameterIDCols = c("parameter", "type", "nonlin", "fixef", "re_factor", "re_entity")
+# AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 
 
 #' absolute random effects scores

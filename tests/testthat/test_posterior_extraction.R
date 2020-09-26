@@ -35,7 +35,7 @@ test_that("posterior object print",{
 })
 
 test_that("extracting random scores",{
-	expect_silent(R_1 <<- re_scores(P_1_s, "Intercept", "Part"))
+	expect_silent(R_1 <<- re_scores(P_1_s))
 	expect_s3_class(R_1, "tbl_post")
 })
 

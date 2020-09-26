@@ -9,8 +9,6 @@ context("creating parameter tables")
 
 load("M_1.Rda")
 
-M_1 <- list(M_1_s, M_1_b)
-
 test_that("coef works without issues",{
 	expect_silent(bayr::fixef(P_1_b))
 	expect_silent(bayr:::tbl_post.stanreg(M_1_s))
