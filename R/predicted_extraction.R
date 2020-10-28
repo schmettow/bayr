@@ -54,11 +54,11 @@ predict.tbl_post_pred <-
 	}
 
 
-# #' @rdname predict.tbl_post_pred
-# #' @export
+#' @rdname predict.tbl_post_pred
+#' @export
 
-# predict <-
-# 	function(x, ...) UseMethod("predict", x)
+predict <-
+	function(x, ...) UseMethod("predict", x)
 
 
 
