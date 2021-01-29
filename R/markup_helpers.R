@@ -3,77 +3,129 @@
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
 
 
-
-#################### PRINT #######################
-
-#' @rdname clu
-#' @export
-
-# print.tbl_clu.old <- function(x, ...) {
-# 	tab <- x
-# 	if(nrow(tab) > 1)	{
-# 		tab <- discard_redundant(tab)
-# 	} else if(!is.null(tab$fixef) & tab$fixef[1] == "Intercept"){
-# 		#		warning("Intercept model")
-# 		tab <- select(tab, fixef, center, lower, upper)
-# 	} else {
-# 		tab <- mascutils::discard_all_na(x)
-# 	}
-# 	cap <-
-# 		paste0("Estimates with ",
-# 					 attr(x, "interval")*100,
-# 					 "% credibility limits")
-# 	out <-
-# 		knitr::kable(tab, caption = cap)
-# 	print(out)
-# 	invisible(tab)
-# }
-
-print.tbl_clu <- function(x, ...) {
-	cols <- c()
-	types <- unique(x$type)
-	if(length(unique(x$model)) > 1) cols <- union(cols, "model")
-	if("fixef" %in% types)          cols <- union(cols, "fixef")
-	if("grpef" %in% types)          cols <- union(cols, c("fixef", "re_factor"))
-	if("ranef" %in% types)          cols <- union(cols, c("fixef", "re_factor", "re_entity"))
-	if("disp"  %in% types)          cols <- union(cols, c("parameter","disp"))
-	cols <- c(cols, "center", "lower", "upper")
-	out <- x %>% select_(.dots = cols)
-	if(dim(out)[2] == 0) warning("Empty CLU table. Do you need to adjust filters applied to posterior object?")
-	cap <-
-		paste0("Estimates with ",
-					 attr(x, "interval")*100,
-					 "% credibility limits")
-	out <-
-		knitr::kable(out, caption = cap)
-	print(out)
-	invisible(out)
-}
+#################### TBL_POST #######################
 
 
+prep_print_tbl_post <-
+	function(tbl_post){
+		res <- list()
+		res$n_iter <- length(unique(tbl_post$iter))
+		res$n_chain <- length(unique(tbl_post$chain))
+		res$n_dim <- length(unique(tbl_post$parameter))
 
-#' @rdname coef.tbl_post
-#' @export
+		res$user_annos <- setdiff(names(tbl_post),
+															as.character(bayr:::AllCols))
 
-print.tbl_coef <- function(x, ...) {
-	tab <- x
-	if(nrow(tab) > 1)	{
-		tab <- discard_redundant(tab)
-	} else if(tab$fixef[1] == "Intercept"){
-		#		warning("Intercept model")
-		tab <- select(tab, fixef, center, lower, upper)
-	} else {
-		tab <- mascutils::discard_all_na(x)
+		res$effects <-
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type %in% c("fixef", "ranef")) %>%
+			distinct(model, parameter, type, fixef, nonlin, re_factor, re_entity) %>%
+			mutate(parameter = ifelse(type == "ranef", "", parameter)) %>%
+			group_by(model, parameter, type, nonlin, fixef, re_factor) %>%
+			summarize(count = n()) %>%
+			ungroup() %>%
+			mascutils::discard_all_na()
+
+		res$disp <-
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type %in% c( "disp", "grpef")) %>%
+			distinct(model, parameter, fixef, type)
+
+		res$shape <-
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type == "shape") %>%
+			distinct(model, parameter, type) ## also creates empty columns
+
+		## Correlations are just counted
+		res$cor <-
+			tbl_post %>%
+			as_tibble() %>%
+			filter(type == "cor") %>%
+			distinct(model, parameter, type) %>%
+			group_by(model, type) %>%
+			summarize(count = n()) %>%
+			mutate(parameter = "")
+
+		res$comb <-
+			full_join(res$effects, res$disp) %>%
+			full_join(res$shape) %>%
+			full_join(res$cor)
+
+		res
 	}
-	cap <-
-		paste0("Estimates with ",
-					 attr(x, "interval")*100,
-					 "% credibility limits")
-	out <-
-		knitr::kable(tab, caption = cap)
-	print(out)
-	invisible(tab)
+
+
+
+
+#' @rdname posterior
+#' @export
+
+print.tbl_post <-
+	function(tbl_post, ...){
+
+		tbls <- prep_print_tbl_post(tbl_post)
+		# frm <-
+		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
+
+
+		cat("** MCMC posterior: ", tbls$n_iter, " samples of ",
+				tbls$n_dim ," parameters \n\n")
+		#		cat(frm, "\n\n")
+
+		print.data.frame(tbls$comb, row.names = F)
+
+		invisible(tbl_post)
+	}
+
+
+#' @rdname posterior
+#' @export
+
+knit_print.tbl_post <- function(x, ...) {
+	tbls <- prep_print_tbl_post(x)
+	tab <- tbls$comb
+	cap <- paste0("MCMC posterior with ", tbls$n_iter, " samples of ",
+								tbls$n_dim ," parameters")
+	kab <- knitr::kable(tab, caption = cap, format = "markdown", ...)
+	out <- paste0(c("", "", kab, "\n\n"), collapse = "\n")
+
+	knitr::asis_output(out)
 }
+
+
+
+
+knit_print.tbl_post_old <- function(x, ...) {
+	tbls <- bayr:::prep_print_tbl_post(x)
+	# res <- paste0("\n\n** tbl_post: ", tbls$n_iter,
+	# 							" samples in ", tbls$n_chain, " chains\n\n",
+	# 							collapse ="\n")
+
+	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects, format = "markdown",
+																										cap = "Coefficients"), "\n")
+	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp, format = "markdown",
+																								 cap = "Dispersion"), "\n")
+	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape, format = "markdown",
+																									cap = "Shape"), "\n")
+	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor, format = "markdown",
+																								cap = "Correlations"), "\n")
+
+	out <- paste0(res, collapse = "\n")
+
+	knitr::asis_output(out)
+
+}
+
+
+
+
+
+
+#################### POST_PRED #######################
+
 
 
 
@@ -121,92 +173,9 @@ print.tbl_coef <- function(x, ...) {
 # 	}
 
 
-#' @rdname posterior
-#' @export
-
-print.tbl_post <-
-	## TODO: add formula and corr
-	function(tbl_post, ...){
-
-		tbls <- prep_print_tbl_post(tbl_post)
-		# frm <-
-		# 	formula.tools:::as.character.formula(attr(tbl_post, "formula"))
-
-
-		cat("** tbl_post: ", tbls$n_iter, " samples in ", tbls$n_chain, " chains\n\n")
-		#		cat(frm, "\n\n")
-
-		cat("** Effects: \n")
-		print.data.frame(tbls$effects, row.names = F)
-
-		cat("\n** Dispersion: \n")
-		print.data.frame(tbls$disp, row.names = F)
-
-		cat("\n** Shape: \n")
-		print.data.frame(tbls$shape, row.names = F)
-
-		cat("\n** Correlations: \n")
-		print.data.frame(tbls$cor, row.names = F)
-
-		cat("\n** User annotations: \n", tbls$user_annos)
-
-
-		invisible(tbl_post)
-	}
-
-prep_print_tbl_post <-
-	function(tbl_post){
-
-		#tbl_post <- P_1_s
-
-		res <- list()
-
-		res$n_iter <- length(unique(tbl_post$iter))
-		res$n_chain <- length(unique(tbl_post$chain))
-
-		res$user_annos <- setdiff(names(tbl_post),
-													as.character(bayr:::AllCols))
-
-		res$effects <-
-			tbl_post %>%
-			as_tibble() %>%
-			filter(type %in% c("fixef", "ranef", "grpef")) %>%
-			distinct(model, parameter, type, fixef, nonlin, re_factor, re_entity) %>%
-			mutate(parameter = ifelse(type == "ranef", "", parameter)) %>%
-			group_by(model, parameter, type, nonlin, fixef, re_factor) %>%
-			summarize(entities = n()) %>%
-			ungroup() %>%
-			mascutils::discard_all_na()
-
-		res$cor <-
-			tbl_post %>%
-			as_tibble() %>%
-			filter(type == "cor") %>%
-			distinct(model, parameter) %>%
-			mascutils::discard_all_na()
-
-		res$disp <-
-			tbl_post %>%
-			as_tibble() %>%
-			filter(type == "error") %>%
-			distinct(model, parameter) %>%
-			mascutils::discard_all_na()
-
-		res$shape <-
-			tbl_post %>%
-			as_tibble() %>%
-			filter(type == "shape") %>%
-			distinct(model, parameter) %>%
-			mascutils::discard_all_na()
-
-		res
-	}
-
-
-
-
 #' @rdname post_pred
 #' @export
+
 
 
 print.tbl_post_pred <-
@@ -227,8 +196,7 @@ print.tbl_post_pred <-
 		invisible(x)
 	}
 
-
-#' @rdname predict.tbl_post_pred
+#' @rdname post_pred
 #' @export
 
 print.tbl_predicted <-
@@ -250,77 +218,6 @@ print.tbl_predicted <-
 
 
 
-
-#################### KNIT_PRINT #######################
-
-
-#' @rdname posterior
-#' @export
-
-knit_print.tbl_post <- function(x, ...) {
-	tbls <- bayr:::prep_print_tbl_post(x)
-	res <- paste0("\n\n** tbl_post: ", tbls$n_iter,
-								" samples in ", tbls$n_chain, " chains\n\n",
-								collapse ="\n")
-
-	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects, format = "markdown",
-																														cap = "Coefficients"), "\n")
-	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp, format = "markdown",
-																												 cap = "Dispersion"), "\n")
-	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape, format = "markdown",
-																													cap = "Shape"), "\n")
-	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor, format = "markdown",
-																												cap = "Correlations"), "\n")
-
-	out <- paste0(res, collapse = "\n")
-
-	knitr::asis_output(out)
-
-	}
-
-
-
-#' @rdname clu
-#' @export
-
-
-
-knit_print.tbl_clu <- function (x, ...)
-{
-	cap =
-		paste0("Estimates with ",
-					 attr(x, "interval")*100,
-					 "% credibility limits")
-	tab = discard_redundant(x) %>%
-		mascutils::discard_all_na()
-
-	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
-							 collapse = "\n")
-	knitr::asis_output(res)
-}
-
-
-
-#' @rdname coef.tbl_post
-#' @export
-
-
-
-knit_print.tbl_coef <- function (x, ...)
-{
-	cap =
-		paste0("Estimates with ",
-					 attr(x, "interval")*100,
-					 "% credibility limits")
-	tab = discard_redundant(x) %>%
-		mascutils::discard_all_na()
-
-	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
-							collapse = "\n")
-	knitr::asis_output(res)
-}
-
-
 #' @rdname post_pred
 #' @export
 
@@ -340,33 +237,279 @@ knit_print.tbl_post_pred <-
 			mascutils::discard_all_na()
 
 		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
-								collapse = "\n")
+								 collapse = "\n")
 		knitr::asis_output(res)
 	}
 
 
-#' @rdname predict.tbl_post_pred
+#' @rdname post_pred
 #' @export
 
 knit_print.tbl_predicted <-
 	function(x, ...) {
-	n_Obs <- nrow(x)
-	cap <- paste0(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
-									 attr(x, "interval")*100, "% credibility limits (five shown below)", collapse = "")
-	tab <-	x %>%
-		sample_n(min(n_Obs, 5)) %>%
-		arrange(Obs, model) %>%
-		discard_redundant() %>%
-		mascutils::discard_all_na()
+		n <- min(8, nrow(x))
+		n_Obs <- nrow(x)
+		cap <- paste0(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
+									attr(x, "interval")*100, "% credibility limits (8 shown)", collapse = "")
+		tab <-	x %>%
+			sample_n(min(n_Obs, 8)) %>%
+			arrange(Obs, model) %>%
+			discard_redundant() %>%
+			mascutils::discard_all_na()
 
-	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...)), collapse = "\n")
-	knitr::asis_output(res)
-}
+		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...)), collapse = "\n")
+		knitr::asis_output(res)
+	}
 
 # knit_print.tbl_predicted
 
 
 
+
+#################### COEF ######################
+
+#' @rdname coef.tbl_post
+#' @export
+
+print.tbl_coef <- function(x, ...) {
+	tab <- x
+	if(nrow(tab) > 1)	{
+		tab <- discard_redundant(tab)
+	} else if(tab$fixef[1] == "Intercept"){
+		#		warning("Intercept model")
+		tab <- select(tab, fixef, center, lower, upper)
+	} else {
+		tab <- mascutils::discard_all_na(x)
+	}
+	cap <-
+		paste0("Coefficient estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	out <-
+		knitr::kable(tab, caption = cap)
+	print(out)
+	invisible(tab)
+}
+
+
+
+
+#' @rdname coef.tbl_post
+#' @export
+
+
+
+knit_print.tbl_coef <- function (x, ...)
+{
+	cap =
+		paste0("Coefficient estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	tab = discard_redundant(x) %>%
+		mascutils::discard_all_na()
+
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
+							 collapse = "\n")
+	knitr::asis_output(res)
+}
+
+
+#################### FIXEF_ML ######################
+
+#' @rdname fixef_ml
+#' @export
+
+print.tbl_fixef_ml <- function(x, ...) {
+	tab <- x
+	cap <-	paste0("Population-level coefficients with random effects standard deviations")
+	out <-
+		knitr::kable(tab, caption = cap)
+	print(out)
+	invisible(tab)
+}
+
+
+
+
+#' @rdname fixef_ml
+#' @export
+
+
+
+knit_print.tbl_fixef_ml <- function (x, ...)
+{
+	cap <-	paste0("Population-level coefficients with random effects standard deviations")
+	tab <- x %>%	mascutils::discard_all_na()
+	res <- paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
+							 collapse = "\n")
+	knitr::asis_output(res)
+}
+
+
+
+
+#################### CLU #######################
+
+
+
+#' @rdname clu
+#' @export
+
+
+# print.tbl_clu.old <- function(x, ...) {
+# 	tab <- x
+# 	if(nrow(tab) > 1)	{
+# 		tab <- discard_redundant(tab)
+# 	} else if(!is.null(tab$fixef) & tab$fixef[1] == "Intercept"){
+# 		#		warning("Intercept model")
+# 		tab <- select(tab, fixef, center, lower, upper)
+# 	} else {
+# 		tab <- mascutils::discard_all_na(x)
+# 	}
+# 	cap <-
+# 		paste0("Estimates with ",
+# 					 attr(x, "interval")*100,
+# 					 "% credibility limits")
+# 	out <-
+# 		knitr::kable(tab, caption = cap)
+# 	print(out)
+# 	invisible(tab)
+# }
+
+print.tbl_clu <- function(x, ...) {
+	cols <- c()
+	types <- unique(x$type)
+	if(length(unique(x$model)) > 1) cols <- union(cols, "model")
+	if("fixef" %in% types)          cols <- union(cols, "fixef")
+	if("grpef" %in% types)          cols <- union(cols, c("fixef", "re_factor"))
+	if("ranef" %in% types)          cols <- union(cols, c("fixef", "re_factor", "re_entity"))
+	if("disp"  %in% types)          cols <- union(cols, c("parameter","disp"))
+	cols <- c(cols, "center", "lower", "upper")
+	out <- x %>% select_(.dots = cols)
+	if(dim(out)[2] == 0) warning("Empty CLU table. Do you need to adjust filters applied to posterior object?")
+	cap <-
+		paste0("Parameter estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	out <-
+		knitr::kable(out, caption = cap)
+	print(out)
+	invisible(out)
+}
+
+
+
+#' @rdname clu
+#' @export
+
+
+knit_print.tbl_clu <- function (x, ...)
+{
+	cap =
+		paste0("Parameter estimates with ",
+					 attr(x, "interval")*100,
+					 "% credibility limits")
+	tab = discard_redundant(x) %>%
+		mascutils::discard_all_na()
+
+	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
+							 collapse = "\n")
+	knitr::asis_output(res)
+}
+
+
+
+################ OBS ############################
+
+#' @rdname as_tbl_obs
+#' @export
+
+print.tbl_obs <- function(x, ...) {
+	n <- min(8, nrow(x))
+	tab <- dplyr::sample_n(x, n)
+	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
+	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part)
+	cap <- stringr::str_c("Data set",": showing ", n, " of ", nrow(x), " observations")
+	print(cap)
+	base:::print.data.frame(tab)
+	invisible(x)
+}
+
+#' @rdname as_tbl_obs
+#' @export
+
+knit_print.tbl_obs <- function(x, ...) {
+	#data_set <- deparse(substitute(x))
+	n <- min(8, nrow(x))
+	cap <- paste0("Data set with ", ncol(x)," variables, showing ", n, " of ", nrow(x), " observations.")
+	tab <- dplyr::sample_n(x, n)
+	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
+	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part, Obs)
+
+	kab <- knitr::kable(tab, caption = cap, format = "markdown", ...)
+	out <- paste0(c("", "", kab, "\n\n"), collapse = "\n")
+	knitr::asis_output(out)
+}
+
+
+
+knit_print.tbl_obs_old <- function(x, ...) {
+	#data_set <- deparse(substitute(x))
+	n <- min(8, nrow(x))
+	tab <- dplyr::sample_n(x, n)
+	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
+	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part)
+	cap <- stringr::str_c("Data set with ", ncol(x)," variables. Showing ", n, " of ", nrow(x), " observations.")
+
+	out <- knitr::kable(tab, caption = cap, format = "markdown")
+	knitr::asis_output(out)
+	#
+	# res = paste(c("", "", knitr::kable(tab, format = "markdown", ...)),
+	#             collapse = "\n")
+	# knitr::asis_output(res)
+	invisible(tab)
+}
+
+
+################# IC ########################
+
+#' @rdname IC
+#' @export
+
+print.tbl_IC <- function(x, ...) {
+	cap <- stringr::str_c("Estimated Information Criterion")
+	base:::print.data.frame(x)
+	invisible(x)
+}
+
+#' @rdname IC
+#' @export
+
+knit_print.tbl_IC <- function(x, ...) {
+	cap <- paste0("Estimated Information Criterion")
+	kab <- knitr::kable(x, caption = cap, format = "markdown", ...)
+	out <- paste0(c("", "", kab, "\n\n"), collapse = "\n")
+	knitr::asis_output(out)
+}
+
+#' @rdname compare_IC
+#' @export
+
+print.tbl_IC_comp <- function(x, ...) {
+	cap <- stringr::str_c("Model ranking by predictive accuracy")
+	base:::print.data.frame(x)
+	invisible(x)
+}
+
+#' @rdname compare_IC
+#' @export
+
+knit_print.tbl_IC_comp <- function(x, ...) {
+	cap <- paste0("Model ranking by predictive accuracy")
+	kab <- knitr::kable(x, caption = cap, format = "markdown", ...)
+	out <- paste0(c("", "", kab, "\n\n"), collapse = "\n")
+	knitr::asis_output(out)
+}
 
 
 

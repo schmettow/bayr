@@ -11,11 +11,15 @@
 #' @export
 
 
-IC <- function (ic)
-	ic$estimates %>%
-	as_tibble(rownames = "IC") %>%
-	mutate(Model = attr(ic, "model_name")) %>%
-	select(Model, IC, Estimate, SE)
+IC <- function (ic){
+	tbl_IC <-
+		ic$estimates %>%
+		as_tibble(rownames = "IC") %>%
+		mutate(Model = attr(ic, "model_name")) %>%
+		select(Model, IC, Estimate, SE)
+	class(tbl_IC) <- append("tbl_IC", class(tbl_IC))
+	tbl_IC
+}
 
 #' Information Criteria comparison
 #'
@@ -32,11 +36,14 @@ IC <- function (ic)
 
 
 compare_IC <- function(ic_list){
-	ic_list %>%
+	tbl_IC_comp <-
+		ic_list %>%
 		purrr::map_df(IC) %>%
 		filter(IC %in% c("looic", "waic", "kfoldic")) %>%
 		group_by(IC) %>%
 		mutate(diff_IC = Estimate - min(Estimate)) %>%
 		ungroup() %>%
 		arrange(IC, diff_IC)
+	class(tbl_IC_comp) <- append("tbl_IC_comp", class(tbl_IC_comp))
+	tbl_IC_comp
 }

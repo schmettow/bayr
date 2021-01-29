@@ -2,13 +2,19 @@
 % Please edit documentation in R/markup_helpers.R, R/postpred_extraction.R
 \name{print.tbl_post_pred}
 \alias{print.tbl_post_pred}
+\alias{print.tbl_predicted}
 \alias{knit_print.tbl_post_pred}
+\alias{knit_print.tbl_predicted}
 \alias{post_pred}
 \title{posterior predictive extraction}
 \usage{
 \method{print}{tbl_post_pred}(x, ...)
 
+\method{print}{tbl_predicted}(x, ...)
+
 \method{knit_print}{tbl_post_pred}(x, ...)
+
+\method{knit_print}{tbl_predicted}(x, ...)
 
 post_pred(model, scale = "obs", model_name, thin = 1)
 }

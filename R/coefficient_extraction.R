@@ -337,9 +337,12 @@ fixef_ml <-
 			mutate(re_factor = str_c("SD_", re_factor)) %>%
 			spread(re_factor, SD)
 
-		bayr::fixef(model, ...)  %>%
+		out <-
+			bayr::fixef(model, ...)  %>%
 			left_join(T_grpef) %>%
 			mascutils::discard_redundant()
+		class(out) = append("tbl_fixef_ml", class(out))
+		out
 	}
 
 
