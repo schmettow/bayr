@@ -4,6 +4,9 @@ assert_has_name <- function(var, x){
 	x_name <- as.character(deparse(substitute(x)))
 	assert_that(has_name(x, var),
 							msg = str_c("Variable ", var," missing in ", x_name))
+
+	assert_that(has_name(x, var),
+							msg = str_c("Variable ", var," does not exist."))
 }
 
 assert_names <- function(x, ...){
