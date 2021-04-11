@@ -9,7 +9,7 @@
 \alias{tbl_post.stanreg}
 \title{posterior extraction}
 \usage{
-\method{print}{tbl_post}(tbl_post, ...)
+\method{print}{tbl_post}(x, ...)
 
 \method{knit_print}{tbl_post}(x, ...)
 
