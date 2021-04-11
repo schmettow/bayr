@@ -21,6 +21,9 @@
 #' @return CLU table (tbl_clu) with parameter name, estimate and interval.
 #' @author Martin Schmettow
 #' @import dplyr
+#' @import lme4
+#' @import broom.mixed
+#' @import assertthat
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
 #' @importFrom stats coef median fitted quantile
@@ -34,6 +37,16 @@ clu <-
 
 #' @rdname clu
 #' @export
+
+
+assert_clu <- function(x){
+	assert_names(x, model, parameter, type, center, lower, upper)
+	assert_key(x, model, parameter)
+}
+
+#' @rdname clu
+#' @export
+
 
 clu.tbl_post <- function(object,
 												 model = unique(object$model),
@@ -115,7 +128,7 @@ clu.tbl_post <- function(object,
 clu.data.frame <-
 	## dirty hack! partype columns not preserved
 	function(df, ...) {
-		if(! all(c("parameter", "center", "lower", "upper") %in% names(df))) stop("not a valid tbl_clu, some columns missing")
+		assert_CLU(df)
 		out = df
 		class(out) = append("tbl_clu", class(out))
 		out
@@ -150,7 +163,56 @@ clu.stanreg <-
 	function(object, ...)
 		tbl_post(object) %>% clu()
 
+#' @rdname clu
+#' @export
 
+clu.glmerMod <-
+	function(model,
+					 mean.func = identity,
+					 model_name = as.character(deparse(substitute(model))),
+					 interval = .95){
+		lower <- (1-interval)/2
+		upper <- 1-(1-interval)/2
+
+		pop_level <-
+			model %>%
+			tidy(conf.int = T, conf.level = ) %>%
+			rename(parameter = term,
+						 re_factor = group,
+						 type = effect,
+						 center = estimate,
+						 lower = conf.low,
+						 upper = conf.high) %>%
+			mutate(model = model_name,
+						 center = mean.func(center),
+						 lower = mean.func(lower),
+						 upper = mean.func(upper),
+						 type = if_else(type == "fixed",
+						 							 "fixef",
+						 							 str_extract(parameter,
+						 							 						"^cor|^sd")))
+
+		ranefs <-
+			nlme::ranef(model) %>%
+			map_dfr(as_tibble, rownames = "re_entity", .id = "re_factor") %>%
+			pivot_longer(!starts_with("re_"),
+									 names_to = "fixef",
+									 values_to = "center") %>%
+			mutate(model = model_name,
+						 parameter = str_c(re_factor,"_",re_entity,".",fixef),
+						 type = "ranef",
+						 lower = NA,
+						 upper = NA)
+
+		out <-
+			bind_rows(pop_level,
+								ranefs) %>%
+			filter(!is.na(center))
+
+		class(out) <- c("tbl_clu", class(out))
+		attr(out, "interval") <- interval
+		out
+	}
 
 
 ################ COEF ###############################

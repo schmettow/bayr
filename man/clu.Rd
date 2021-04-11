@@ -2,17 +2,21 @@
 % Please edit documentation in R/coefficient_extraction.R, R/markup_helpers.R
 \name{clu}
 \alias{clu}
+\alias{assert_clu}
 \alias{clu.tbl_post}
 \alias{clu.data.frame}
 \alias{clu.MCMCglmm}
 \alias{clu.brmsfit}
 \alias{clu.stanfit}
 \alias{clu.stanreg}
+\alias{clu.glmerMod}
 \alias{print.tbl_clu}
 \alias{knit_print.tbl_clu}
 \title{center-lower-upper table}
 \usage{
 clu(object, ...)
+
+assert_clu(x)
 
 \method{clu}{tbl_post}(
   object,
@@ -31,6 +35,13 @@ clu(object, ...)
 \method{clu}{stanfit}(object, ...)
 
 \method{clu}{stanreg}(object, ...)
+
+\method{clu}{glmerMod}(
+  model,
+  mean.func = identity,
+  model_name = as.character(deparse(substitute(model))),
+  interval = 0.95
+)
 
 \method{print}{tbl_clu}(x, ...)
 

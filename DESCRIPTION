@@ -1,19 +1,19 @@
 Package: bayr
 Type: Package
-Title: tidy and unified reporting of Bayesian regression results
-Version: 0.9.3
-Date: 2021-01-29
+Title: tidy and unified reporting of Bayesian regression models
+Version: 0.9.4
+Date: 2021-04-11
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package aims at unifying tool set for reporting of
     Bayesian regression models (generalized linear mixed-effects models).
     A set of wrapper functions unifies extraction of MCMC chains
-    from varios Bayesian implementations (currently: brms, rstanarm).
+    from varios Bayesian implementations (currently: brms, rstanarm, and some lme4).
     Posterior distributions are stored in annotated long format.
     Parameters are classified to facilitate further
     processing with dplyr/tidyr and ggplot2. Reporting functions
     for posteriors, posterior predictions, coefficient tables and 
-    infomration criteria are provided that work well with knitr/markdown
+    information criteria are provided that work well with knitr/markdown
     documents.
 LazyData: TRUE
 License: GPL-3
@@ -21,11 +21,14 @@ Depends: R (>= 3.6.1)
 Suggests:
     ggplot2,
     testthat,
+    lme4
 Imports:
     rstanarm (>= 2.14.1),
     brms (>= 2.0.0),
     dplyr (>= 1.0.0),
     nlme,
     tidyr,
-    stringr
+    stringr,
+    assertthat
 RoxygenNote: 7.1.1
+Encoding: UTF-8

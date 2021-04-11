@@ -75,16 +75,14 @@ discard_redundant.tbl_post <- function(object, except = c())
 
 
 
-#' @rdname mutate.tbl_post
-
-distinct.tbl_post <-
-	function (.data, ..., .dots)
-	{
-		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
-		out <- dplyr:::distinct_impl(.data, dots)
-		class(out)[2:length(class(out))]
-		out
-	}
+# distinct.tbl_post <-
+# 	function (.data, ..., .dots)
+# 	{
+# 		dots <- lazyeval::all_dots(.dots, ..., all_named = TRUE)
+# 		out <- dplyr:::distinct_impl(.data, dots)
+# 		class(out)[2:length(class(out))]
+# 		out
+# 	}
 
 
 ########################### FUTURE ##########################
