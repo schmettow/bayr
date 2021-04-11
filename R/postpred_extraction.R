@@ -46,7 +46,7 @@ post_pred <-
 			stop("not a valid tbl_post_pred")
 
 		out <- post %>%
-			select_(.dots = bayr:::Cols_pp) %>%
+			select(.dots = bayr:::Cols_pp) %>%
 			arrange_(.dots = bayr:::Cols_pp) %>%
 			mutate(model = model_name)
 
@@ -107,7 +107,7 @@ tbl_post_pred.generic <-
 			tidyr::gather(key = "Obs",
 										value = "value", -model, -iter, -chain, -scale) %>%
 			mutate(Obs = as.integer(stringr::str_replace(Obs, "^V", ""))) %>%  ## making observations integer (Vx)
-			select_(.dots = bayr:::Cols_pp) %>%
+			select(.dots = bayr:::Cols_pp) %>%
 			arrange_(.dots = bayr:::Cols_pp)
 
 		class(out) <-
