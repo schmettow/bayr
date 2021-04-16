@@ -128,7 +128,7 @@ clu.tbl_post <- function(object,
 clu.data.frame <-
 	## dirty hack! partype columns not preserved
 	function(df, ...) {
-		assert_CLU(df)
+		assert_clu(df)
 		out = df
 		class(out) = append("tbl_clu", class(out))
 		out
