@@ -370,7 +370,7 @@ pre_print_tbl_clu <- function(tbl_clu){
 	if("disp"  %in% types)          cols <- union(cols, c("parameter"))
 	cols <- c(cols, "center", "lower", "upper")
 	out <- tbl_clu %>%
-		select(.dots = cols)
+		select(cols)
 	out <- out %>%	mascutils::discard_all_na()
 	if(nrow(out > 1)) out <- out %>% mascutils::discard_redundant()
 	out
