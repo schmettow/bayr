@@ -40,6 +40,31 @@ discard_redundant.tbl_post <- function(object, except = c())
 	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "value"))
 
 
+#' Varies
+#'
+#' tests if a variable has more than one level.
+#'
+#' TODO:
+#' + transfer to remodels.
+#' + think about NA handling
+#'
+#'
+#' @param D data frame
+#' @return data frame
+#'
+#' @export
+#' @author Martin Schmettow
+
+varies <- function(x) {
+	#if(all(is.na(x))) return(NA)
+	return(length(unique(x)) > 1)
+}
+
+
+
+
+
+
 
 ################ DPLYR overloaded ###############################
 
