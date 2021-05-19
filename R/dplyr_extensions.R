@@ -57,7 +57,7 @@ discard_redundant.tbl_post <- function(object, except = c())
 
 varies <- function(x) {
 	#if(all(is.na(x))) return(NA)
-	return(length(unique(x)) > 1)
+	return(n_distinct(x) > 1)
 }
 
 

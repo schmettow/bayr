@@ -401,9 +401,9 @@ fixef_ml <-
 
 		out <-
 			bayr::fixef(model, ...)  %>%
-			left_join(T_grpef) %>%
+			left_join(T_grpef, by = c("model", "fixef")) %>%
 			mascutils::discard_redundant()
-		class(out) = append("tbl_fixef_ml", class(out))
+		class(out) <- append("tbl_fixef_ml", class(out))
 		out
 	}
 

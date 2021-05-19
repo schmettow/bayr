@@ -9,9 +9,9 @@
 prep_print_tbl_post <-
 	function(tbl_post){
 		res <- list()
-		res$n_model <- length(unique(tbl_post$model))
-		res$n_iter <- length(unique(tbl_post$iter))
-		res$n_chain <- length(unique(tbl_post$chain))
+		res$n_model <- n_distinct(tbl_post$model)
+		res$n_iter <- n_distinct(tbl_post$iter)
+		res$n_chain <- n_distinct(tbl_post$chain)
 		res$n_param <- nrow(distinct(tbl_post, model, parameter))
 		res$user_annos <- setdiff(names(tbl_post),
 															as.character(bayr:::AllCols))
@@ -188,9 +188,9 @@ knit_print.tbl_post_old <- function(x, ...) {
 
 print.tbl_post_pred <-
 	function(x, ...){
-		n_iter <- length(unique(x$iter))
-		n_chain <- length(unique(x$chain))
-		n_Obs <- length(unique(x$Obs))
+		n_iter <- n_distinct(x$iter)
+		n_chain <- n_distinct(x$chain)
+		n_Obs <- n_distinct(x$Obs)
 		scales <- unique(x$scale)
 		cap <- stringr::str_c("posterior predictions: ",
 													n_iter, " samples in ", n_chain, " chains on ", n_Obs, " observations. (five shown below)")
@@ -209,7 +209,7 @@ print.tbl_post_pred <-
 
 print.tbl_predicted <-
 	function(x, ...) {
-		n_Obs <- length(unique(x$Obs))
+		n_Obs <- n_distinct(x$Obs)
 		cap <-
 			stringr::str_c(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
 										 attr(x, "interval")*100, "% credibility limits (five shown below)")
@@ -232,8 +232,8 @@ print.tbl_predicted <-
 knit_print.tbl_post_pred <-
 	function(x, ...){
 		n_iter <- nrow(distinct(x, iter, chain))
-		n_chain <- length(unique(x$chain))
-		n_Obs <- length(unique(x$Obs))
+		n_chain <- n_distinct(x$chain)
+		n_Obs <- n_distinct(x$Obs)
 		scales <- unique(x$scale)
 		cap <- stringr::str_c("posterior predictions: ",
 													n_iter, " samples in ", n_chain, " chains on ",
@@ -362,7 +362,7 @@ knit_print.tbl_fixef_ml <- function (x, ...)
 pre_print_tbl_clu <- function(tbl_clu){
 	cols <- c()
 	types <- unique(tbl_clu$type)
-	if(length(unique(tbl_clu$model)) > 1) cols <- union(cols, "model")
+	if(n_distinct(tbl_clu$model) > 1) cols <- union(cols, "model")
 	cols <- union(cols, "parameter")
 	if("fixef" %in% types)          cols <- union(cols, "fixef")
 	if("grpef" %in% types)          cols <- union(cols, c("fixef", "re_factor"))
