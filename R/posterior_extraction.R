@@ -359,7 +359,7 @@ tbl_post.brmsfit <-
 
 		par_out <-
 			par_out %>%
-			dplyr::distinct(ParameterIDCols) %>%
+			distinct(parameter, type, nonlin, fixef, re_factor, re_entity) %>%
 			full_join(par_order, by = "parameter")
 
 
