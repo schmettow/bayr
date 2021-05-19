@@ -6,6 +6,9 @@
 \alias{knit_print.tbl_post_pred}
 \alias{knit_print.tbl_predicted}
 \alias{post_pred}
+\alias{mtx_post_pred}
+\alias{mtx_post_pred.brmsfit}
+\alias{mtx_post_pred.stanreg}
 \title{posterior predictive extraction}
 \usage{
 \method{print}{tbl_post_pred}(x, ...)
@@ -17,6 +20,12 @@
 \method{knit_print}{tbl_predicted}(x, ...)
 
 post_pred(model, scale = "obs", model_name, thin = 1)
+
+mtx_post_pred(model, ...)
+
+\method{mtx_post_pred}{brmsfit}(model, model_name, newdata = NULL, thin = 1, ...)
+
+\method{mtx_post_pred}{stanreg}(model, model_name, newdata = NULL, thin = 1, ...)
 }
 \arguments{
 \item{model}{Bayesian model object}
@@ -35,8 +44,8 @@ tbl_postpred object with MCMC draws
 chains are stored in a
 long table with the following columns:
 
-chain  iter   parameter   value  type  order
-(fctr) (int)  (chr)       (dbl)  (chr) (int)
+chain  iter   Obs   value  type  order
+(fctr) (int)  (int)       (dbl)  (chr) (int)
 }
 \description{
 MCMC predicted values are  extracted from a Bayesian (regression) object

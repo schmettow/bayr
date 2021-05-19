@@ -65,7 +65,7 @@ predict.brmsfit <-
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...)
-		tbl_post_pred(x, ...) %>% predict(scale, center, interval)
+		post_pred(x, ...) %>% predict(scale, center, interval)
 
 
 
@@ -76,7 +76,7 @@ predict.stanreg <-	function(x,
 														scale = c("resp"),
 														center =  median,
 														interval = .95, ...)
-	tbl_post_pred(x, ...) %>% predict(scale, center, interval)
+	post_pred(x, ...) %>% predict(scale, center, interval)
 
 
 
