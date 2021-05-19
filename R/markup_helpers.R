@@ -576,7 +576,7 @@ md_coef =
 			if(length(filter_crit) > 0) warning("selection by row overides selection by filter")
 			tbl_coef = slice(tbl_coef, row)
 		} else {
-			tbl_coef = filter_(tbl_coef, .dots = filter_crit)
+			tbl_coef = filter(tbl_coef, filter_crit)
 		}
 
 		if(nrow(tbl_coef) == 0) stop("md_coef: parameter does not exist")
