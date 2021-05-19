@@ -8,6 +8,7 @@ ParameterIDCols = c("parameter", "type", "nonlin", "fixef", "re_factor", "re_ent
 AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 
 
+
 #' posterior extraction
 #'
 #' MCMC chains are  extracted from a Bayesian (regression) object
@@ -99,6 +100,15 @@ tbl_post <-
 		UseMethod("tbl_post", model)
 	}
 
+#' @rdname posterior
+#' @export
+
+assert_tbl_post <-
+	function (x, ...) {
+		assert_names(x, model, chain, iter, parameter, type, value, order)
+		assert_key(x, model, chain, iter, parameter)
+	}
+
 
 # tidy_samples.brmsfit <-	function(model, ...){
 # 	model = M_1_b
@@ -145,6 +155,8 @@ tbl_post <-
 # }
 
 
+#' @rdname posterior
+#' @export
 
 
 tbl_post.data.frame <-
@@ -152,9 +164,9 @@ tbl_post.data.frame <-
 	## - identifying user_annos (all user annos)
 	## - registering user annos (explicit user annos)
 	## - keep attribute user_annos (keep user annos)
-	function(df, ...) {
-		if(! all(as.character(AllCols) %in% names(df))) stop("not a valid tbl_post, some columns missing")
-		out <- df
+	function(x, ...) {
+		assert_tbl_post(x)
+		out <- x
 		class(out) <- append("tbl_post", class(out))
 		out
 	}
@@ -347,7 +359,7 @@ tbl_post.brmsfit <-
 
 		par_out <-
 			par_out %>%
-			dplyr::distinct_(.dots = ParameterIDCols) %>%
+			dplyr::distinct(ParameterIDCols) %>%
 			full_join(par_order, by = "parameter")
 
 
