@@ -438,14 +438,14 @@ ranef.tbl_post <-
 
 ranef.MCMCglmm <-
 	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 #' @rdname coef.tbl_post
 #' @export
 
 ranef.brmsfit <-
 	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 
 #' @rdname coef.tbl_post
@@ -453,14 +453,14 @@ ranef.brmsfit <-
 
 ranef.stanfit <-
 	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 #' @rdname coef.tbl_post
 #' @export
 
 ranef.stanreg <-
 	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate)
+		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 
 ##################### GRPEF ######################
