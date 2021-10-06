@@ -19,12 +19,10 @@ LazyData: TRUE
 License: GPL-3
 Depends: R (>= 3.6.1)
 Suggests:
-    ggplot2,
-    testthat,
+    brms (>= 2.0.0),
     lme4
 Imports:
     rstanarm (>= 2.14.1),
-    brms (>= 2.0.0),
     dplyr (>= 1.0.0),
     nlme,
     tidyr,
