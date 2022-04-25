@@ -21,8 +21,6 @@
 #' @return CLU table (tbl_clu) with parameter name, estimate and interval.
 #' @author Martin Schmettow
 #' @import dplyr
-#' @import lme4
-#' @import broom.mixed
 #' @import assertthat
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
@@ -162,6 +160,58 @@ clu.stanfit <-
 clu.stanreg <-
 	function(object, ...)
 		tbl_post(object) %>% clu()
+
+
+#' @rdname clu
+#' @export
+
+# clu.glm <-
+# 	function(model,
+# 					 mean.func = identity,
+# 					 model_name = as.character(deparse(substitute(model))),
+# 					 interval = .95){
+# 		lower <- (1-interval)/2
+# 		upper <- 1-(1-interval)/2
+#
+# 		model %>%
+# 			tidy(conf.int = T, conf.level = ) %>%
+# 			rename(parameter = term,
+# 						 re_factor = group,
+# 						 type = effect,
+# 						 center = estimate,
+# 						 lower = conf.low,
+# 						 upper = conf.high) %>%
+# 			mutate(model = model_name,
+# 						 center = mean.func(center),
+# 						 lower = mean.func(lower),
+# 						 upper = mean.func(upper),
+# 						 type = if_else(type == "fixed",
+# 						 							 "fixef",
+# 						 							 str_extract(parameter,
+# 						 							 						"^cor|^sd")))
+#
+# 		ranefs <-
+# 			nlme::ranef(model) %>%
+# 			map_dfr(as_tibble, rownames = "re_entity", .id = "re_factor") %>%
+# 			pivot_longer(!starts_with("re_"),
+# 									 names_to = "fixef",
+# 									 values_to = "center") %>%
+# 			mutate(model = model_name,
+# 						 parameter = str_c(re_factor,"_",re_entity,".",fixef),
+# 						 type = "ranef",
+# 						 lower = NA,
+# 						 upper = NA)
+#
+# 		out <-
+# 			bind_rows(pop_level,
+# 								ranefs) %>%
+# 			filter(!is.na(center))
+#
+# 		class(out) <- c("tbl_clu", class(out))
+# 		attr(out, "interval") <- interval
+# 		out
+# 	}
+
 
 #' @rdname clu
 #' @export

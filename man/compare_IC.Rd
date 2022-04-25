@@ -8,7 +8,7 @@
 \usage{
 \method{print}{tbl_IC_comp}(x, ...)
 
-\method{knit_print}{tbl_IC_comp}(x, ...)
+knit_print.tbl_IC_comp(x, ...)
 
 compare_IC(ic_list)
 }

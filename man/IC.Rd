@@ -8,7 +8,7 @@
 \usage{
 \method{print}{tbl_IC}(x, ...)
 
-\method{knit_print}{tbl_IC}(x, ...)
+knit_print.tbl_IC(x, ...)
 
 IC(ic)
 }

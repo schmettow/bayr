@@ -86,7 +86,7 @@ grpef(object, estimate = median, ...)
 
 \method{print}{tbl_coef}(x, ...)
 
-\method{knit_print}{tbl_coef}(x, ...)
+knit_print.tbl_coef(x, ...)
 }
 \arguments{
 \item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}

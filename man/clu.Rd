@@ -45,7 +45,7 @@ assert_clu(x)
 
 \method{print}{tbl_clu}(x, ...)
 
-\method{knit_print}{tbl_clu}(x, ...)
+knit_print.tbl_clu(x, ...)
 }
 \arguments{
 \item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}

@@ -8,15 +8,15 @@
 \alias{discard_redundant.tbl_post}
 \title{Removing redundant variables}
 \usage{
-\method{discard_redundant}{tbl_clu}(object, except = c())
+discard_redundant.tbl_clu(object, except = c())
 
-\method{discard_redundant}{tbl_coef}(object, except = c())
+discard_redundant.tbl_coef(object, except = c())
 
-\method{discard_redundant}{tbl_post_pred}(object, except = c())
+discard_redundant.tbl_post_pred(object, except = c())
 
-\method{discard_redundant}{tbl_predicted}(object, except = c())
+discard_redundant.tbl_predicted(object, except = c())
 
-\method{discard_redundant}{tbl_post}(object, except = c())
+discard_redundant.tbl_post(object, except = c())
 }
 \arguments{
 \item{except}{vector of column names to keep}
