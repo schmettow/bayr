@@ -15,9 +15,9 @@
 
 \method{print}{tbl_predicted}(x, ...)
 
-knit_print.tbl_post_pred(x, ...)
+\method{knit_print}{tbl_post_pred}(x, ...)
 
-knit_print.tbl_predicted(x, ...)
+\method{knit_print}{tbl_predicted}(x, ...)
 
 post_pred(model, scale = "obs", model_name, thin = 1)
 

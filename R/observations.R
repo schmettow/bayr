@@ -25,7 +25,7 @@ as_tbl_obs <- function(x, ...) UseMethod("as_tbl_obs", x)
 
 as_tbl_obs.tbl_df <- function(x) {
 	x <- mutate(x, Obs = row_number()) %>%
-		mascutils::go_first(Obs)
+		go_first(Obs)
 	class(x) <- c("tbl_obs", class(x))
 	x
 }

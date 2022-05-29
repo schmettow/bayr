@@ -162,8 +162,6 @@ clu.stanreg <-
 		tbl_post(object) %>% clu()
 
 
-#' @rdname clu
-#' @export
 
 # clu.glm <-
 # 	function(model,
@@ -223,6 +221,8 @@ clu.glmerMod <-
 					 interval = .95){
 		lower <- (1-interval)/2
 		upper <- 1-(1-interval)/2
+
+		require(broom)
 
 		pop_level <-
 			model %>%
@@ -452,7 +452,7 @@ fixef_ml <-
 		out <-
 			bayr::fixef(model, ...)  %>%
 			left_join(T_grpef, by = c("model", "fixef")) %>%
-			mascutils::discard_redundant()
+			discard_redundant()
 		class(out) <- append("tbl_fixef_ml", class(out))
 		out
 	}

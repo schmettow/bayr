@@ -10,7 +10,7 @@ fixef_ml(object, ...)
 
 \method{print}{tbl_fixef_ml}(x, ...)
 
-knit_print.tbl_fixef_ml(x, ...)
+\method{knit_print}{tbl_fixef_ml}(x, ...)
 }
 \arguments{
 \item{object}{tbl_post (brms, rstanarm) object holding the posterior in long format}

@@ -13,7 +13,7 @@
 \usage{
 \method{print}{tbl_post}(x, ...)
 
-knit_print.tbl_post(x, ...)
+\method{knit_print}{tbl_post}(x, ...)
 
 posterior(model, shape, ...)
 

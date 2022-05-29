@@ -10,7 +10,7 @@
 \usage{
 \method{print}{tbl_obs}(x, ...)
 
-knit_print.tbl_obs(x, ...)
+\method{knit_print}{tbl_obs}(x, ...)
 
 as_tbl_obs(x)
 

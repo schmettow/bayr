@@ -483,7 +483,7 @@ tbl_post.stanreg <-
 			par_out %>%
 			right_join(samples, by = "parameter") %>%
 			mutate(model = NA_character_) %>%
-			mascutils::update_by(type == "grpef",
+			update_by(type == "grpef",
 													 value = sqrt(value)) %>%
 			select(all_of(AllCols))
 

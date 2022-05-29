@@ -1,18 +1,18 @@
 Package: bayr
 Type: Package
 Title: tidy and unified reporting of Bayesian regression models
-Version: 0.9.5
-Date: 2022-04-25
+Version: 0.9.6
+Date: 2022-05-29
 Author: Martin Schmettow
 Maintainer: Martin Schmettow <schmettow@web.de>
 Description: This package makes reporting of Bayesian New Statistics models 
-    easy. A set of wrapper functions unifies extraction of MCMC chains
-    from varios Bayesian implementations (currently: brms, rstanarm, and some lme4).
-    Posterior distributions are stored in annotated long format.
-    Parameters are classified to facilitate further
-    processing with dplyr/tidyr and ggplot2. The reporting functions
-    for posteriors, posterior predictions, coefficient tables and 
-    information criteria all work well with knitr/markdown documents.
+    easy. A set of wrapper functions unifies extraction of parameter estimates 
+    from varios Bayesian implementations (currently: brms and rstanarm).
+    Posterior distributions are stored in an unified long format, so 
+    that customized output tables and plots can be produced with tidy 
+    processing chains. A set of methods makes extraction of parameter estimates,
+    predictions and information criteria easy, tidy and good looking in 
+    Knitr/Markdown reports.
 LazyData: TRUE
 License: GPL-3
 Depends: R (>= 3.6.1)
@@ -27,5 +27,7 @@ Imports:
     tidyr,
     stringr,
     assertthat
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 Encoding: UTF-8
+URL: https://schmettow.github.io/New_Stats/, http://github.com/schmettow/bayr
+BugReports: https://github.com/schmettow/bayr/issues

@@ -33,7 +33,7 @@ prep_print_tbl_post <-
 			group_by(model, parameter, type, nonlin, fixef, re_factor) %>%
 			summarize(count = n()) %>%
 			ungroup() %>%
-			mascutils::discard_all_na()
+			discard_all_na()
 
 		res$disp <-
 			tbl_post %>%
@@ -140,7 +140,7 @@ knit_print.tbl_post_old <- function(x, ...) {
 # print.tbl_coef_EATME <-
 # 	function(x, digits = NULL, title = F, footnote = T,
 # 					 kable = bayr:::by_knitr()){
-# 		out <- mascutils::discard_all_na(x)
+# 		out <- discard_all_na(x)
 # 		if(nrow(out) > 1)	{
 # 			out <- discard_redundant(out)}
 # 		else{
@@ -217,7 +217,7 @@ print.tbl_predicted <-
 			sample_n(min(n_Obs, 5)) %>%
 			arrange(Obs, model) %>%
 			discard_redundant() %>%
-			mascutils::discard_all_na()
+			discard_all_na()
 
 		cat("** ", cap, "\n")
 		print.data.frame(tab)
@@ -242,7 +242,7 @@ knit_print.tbl_post_pred <-
 			sample_n(min(n_Obs, 5)) %>%
 			arrange(model, Obs, chain, iter) %>%
 			discard_redundant() %>%
-			mascutils::discard_all_na()
+			discard_all_na()
 
 		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
 								 collapse = "\n")
@@ -263,7 +263,7 @@ knit_print.tbl_predicted <-
 			sample_n(min(n_Obs, 8)) %>%
 			arrange(Obs, model) %>%
 			discard_redundant() %>%
-			mascutils::discard_all_na()
+			discard_all_na()
 
 		res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...)), collapse = "\n")
 		knitr::asis_output(res)
@@ -287,7 +287,7 @@ print.tbl_coef <- function(x, ...) {
 		#		warning("Intercept model")
 		tab <- select(tab, fixef, center, lower, upper)
 	} else {
-		tab <- mascutils::discard_all_na(x)
+		tab <- discard_all_na(x)
 	}
 	cap <-
 		paste0("Coefficient estimates with ",
@@ -314,7 +314,7 @@ knit_print.tbl_coef <- function (x, ...)
 					 attr(x, "interval")*100,
 					 "% credibility limits")
 	tab = discard_redundant(x) %>%
-		mascutils::discard_all_na()
+		discard_all_na()
 
 	res = paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
 							 collapse = "\n")
@@ -347,8 +347,8 @@ print.tbl_fixef_ml <- function(x, ...) {
 knit_print.tbl_fixef_ml <- function (x, ...)
 {
 	cap <-	paste0("Population-level coefficients with random effects standard deviations")
-	tab <- x %>%	mascutils::discard_all_na()
-	if(nrow(tab > 1)) tab <- tab %>% mascutils::discard_redundant()
+	tab <- x %>%	discard_all_na()
+	if(nrow(tab > 1)) tab <- tab %>% discard_redundant()
 	res <- paste0(c("", "", knitr::kable(tab, caption = cap, format = "markdown", ...), "\n\n"),
 							 collapse = "\n")
 	knitr::asis_output(res)
@@ -371,8 +371,8 @@ pre_print_tbl_clu <- function(tbl_clu){
 	cols <- c(cols, "center", "lower", "upper")
 	out <- tbl_clu %>%
 		select(cols)
-	out <- out %>%	mascutils::discard_all_na()
-	if(nrow(out > 1)) out <- out %>% mascutils::discard_redundant()
+	out <- out %>%	discard_all_na()
+	if(nrow(out > 1)) out <- out %>% discard_redundant()
 	out
 }
 
@@ -389,7 +389,7 @@ pre_print_tbl_clu <- function(tbl_clu){
 # 		#		warning("Intercept model")
 # 		tab <- select(tab, fixef, center, lower, upper)
 # 	} else {
-# 		tab <- mascutils::discard_all_na(x)
+# 		tab <- discard_all_na(x)
 # 	}
 # 	cap <-
 # 		paste0("Estimates with ",
