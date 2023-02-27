@@ -224,7 +224,8 @@ extr_brms_par <-
 		pars %>%
 			filter(!stringr::str_detect(parameter, "_$")) %>%
 			mutate(re_entity = NA_character_) %>%
-			mutate_all(funs(ifelse(. == "", NA_character_, .))) %>%
+			#mutate_all(funs(ifelse(. == "", NA_character_, .))) %>%
+			mutate(across(where(is.character), ~ ifelse(.x == "", NA_character_, .x))) %>%
 			distinct() %>%
 			select(all_of(ParameterIDCols))
 
@@ -244,6 +245,7 @@ tbl_post.brmsfit <-
 
 		samples <-
 			brms::as_draws_df(model) %>%
+			as_tibble() %>%
 			rename(iter = .iteration,
 						 chain = .chain) %>%
 			select(-.draw)

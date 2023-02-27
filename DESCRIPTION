@@ -27,7 +27,7 @@ Imports:
     tidyr,
     stringr,
     assertthat
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Encoding: UTF-8
 URL: https://schmettow.github.io/New_Stats/, http://github.com/schmettow/bayr
 BugReports: https://github.com/schmettow/bayr/issues
