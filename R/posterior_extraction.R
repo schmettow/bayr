@@ -243,12 +243,13 @@ tbl_post.brmsfit <-
 		#model = M_tot
 
 		samples <-
-			brms::posterior_samples(model, add_chain = T) %>%
-			as_tibble()
+			brms::as_draws_df(model) %>%
+			rename(iter = .iteration,
+						 chain = .chain) %>%
+			select(-.draw)
 
 		samples_long <-
 			samples %>%
-			mutate(iter = row_number()) %>%
 			tidyr::gather(parameter, value, -iter, -chain) %>%
 			mutate(parameter = as.character(parameter))
 

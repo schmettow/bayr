@@ -89,7 +89,7 @@ mtx_post_pred.data.frame <-
 
 mtx_post_pred.brmsfit <-
 	function(model, model_name, newdata = NULL, thin = 1, ...){
-		n_iter <- brms::nsamples(model)
+		n_iter <- brms::ndraws(model)
 		n_draws <- round(n_iter/thin, 0)
 		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
 		brms:::predict.brmsfit(model, newdata = newdata, nsamples = n_draws, summary = F)
