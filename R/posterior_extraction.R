@@ -82,7 +82,7 @@ posterior <-
 			stop("Wide format currently not implemented")
 			out <-
 				out %>%
-				dplyr::mutate(parameter = str_c(model, nonlin, fixef, re_factor, re_entity, sep = "_")) %>%
+				dplyr::mutate(parameter = stringr::str_c(model, nonlin, fixef, re_factor, re_entity, sep = "_")) %>%
 				dplyr::select(-order, -type) %>%
 				tidyr::spread(parameter, value)
 		}

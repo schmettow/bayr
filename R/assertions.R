@@ -3,10 +3,10 @@
 assert_has_name <- function(var, x){
 	x_name <- as.character(deparse(substitute(x)))
 	assert_that(has_name(x, var),
-							msg = str_c("Variable ", var," missing in ", x_name))
+							msg = stringr::str_c("Variable ", var," missing in ", x_name))
 
 	assert_that(has_name(x, var),
-							msg = str_c("Variable ", var," does not exist."))
+							msg = stringr::str_c("Variable ", var," does not exist."))
 }
 
 assert_names <- function(x, ...){
@@ -20,6 +20,6 @@ assert_key <- function(x, ...){
 							msg = "At least one key variable must be provided as argument")
 	assert_names(x, ...)
 	assert_that(nrow(x) == nrow(distinct(x, ...)),
-							msg = str_c("<",str_c(var_names, collapse = ","),
+							msg = stringr::str_c("<",str_c(var_names, collapse = ","),
 													"> not unique. Duplicate combinations found."))
 }

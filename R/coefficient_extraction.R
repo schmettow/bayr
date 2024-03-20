@@ -249,7 +249,7 @@ clu.glmerMod <-
 									 names_to = "fixef",
 									 values_to = "center") %>%
 			mutate(model = model_name,
-						 parameter = str_c(re_factor,"_",re_entity,".",fixef),
+						 parameter = stringr::str_c(re_factor,"_",re_entity,".",fixef),
 						 type = "ranef",
 						 lower = NA,
 						 upper = NA)

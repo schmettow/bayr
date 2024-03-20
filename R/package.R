@@ -7,5 +7,5 @@ utils::globalVariables(names = c("type", "parameter", "value",
 																 "new_name", "iter", "pattern","tbl_coef"))
 
 ## for testing purposes using the NewStats infrastructure
-path_NewStats <- str_c("../../../../../Publications/New_Stats/")
-path_Cases <- str_c(path_NewStats, "Cases/")
+path_NewStats <- stringr::str_c("../../../../../Publications/New_Stats/")
+path_Cases <- stringr::str_c(path_NewStats, "Cases/")
