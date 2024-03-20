@@ -48,8 +48,8 @@ chain  iter   Obs   value  type  order
 (fctr) (int)  (int)       (dbl)  (chr) (int)
 }
 \description{
-MCMC predicted values are  extracted from a Bayesian (regression) object
-and returned as a tbl_post_pred object
+MCMC predicted values are extracted from a Bayesian (regression) object
+and returned as a tidy tbl_post_pred object.
 }
 \author{
 Martin Schmettow

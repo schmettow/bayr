@@ -9,8 +9,8 @@ Cols_pp = list("model", "Obs", "chain", "iter", "scale", "value") ## columns for
 
 #' posterior predictive extraction
 #'
-#' MCMC predicted values are  extracted from a Bayesian (regression) object
-#' and returned as a tbl_post_pred object
+#' MCMC predicted values are extracted from a Bayesian (regression) object
+#' and returned as a tidy tbl_post_pred object.
 #'
 #' @usage post_pred(model, scale = "obs", model_name, thin = 1)
 #' @param model Bayesian model object
@@ -34,7 +34,7 @@ Cols_pp = list("model", "Obs", "chain", "iter", "scale", "value") ## columns for
 
 post_pred <-
 	function(model,
-					 scale = "obs",
+					 scale = "resp",
 					 model_name = deparse(substitute(model)),
 					 newdata = NULL,
 					 thin = 1, ...){
@@ -47,7 +47,7 @@ post_pred <-
 			as_tibble() %>%
 			mutate(model = model_name,
 						 chain = 1, ## fixme
-						 scale = "resp", ## fixme
+						 scale = scale, ## fixme
 						 iter = 1:n()) %>%
 			pivot_longer(matches("\\d+"),
 									 names_to = "Obs",
@@ -92,7 +92,7 @@ mtx_post_pred.brmsfit <-
 		n_iter <- brms::ndraws(model)
 		n_draws <- round(n_iter/thin, 0)
 		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
-		brms:::predict.brmsfit(model, newdata = newdata, nsamples = n_draws, summary = F)
+		brms:::predict.brmsfit(model, newdata = newdata, ndraws = n_draws, summary = F)
 
 	}
 
@@ -108,44 +108,3 @@ mtx_post_pred.stanreg <-
 		rstanarm::posterior_predict(model, newdata = newdata, draws = n_draws)
 	}
 
-
-# tbl_post_pred_old.generic <-
-# 	function(sample_matrix, model_name = model_name){
-# 		out <-
-# 			sample_matrix %>%
-# 			as.data.frame() %>%
-# 			as_tibble() %>%
-# 			mutate(model = model_name,
-# 						 chain = 1, ## fixme
-# 						 scale = "resp", ## fixme
-# 						 iter = 1:n()) %>%
-# 			pivot_longer(names_to = "Obs",
-# 										value = "value", -model, -iter, -chain, -scale) %>%
-# 			mutate(Obs = as.integer(stringr::str_replace(Obs, "^V", "")))  ## making observations integer (Vx)
-#
-# 		class(out) <-
-# 			append("tbl_post_pred", class(out))
-# 		out
-# 	}
-#
-# ## Totaler Bullshit! Merged into post_pred.
-# tbl_post_pred.generic <-
-# 	function(sample_matrix, model_name = model_name){
-# 		out <-
-# 			sample_matrix %>%
-# 			as.data.frame() %>%
-# 			as_tibble() %>%
-# 			mutate(model = model_name,
-# 						 chain = 1, ## fixme
-# 						 scale = "resp", ## fixme
-# 						 iter = 1:n()) %>%
-# 			pivot_longer(matches("^V\\d+"),
-# 									 names_to = "Obs",
-# 									 values_to = "value") %>%
-# 			mutate(Obs = as.integer(stringr::str_replace(Obs, "^V", ""))) %>%
-# 			select(model, Obs, chain, iter, scale, value) %>%
-# 			arrange(model, Obs, chain, iter, scale)
-# 		class(out) <-
-# 			append("tbl_post_pred", class(out))
-# 		out
-# 	}
