@@ -11,7 +11,7 @@ assert_has_name <- function(var, x){
 
 assert_names <- function(x, ...){
 	var_names <- as.character(rlang::exprs(...))
-	walk(var_names, assert_has_name, x)
+	purrr::walk(var_names, assert_has_name, x)
 }
 
 assert_key <- function(x, ...){
