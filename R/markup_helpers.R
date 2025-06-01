@@ -1,3 +1,4 @@
+
 #library(tidyverse)
 
 ## dplyr is used with NSE, which gives "no visible binding for global variable errors"
@@ -58,9 +59,9 @@ prep_print_tbl_post <-
 			mutate(parameter = "")
 
 		res$comb <-
-			full_join(res$effects, res$disp) %>%
-			full_join(res$shape) %>%
-			full_join(res$cor)
+			full_join(res$effects, res$disp, by = join_by(model, parameter, type, fixef)) %>%
+			full_join(res$shape, join_by(model, parameter, type)) %>%
+			full_join(res$cor, by = join_by(model, parameter, type, count))
 
 		res
 	}

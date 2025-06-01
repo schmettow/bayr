@@ -411,7 +411,7 @@ tbl_post.stanreg <-
 			select(parameter) %>%
 			distinct() %>%
 			mutate(type = case_when(
-				stringr::str_detect(.$parameter, "sigma_resid") ~ "disp",
+				stringr::str_detect(.$parameter, "sigma_resid|reciprocal_dispersion") ~ "disp",
 				stringr::str_detect(.$parameter, "^b\\[.*\\]") ~ "ranef",
 				stringr::str_detect(.$parameter, "^Sigma\\[.*\\]") ~ "grpef",
 				stringr::str_detect(.$parameter, "^shape") ~ "shape",
