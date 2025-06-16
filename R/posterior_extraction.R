@@ -186,19 +186,20 @@ extr_brms_par <-
 
 		pars <-
 			model$prior %>%
-			select(-prior, fixef = coef, re_factor = group, nonlin = nlpar) %>%
+			select(-prior, fixef = coef, re_factor = group, nonlin = nlpar, dist = dpar) %>%
 			filter(class %in% c("b", "sd"))
 
 		pars$type <-
 			case_when(
-				pars$class == "b"  ~ "fixef",
-				pars$class == "sd" ~ "disp")
+				pars$class == "b" &! pars$dist == "" ~ "shape",
+				pars$class == "b"                    ~ "fixef",
+				pars$class == "sd"                   ~ "disp")
 
 		pars$parameter <-
 			case_when(
-				pars$class == "b" & pars$nonlin == "" ~
+				pars$class == "b" & pars$nonlin == ""  ~
 					stringr::str_c(pars$class, "_", pars$fixef),
-				pars$class == "b" & pars$nonlin != "" ~
+				pars$class == "b" & pars$nonlin != ""  ~
 					stringr::str_c(pars$class, "_",pars$nonlin,"_", pars$fixef),
 				pars$class == "sd" & pars$nonlin == "" ~
 					stringr::str_c(pars$class, "_", pars$re_factor, "__", pars$fixef),
