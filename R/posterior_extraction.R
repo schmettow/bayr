@@ -171,14 +171,12 @@ tbl_post.data.frame <-
 
 
 extr_brms_par <-
-	function(model){
+	function(model, par_names){
 
 		# model <- M_tot
 
-		## use fixef and ranef parnames for check
-		pn_fe <- rownames(brms::fixef(model))
-		try(pn_re <- names(brms::ranef(model)), silent = T)
-
+		## fixed-effect names are the draw names starting with "b_"
+		pn_fe <- stringr::str_remove(par_names[stringr::str_detect(par_names, "^b_")], "^b_")
 
 		pars <-
 			model$prior %>%
@@ -281,7 +279,7 @@ tbl_post.brmsfit <-
 			select(parameter, type, pattern)
 
 		brms_pars <-
-			extr_brms_par(model) %>%
+			extr_brms_par(model, par_names = colnames(samples)) %>%
 			select(-type)
 
 		par_all <-

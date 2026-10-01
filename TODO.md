@@ -31,7 +31,7 @@ check output.
 | Package installs | ✅ fixed in Phase 0 (removed `library(tidyverse)`; globals moved to `R/globals.R`) |
 | Dependencies declared | ✅ fixed (Phases 0–1: `knitr`+`plyr/purrr/rlang/tibble` added to `Imports`; `broom.mixed` declared in `Suggests` for the `glmerMod` tidier) |
 | Examples run | ✅ fixed in Phase 1 |
-| Tests run | ❌ still Phase 3 (fixture location + dev script); test deps now declared except `tidyverse` |
+| Tests run | ✅ fixed in Phase 3 (`FAIL 0 | PASS 82`; no samplers during check) |
 | Docs code/doc match | ✅ fixed in Phase 1 |
 | S3 consistency | ✅ fixed in Phase 1 |
 | `R code for possible problems` | ✅ fixed in Phase 1 |
@@ -59,6 +59,13 @@ verify current time` (environmental, not a package issue).
 > instead of warning), which broke the `go_arrange` example — fixed in Phase 5.
 > Other superseded verbs (`sample_n`, `transmute_all`, `one_of`, `gather`,
 > `spread`) still work with deprecation warnings.
+
+**After Phase 3:** full `R CMD check` (tests enabled) passes in ~50 s with
+`Status: 1 NOTE` (`brms:::predict.brmsfit`) and `checking tests ... OK`
+(`FAIL 0 | WARN 6 | PASS 82`). With `--as-cran` (tests enabled) the result is
+`Status: 3 NOTEs`: incoming feasibility (`New submission`), the environmental
+time-stamp NOTE and the `brms:::` NOTE. The `tidyverse` tests WARNING and the
+top-level-file NOTE are gone.
 
 ---
 
@@ -183,13 +190,12 @@ unqualified helpers were namespace-qualified (`stringr::str_c`,
 `@importFrom stats sd` were added.
 `checking R code for possible problems ... OK`.
 
-### 1.7 Unstated test dependencies — ⚠️ PARTIAL
+### 1.7 Unstated test dependencies ✅
 
 - [x] Added `testthat (>= 3.0.0)` to `Suggests` and
   `Config/testthat/edition: 3` to `DESCRIPTION`.
-- [ ] Remaining: `'library' or 'require' call not declared from: 'tidyverse'`
-  (the tests also use `mascutils`). Deliberately left to Phase 3, which
-  rewrites the tests and their fixtures.
+- [x] The `tidyverse` / `mascutils` calls were removed in Phase 3;
+  `checking for unstated dependencies in 'tests' ... OK`.
 
 ---
 
@@ -215,34 +221,48 @@ unqualified helpers were namespace-qualified (`stringr::str_c`,
 
 ---
 
-## Phase 3 — Tests and fixtures
+## Phase 3 — Tests and fixtures ✅ DONE
 
-The tests cannot pass as-is during `R CMD check`:
+The test suite was rebuilt around a pre-computed fixture; no model is fitted
+during `R CMD check`.
 
-- [ ] **`tests/prepare_test_models.R` runs during check** (R CMD check sources
-  every `.R` in `tests/`). It builds `brms`/`rstanarm` models, reads
-  `"tests/Pumps.csv"` (wrong path from the `tests/` working directory), and
-  needs `mascutils`/`readr`. Move it to `data-raw/` (and add `^data-raw$` to
-  `.Rbuildignore`) so it is never part of the shipped package.
-- [ ] **`tests/testthat/*.R` load `"M_1.Rda"`** with a path that does not match
-  the file location (`M_1.Rda` currently sits at package root and is shipped
-  at the tarball top level). testthat runs with the working directory set to
-  `tests/testthat/`, so the file is not found.
-  - Either move the fixture to `tests/testthat/` and load it relative to the
-    test, or ship it under `inst/extdata/` and load via `system.file()`.
-- [ ] **Remove the non-CRAN test dependency `mascutils`.** It is only used to
-  load fixture models. Replace with base `load()`/`readr` (add `readr` to
-  `Suggests`) or drop it.
-- [ ] **Avoid fitting Bayesian models inside `R CMD check`** — it is slow and
-  fragile on CRAN machines. Prefer:
-  - small pre-computed fixtures (`.rds`/`.Rda`) of a *tbl_post*-like object so
-    the pure-data functions are tested without Stan, and
-  - `testthat::skip_on_cran()` around anything that must run a sampler.
-- [ ] Re-instate the currently commented-out tests once fixtures are stable, or
-  delete them — half-dead test files give false confidence.
-- [ ] Add `tests/testthat/test-*.R` coverage for the exported helpers that have
-  no tests yet (`md_coef`/`frm_coef`, `z_trans`, `rescale_*`, `reorder_levels`,
-  `discard_redundant`, `update_by`, `left_union`).
+- [x] **`tests/prepare_test_models.R` moved to `data-raw/prepare_test_models.R`**
+  (together with `Pumps.csv`) and rewritten to read from `data-raw/` and write
+  the fixture to `tests/testthat/M_1.Rda`. `data-raw/` is in `.Rbuildignore`,
+  so the script is never shipped and never runs during check.
+- [x] **Fixture relocated** to `tests/testthat/M_1.Rda` and re-compressed with
+  `compress = "xz"` (1.9 MB → 0.9 MB); tests load it via
+  `testthat::test_path("M_1.Rda")`. This also removes the non-standard
+  top-level file reported by `--as-cran`.
+- [x] **`mascutils` (and `tidyverse`) removed from the tests.** They now need
+  only `brms`, `rstanarm`, `lme4` and `broom.mixed` (all in `Suggests`), each
+  guarded with `skip_if_not_installed()`.
+- [x] **No samplers run during check.** The extraction tests load the
+  pre-computed fits; everything else runs on a dependency-free synthetic
+  `tbl_post` built in `helper-fixtures.R` (`tbl_post_fixture()`).
+- [x] **Dead, commented-out tests deleted** and replaced with focused coverage:
+
+| File | Covers |
+|---|---|
+| `test-posterior-extraction.R` | `tbl_post()` validation, `posterior()` and `fixef()`/`grpef()`/`ranef()`/`clu()` on real `brms`/`rstanarm` fits |
+| `test-par-tables.R` | `clu()`/`coef()`/`fixef()`/`grpef()`/`ranef()`/`re_scores()`, print/`knit_print` methods, `lme4` + `broom.mixed` path |
+| `test-helpers.R` | `z_trans()`, `rescale_*()`, `reorder_levels()`, `discard_redundant()`, `discard_all_na()`, `update_by()`, `left_union()`, `go_first()`/`go_arrange()`, `expand_grid()` |
+| `test-md-coef.R` | `md_coef()`/`frm_coef()` formatting, selection and error paths |
+
+Bugs the new tests found and that were fixed in this pass:
+
+- [x] **`md_coef()`/`frm_coef()` always returned `character(0)`** — the
+  accumulator was initialised with `as.character()` (length 0) and
+  `stringr::str_c()` then recycled to zero length. `R/markup_helpers.R` now
+  starts from `""`.
+- [x] **`brms::fixef()`/`brms::ranef()` caused infinite recursion** in
+  `extr_brms_par()`: `brms` and `bayr` both register `fixef.brmsfit`, so
+  `brms::fixef()` dispatched back into `bayr`'s method → `tbl_post()` →
+  `extr_brms_par()` → ... `extr_brms_par()` now derives the fixed-effect names
+  from the draw names (`b_*`) and the unused `ranef()` call was dropped.
+- [x] Deprecated tidyselect usage surfaced by the tests replaced:
+  `select(cols)` → `select(all_of(cols))` in `pre_print_tbl_clu()` and
+  `one_of()` → `any_of()` in `discard_all_na()`.
 
 ---
 
@@ -272,9 +292,8 @@ The tests cannot pass as-is during `R CMD check`:
   results for the submission.
 - [x] **`.Rbuildignore` tidied** (Phase 2 pass): the duplicated `^.*\.Rproj$`
   was removed and `^cran-comments\.(Rmd|md)$`, `^AGENTS\.md$`, `^TODO\.md$`,
-  `^data-raw$` and `^\.github$` were added. Still to consider in Phase 3:
-  `^M_1\.Rda$` (only if the fixture is not moved under `tests/` or `inst/`),
-  plus `^.*\.tar\.gz$` / `^.*\.Rcheck$`.
+  `^data-raw$` and `^\.github$` were added. The fixture now lives under
+  `tests/` (Phase 3), so no `M_1.Rda` entry is needed.
 - [ ] **Add `NEWS.md`** (CRAN likes a changelog; makes release notes easy) and a
   `README.md` / `README.Rmd` for the GitHub landing page.
 - [ ] **Add a `LICENSE` note?** Not required for `GPL-3`, but consider
@@ -292,13 +311,17 @@ The tests cannot pass as-is during `R CMD check`:
   Consider renaming (e.g. `expand_grid_df`) or dropping it.
 - [x] `arrange_` → `arrange(!!!rlang::syms(...))` in `go_arrange()`
   (`arrange_()` became **defunct** in dplyr 1.2.1, so this was blocking).
+- [x] `one_of()` → `any_of()` in `discard_all_na()` (Phase 3).
 - [ ] Replace the remaining superseded APIs before CRAN (they still work with
   deprecation warnings, but CRAN runs current packages):
   `tidyr::gather`/`spread` → `pivot_longer`/`pivot_wider`;
   `mutate_all`/`transmute_all` → `across()`;
-  `dplyr::sample_n` → `slice_sample()`;
-  `one_of()` → `any_of()`;
-  `data_frame()` → `tibble()` (now only in comments).
+  `dplyr::sample_n` → `slice_sample()`.
+- [ ] **Silence dplyr's many-to-many join warnings** in the `tbl_post.*`
+  extraction code (`WARN 6` in the test run). The joins are intentional and
+  filtered afterwards, but dplyr 1.2.1 flags them; make the relationship
+  explicit (`relationship = "many-to-many"`) or restructure the
+  `type_mapping` join.
 - [ ] `discard_all_na()` uses `plyr::aaply(as.matrix(D), 2, ...)`, which
   coerces mixed-type tibbles to character. Prefer a pure-dplyr
   `select(where(~ !all(is.na(.x))))` and drop the `plyr` dependency entirely.

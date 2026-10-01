@@ -245,7 +245,7 @@ discard_all_na <-
 	function(D){
 		filter = which(plyr::aaply(as.matrix(D), 2, any_not_na))
 		var_non_na = colnames(D)[filter]
-		out = select(D, one_of(var_non_na))
+		out = select(D, any_of(var_non_na))
 		out
 	}
 

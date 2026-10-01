@@ -375,7 +375,7 @@ pre_print_tbl_clu <- function(tbl_clu){
 	if("disp"  %in% types)          cols <- union(cols, c("parameter"))
 	cols <- c(cols, "center", "lower", "upper")
 	out <- tbl_clu %>%
-		select(cols)
+		select(all_of(cols))
 	out <- out %>%	discard_all_na()
 	if(nrow(out > 1)) out <- out %>% discard_redundant()
 	out
@@ -591,7 +591,7 @@ md_coef <- function(tbl_coef, ...,
 	if(nrow(tbl_coef) == 0) stop("md_coef: parameter does not exist")
 	if(nrow(tbl_coef) > 1)  stop("md_coef: parameter is not unique, ", print(tbl_coef))
 
-	out = as.character()
+	out = ""
 
 	if(prefix) warning("prefix not yet implemented")
 
