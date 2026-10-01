@@ -17,16 +17,21 @@ LazyData: TRUE
 License: GPL-3
 Depends: R (>= 3.6.1)
 Suggests:
+    broom,
     brms (>= 2.0.0),
     lme4,
-    broom.mixed,
     rstanarm (>= 2.14.1)
 Imports:
+    assertthat,
     dplyr (>= 1.0.0),
+    knitr,
     nlme,
-    tidyr,
+    plyr,
+    purrr,
+    rlang,
     stringr,
-    assertthat
+    tibble,
+    tidyr
 RoxygenNote: 7.2.3
 Encoding: UTF-8
 URL: https://schmettow.github.io/New_Stats/, http://github.com/schmettow/bayr

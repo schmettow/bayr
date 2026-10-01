@@ -1,8 +1,4 @@
-#library(tidyverse)
 
-## dplyr is used with NSE, which gives "no visible binding for global variable errors"
-#utils::globalVariables(names = c("type", "parameter", "value",
-#																 "new_name", "iter", "pattern"))
 
 ParameterIDCols = c("parameter", "type", "nonlin", "fixef", "re_factor", "re_entity")
 AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
