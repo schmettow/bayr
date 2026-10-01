@@ -50,3 +50,9 @@ Write code in tidyverse style and follow tidy-data principles.
 - Use `TRUE`/`FALSE`, never `T`/`F`.
 - Never call `library()`/`require()` in package code; use `pkg::fun` or
   `@importFrom` and regenerate `NAMESPACE` with roxygen2.
+
+## 3. Ambiguity in multiple subtasks
+
+When commanded to perform multiple subtasks, 
+- always perform them sequentially, one after the other, rather than in parallel.
+- when ambiguity arises for one or more subtasks, skip these tasks and add a note after the remaining tasks. Outline the ambiguity and make suggestions how to resolve it.
