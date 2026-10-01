@@ -29,7 +29,7 @@ check output.
 | Check | Result |
 |---|---|
 | Package installs | ✅ fixed in Phase 0 (removed `library(tidyverse)`; globals moved to `R/globals.R`) |
-| Dependencies declared | ✅ fixed in Phase 0 (`knitr`+`plyr/purrr/rlang/tibble` added; phantom `broom.mixed` dropped; `broom` added to `Suggests`) |
+| Dependencies declared | ✅ fixed (Phases 0–1: `knitr`+`plyr/purrr/rlang/tibble` added to `Imports`; `broom.mixed` declared in `Suggests` for the `glmerMod` tidier) |
 | Examples run | ✅ fixed in Phase 1 |
 | Tests run | ❌ still Phase 3 (fixture location + dev script); test deps now declared except `tidyverse` |
 | Docs code/doc match | ✅ fixed in Phase 1 |
@@ -42,11 +42,17 @@ Target for submission: **0 ERROR, 0 WARNING, 0 NOTE**.
 **After Phase 0:** `checking package dependencies ... OK` and the package
 installs cleanly.
 
-**After Phase 1 (this pass):** `Status: 1 WARNING, 1 NOTE` with tests skipped
-(tests are Phase 3). `checking examples ... OK`, and the S3, codoc,
-`Rd \usage` and "possible problems" checks are all OK. The remaining WARNING
-(`tidyverse` in tests) and NOTE (`require(broom)` + `brms:::predict.brmsfit`)
-are the two deliberately skipped items / Phase 3 work.
+**After Phase 1:** `Status: 1 WARNING, 1 NOTE` with tests skipped (tests are
+Phase 3). `checking examples ... OK`, and the S3, codoc, `Rd \usage` and
+"possible problems" checks are all OK. The remaining WARNING (`tidyverse` in
+tests) is Phase 3; the NOTE is now only `brms:::predict.brmsfit`.
+
+> **Environment note:** while wiring up `glmerMod`, the user library was
+> upgraded (`dplyr` 1.2.1, `rlang` 1.3.0, `broom.mixed` 0.2.9.7 installed via
+> Posit PPM binaries). In `dplyr` 1.2.1 `arrange_()` is now *defunct* (errors
+> instead of warning), which broke the `go_arrange` example — fixed in Phase 5.
+> Other superseded verbs (`sample_n`, `transmute_all`, `one_of`, `gather`,
+> `spread`) still work with deprecation warnings.
 
 ---
 
@@ -64,8 +70,9 @@ are the two deliberately skipped items / Phase 3 work.
 - [x] **Dropped the phantom `broom.mixed` from `Suggests`** (unused anywhere in
   `R/` or `tests/`).
 - [x] **Added the actually-used packages to `Imports`:** `knitr`, `tibble`,
-  `rlang`, `purrr`, `plyr`. `broom` (needed only by `clu.glmerMod`) was added to
-  `Suggests`. `Imports`/`Suggests` are now sorted alphabetically.
+  `rlang`, `purrr`, `plyr`. `Imports`/`Suggests` are sorted alphabetically.
+  (The `glmerMod` tidier ended up needing `broom.mixed`, not `broom` — see
+  Phase 1.5.)
 
 Verified on a fresh `R CMD build` + `R CMD check`:
 
@@ -75,9 +82,8 @@ Verified on a fresh `R CMD build` + `R CMD check`:
 ```
 
 > Note: the old `'library' or 'require' call to 'broom'` and `':::'` findings
-> remain as a **NOTE** (not a WARNING) — they are tracked in Phase 1.5, not
-> here. `checking dependencies in R code` now only reports the `:::`-related
-> items plus the `require(broom)` call.
+> were tracked to Phase 1.5 and are now resolved (the `glmerMod` tidier uses
+> `broom.mixed`; only the `brms:::predict.brmsfit` NOTE remains).
 
 ---
 
@@ -152,9 +158,12 @@ All methods now match their generics: `as_tbl_obs.*` gained `...`;
   calls with `print.data.frame()`.
 - [x] Replaced `brms:::fixef.brmsfit` / `brms:::ranef.brmsfit` with the
   exported `brms::fixef()` / `brms::ranef()` (both are exported).
-- [ ] ⏭️ **SKIPPED — `require(broom)` in `clu.glmerMod()`.** Whether to keep
-  the `glmerMod` backend at all is still open; the `glmerMod` tidier lives in
-  `broom.mixed` (not installed here), not in `broom`. Decision needed.
+- [x] **`clu.glmerMod()` — kept, now uses `broom.mixed`.** Replaced
+  `require(broom)` with `requireNamespace("broom.mixed")` plus a clear error
+  message, and the unqualified `tidy()` with `broom.mixed::tidy(conf.int = TRUE)`
+  (the empty `conf.level = ` argument was a bug and was dropped). `broom` was
+  swapped for `broom.mixed` in `Suggests`. Runtime-tested on a `glmer()`
+  binomial model; returns fixed, SD and random-effect rows as expected.
 - [ ] ⏭️ **SKIPPED — `brms:::predict.brmsfit`.** The obvious replacement,
   `stats::predict()`, would recurse into `bayr`'s own `predict.brmsfit` method.
   Needs either `brms::posterior_predict()` (verify the returned shape first) or
@@ -253,7 +262,8 @@ The tests cannot pass as-is during `R CMD check`:
   - `MCMCglmm`, `rstan`/`stanfit` are not in `Suggests`, and the docs say
     support is "currently: brms and rstanarm".
   Either implement + declare these backends, or remove the methods to match the
-  documented scope. Same question for `clu.glmerMod` (needs broom.mixed).
+  documented scope. (`clu.glmerMod` is confirmed in scope — it uses
+  `broom.mixed` for quick lme4 model checks.)
 - [ ] **`cran-comments.Rmd` is stale** (dated 2016, "Windows 7", "R 3.2.3",
   GPL noise) and is excluded from the build. Replace with a current
   `cran-comments.md` that reflects the actual test environments and check
@@ -284,13 +294,15 @@ The tests cannot pass as-is during `R CMD check`:
 - [ ] `expand_grid()` (`R/dplyr_extensions.R`) shadows `tidyr::expand_grid`,
   which is imported wholesale. `library(bayr)` will emit a masking message.
   Consider renaming (e.g. `expand_grid_df`) or dropping it.
-- [ ] Replace superseded APIs so examples/tests don't emit deprecation noise:
+- [x] `arrange_` → `arrange(!!!rlang::syms(...))` in `go_arrange()`
+  (`arrange_()` became **defunct** in dplyr 1.2.1, so this was blocking).
+- [ ] Replace the remaining superseded APIs before CRAN (they still work with
+  deprecation warnings, but CRAN runs current packages):
   `tidyr::gather`/`spread` → `pivot_longer`/`pivot_wider`;
   `mutate_all`/`transmute_all` → `across()`;
-  `arrange_` → `arrange()` + `across()`;
   `dplyr::sample_n` → `slice_sample()`;
   `one_of()` → `any_of()`;
-  `data_frame()` → `tibble()`.
+  `data_frame()` → `tibble()` (now only in comments).
 - [ ] `discard_all_na()` uses `plyr::aaply(as.matrix(D), 2, ...)`, which
   coerces mixed-type tibbles to character. Prefer a pure-dplyr
   `select(where(~ !all(is.na(.x))))` and drop the `plyr` dependency entirely.
@@ -313,22 +325,22 @@ Rscript -e 'devtools::build()'           # produces bayr_<ver>.tar.gz
 _R_CHECK_FORCE_SUGGESTS_=false R CMD check --as-cran bayr_0.9.8.tar.gz
 ```
 
-Also install `broom.mixed` (or remove it — see Phase 0) before the final run so
-the dependency check is exercised honestly. For a real submission, run
+`broom.mixed` is now installed and declared in `Suggests`. For a real
+submission, run
 `--as-cran` on **both** Windows and Linux, and on the current R release and
 R-devel.
 
 ## Open questions for you
 
-1. **Scope of backends** — is MCMCglmm / rstan (`stanfit`) / `glmerMod` support
-   intended, or should the package officially support only `brms` + `rstanarm`
-   as the DESCRIPTION says? This determines whether we implement and declare
-   those packages, or delete the dead methods.
+1. **Scope of backends** — `glmerMod` is confirmed in scope (kept, using
+   `broom.mixed`). Still open: MCMCglmm / rstan (`stanfit`), for which there is
+   no working `tbl_post` method and no declared dependency. Keep and implement,
+   or delete?
 2. **`go_first`/`go_arrange` API** — ✅ resolved provisionally in Phase 1: the
    `~` examples were stale (never worked with `select()`), so the docs now use
    the bare-name/tidyselect form (`go_first(D, y)`). Confirm, or the function
    will be changed to accept `~y` instead.
 3. **Test strategy** — OK to ship small pre-computed `.rda`/`.rds` fixtures and
    skip sampler-fitting on CRAN?
-4. **`broom.mixed`** — remove the phantom `Suggests` entry, or wire up the
-   `glmerMod` tidier properly?
+4. ~~`broom.mixed`~~ — ✅ resolved: declared in `Suggests` and used for the
+   `glmerMod` tidier.

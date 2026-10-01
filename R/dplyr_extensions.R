@@ -58,7 +58,7 @@ go_arrange <-
 		cols <- quos(...)
 		df1 <- dplyr::select(D, !!!cols)
 		out <- left_union(df1, D) %>%
-			dplyr::arrange_(names(df1))
+			dplyr::arrange(!!!rlang::syms(names(df1)))
 		class(out) <- class
 		out
 	}

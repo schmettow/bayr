@@ -221,11 +221,13 @@ clu.glmerMod <-
 		lower <- (1-interval)/2
 		upper <- 1-(1-interval)/2
 
-		require(broom)
+		if (!requireNamespace("broom.mixed", quietly = TRUE))
+			stop("Package 'broom.mixed' is required to tidy lme4 models. ",
+			     "Please install it with install.packages(\"broom.mixed\").")
 
 		pop_level <-
 			object %>%
-			tidy(conf.int = T, conf.level = ) %>%
+			broom.mixed::tidy(conf.int = TRUE) %>%
 			rename(parameter = term,
 						 re_factor = group,
 						 type = effect,
