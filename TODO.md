@@ -35,7 +35,7 @@ check output.
 | Docs code/doc match | ✅ fixed in Phase 1 |
 | S3 consistency | ✅ fixed in Phase 1 |
 | `R code for possible problems` | ✅ fixed in Phase 1 |
-| DESCRIPTION metadata | ⚠️ as-cran NOTEs (title case, "This package", stale `Date`, invalid URL) |
+| DESCRIPTION metadata | ✅ fixed in Phase 2 (as-cran incoming NOTE is only `Maintainer:` + `New submission`) |
 
 Target for submission: **0 ERROR, 0 WARNING, 0 NOTE**.
 
@@ -46,6 +46,12 @@ installs cleanly.
 Phase 3). `checking examples ... OK`, and the S3, codoc, `Rd \usage` and
 "possible problems" checks are all OK. The remaining WARNING (`tidyverse` in
 tests) is Phase 3; the NOTE is now only `brms:::predict.brmsfit`.
+
+**After Phase 2:** plain check unchanged at `Status: 1 WARNING, 1 NOTE`
+(tests skipped). With `--as-cran` the incoming-feasibility NOTE contains only
+`Maintainer:` and `New submission`; the extra as-cran NOTEs are `M_1.Rda` at
+top level (Phase 3), `brms:::predict.brmsfit` (Phase 1.5 skip) and `unable to
+verify current time` (environmental, not a package issue).
 
 > **Environment note:** while wiring up `glmerMod`, the user library was
 > upgraded (`dplyr` 1.2.1, `rlang` 1.3.0, `broom.mixed` 0.2.9.7 installed via
@@ -187,29 +193,25 @@ unqualified helpers were namespace-qualified (`stringr::str_c`,
 
 ---
 
-## Phase 2 — DESCRIPTION metadata (as-cran NOTEs)
+## Phase 2 — DESCRIPTION metadata ✅ DONE
 
-- [ ] **Title case.** Current: `tidy and unified reporting of Bayesian regression models`.
-  Required: `Tidy and Unified Reporting of Bayesian Regression Models`.
-- [ ] **Description must not start with "This package"/package name.**
-  Also fix typos: `varios` → `various`, `an unified` → `a unified`. Consider
-  adding a reference/`<doi:...>` and confirming brms/rstanarm support matches
-  the code (the docs claim MCMCglmm/stanfit/glmerMod too — see below).
-- [ ] **Use `Authors@R`** instead of `Author` + `Maintainer`, e.g.
-  `Authors@R: person("Martin", "Schmettow", email = "schmettow@web.de", role = c("aut", "cre"))`,
-  and drop the standalone `Author`/`Maintainer` fields.
-- [ ] **Remove the `Date:` field** (as-cran: *"The Date field is over a month old"*;
-  `R CMD build` adds the canonical build timestamp).
-- [ ] **Fix the URL**: `http://github.com/schmettow/bayr` redirects;
-  as-cran reports *"URL moved to https://github.com/schmettow/bayr"*. Use https
-  for both URLs.
-- [ ] **Remove `LazyData: TRUE`** (no `data/` directory) — the build already
-  prints `Omitted 'LazyData' from DESCRIPTION` and check emits
-  `NOTE: 'LazyData' is specified without a 'data' directory`.
-- [ ] Keep `Imports` sorted and versioned consistently; bump `RoxygenNote`
-  after regenerating with the installed roxygen2 (7.3.1). Confirm
-  `Depends: R (>= 3.6.1)` is still the floor you want (the code needs
-  rlang/tidyr/dplyr features but no newer base R).
+- [x] **Title case:** `Tidy and Unified Reporting of Bayesian Regression Models`.
+- [x] **Description rewritten** so it no longer starts with "This package";
+  typos fixed (`varios` → `various`, `an unified` → `a unified`) and software
+  names quoted (`'brms'`, `'rstanarm'`, `'lme4'`, `'knitr'`, `'Markdown'`).
+  A reference was added: Kruschke and Liddell (2018),
+  <doi:10.1177/2515245918771329>. The wording now matches the confirmed
+  backend scope (`glmerMod` included via `broom.mixed`).
+- [x] **`Authors@R`** added (`aut` + `cre`); the standalone `Author` /
+  `Maintainer` fields were removed.
+- [x] **`Date:` removed** (`R CMD build` supplies the build timestamp).
+- [x] **URLs fixed to https** (website and GitHub).
+- [x] **`LazyData: TRUE` removed** (there is no `data/` directory).
+- [x] `Imports`/`Suggests` sorted; `RoxygenNote` is 7.3.1.
+  `Depends: R (>= 3.6.1)` left unchanged — no newer base-R features are used.
+- [x] Verified with `R CMD check --as-cran`: the incoming-feasibility NOTE now
+  contains only the expected `Maintainer:` and `New submission` lines.
+  (The DOI was accepted and the URL check is clean.)
 
 ---
 
@@ -268,17 +270,11 @@ The tests cannot pass as-is during `R CMD check`:
   GPL noise) and is excluded from the build. Replace with a current
   `cran-comments.md` that reflects the actual test environments and check
   results for the submission.
-- [ ] **Tidy `.Rbuildignore`**: it lists `^.*\.Rproj$` twice and omits the new
-  artifacts. Suggested additions:
-  ```
-  ^cran-comments\.(Rmd|md)$
-  ^data-raw$
-  ^M_1\.Rda$          # only if not moved into tests/inst
-  ^\.github$
-  ^.*\.tar\.gz$
-  ^.*\.Rcheck$
-  ^TODO\.md$
-  ```
+- [x] **`.Rbuildignore` tidied** (Phase 2 pass): the duplicated `^.*\.Rproj$`
+  was removed and `^cran-comments\.(Rmd|md)$`, `^AGENTS\.md$`, `^TODO\.md$`,
+  `^data-raw$` and `^\.github$` were added. Still to consider in Phase 3:
+  `^M_1\.Rda$` (only if the fixture is not moved under `tests/` or `inst/`),
+  plus `^.*\.tar\.gz$` / `^.*\.Rcheck$`.
 - [ ] **Add `NEWS.md`** (CRAN likes a changelog; makes release notes easy) and a
   `README.md` / `README.Rmd` for the GitHub landing page.
 - [ ] **Add a `LICENSE` note?** Not required for `GPL-3`, but consider
@@ -329,6 +325,10 @@ _R_CHECK_FORCE_SUGGESTS_=false R CMD check --as-cran bayr_0.9.8.tar.gz
 submission, run
 `--as-cran` on **both** Windows and Linux, and on the current R release and
 R-devel.
+
+> `checking for future file timestamps ... NOTE: unable to verify current
+> time` is an environment artefact (no reliable time source in this sandbox),
+> not a package issue.
 
 ## Open questions for you
 

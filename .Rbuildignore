@@ -1,4 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^.*\.Rproj$
-cran-comments.Rmd
+^cran-comments\.(Rmd|md)$
+^AGENTS\.md$
+^TODO\.md$
+^data-raw$
+^\.github$
