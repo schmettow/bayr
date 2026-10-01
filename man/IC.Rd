@@ -13,6 +13,10 @@
 IC(ic)
 }
 \arguments{
+\item{x}{tbl_IC object}
+
+\item{...}{ignored}
+
 \item{ic}{loo.psis, kfold or waic object}
 }
 \value{

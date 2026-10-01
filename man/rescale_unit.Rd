@@ -25,6 +25,8 @@ rescale_zero_one(
 \item{lower}{lowest possible value}
 
 \item{upper}{highest possible value}
+
+\item{scale}{rescale factor}
 }
 \value{
 numerical vector

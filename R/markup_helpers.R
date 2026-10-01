@@ -13,7 +13,7 @@ prep_print_tbl_post <-
 		res$n_chain <- n_distinct(tbl_post$chain)
 		res$n_param <- nrow(distinct(tbl_post, model, parameter))
 		res$user_annos <- setdiff(names(tbl_post),
-															as.character(bayr:::AllCols))
+															as.character(AllCols))
 
 
 		res$model <-
@@ -68,6 +68,8 @@ prep_print_tbl_post <-
 
 
 #' @rdname posterior
+#' @param x tbl_post object
+#' @param ... ignored
 #' @export
 
 print.tbl_post <-
@@ -106,7 +108,7 @@ knit_print.tbl_post <- function(x, ...) {
 
 
 knit_print.tbl_post_old <- function(x, ...) {
-	tbls <- bayr:::prep_print_tbl_post(x)
+	tbls <- prep_print_tbl_post(x)
 	# res <- paste0("\n\n** tbl_post: ", tbls$n_iter,
 	# 							" samples in ", tbls$n_chain, " chains\n\n",
 	# 							collapse ="\n")
@@ -181,6 +183,8 @@ knit_print.tbl_post_old <- function(x, ...) {
 
 
 #' @rdname post_pred
+#' @param x tbl_post_pred object
+#' @param ... ignored
 #' @export
 
 
@@ -276,6 +280,7 @@ knit_print.tbl_predicted <-
 #################### COEF ######################
 
 #' @rdname coef.tbl_post
+#' @param x tbl_coef object
 #' @export
 
 print.tbl_coef <- function(x, ...) {
@@ -324,6 +329,7 @@ knit_print.tbl_coef <- function (x, ...)
 #################### FIXEF_ML ######################
 
 #' @rdname fixef_ml
+#' @param x tbl_fixef_ml object
 #' @export
 
 print.tbl_fixef_ml <- function(x, ...) {
@@ -446,7 +452,7 @@ print.tbl_obs <- function(x, ...) {
 	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part)
 	cap <- stringr::str_c("Data set",": showing ", n, " of ", nrow(x), " observations")
 	print(cap)
-	base:::print.data.frame(tab)
+	print.data.frame(tab)
 	invisible(x)
 }
 
@@ -490,11 +496,13 @@ knit_print.tbl_obs_old <- function(x, ...) {
 ################# IC ########################
 
 #' @rdname IC
+#' @param x tbl_IC object
+#' @param ... ignored
 #' @export
 
 print.tbl_IC <- function(x, ...) {
 	cap <- stringr::str_c("Estimated Information Criterion")
-	base:::print.data.frame(x)
+	print.data.frame(x)
 	invisible(x)
 }
 
@@ -509,11 +517,13 @@ knit_print.tbl_IC <- function(x, ...) {
 }
 
 #' @rdname compare_IC
+#' @param x tbl_IC_comp object
+#' @param ... ignored
 #' @export
 
 print.tbl_IC_comp <- function(x, ...) {
 	cap <- stringr::str_c("Model ranking by predictive accuracy")
-	base:::print.data.frame(x)
+	print.data.frame(x)
 	invisible(x)
 }
 
@@ -544,7 +554,7 @@ knit_print.tbl_IC_comp <- function(x, ...) {
 #' @param center add center estimate (TRUE)
 #' @param interval add interval (TRUE)
 #' @param prefix add prefix term with coef name (not implemented)
-#' @param rounding digits (2)
+#' @param round digits (2)
 #' @param neg output negative estimate
 #' @param mean_fnc mean function (identity)
 #' @return markdown string

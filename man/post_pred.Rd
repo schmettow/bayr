@@ -19,7 +19,14 @@
 
 \method{knit_print}{tbl_predicted}(x, ...)
 
-post_pred(model, scale = "obs", model_name, thin = 1)
+post_pred(
+  model,
+  scale = "resp",
+  model_name = deparse(substitute(model)),
+  newdata = NULL,
+  thin = 1,
+  ...
+)
 
 mtx_post_pred(model, ...)
 
@@ -28,6 +35,10 @@ mtx_post_pred(model, ...)
 \method{mtx_post_pred}{stanreg}(model, model_name, newdata = NULL, thin = 1, ...)
 }
 \arguments{
+\item{x}{tbl_post_pred object}
+
+\item{...}{ignored}
+
 \item{model}{Bayesian model object}
 
 \item{scale}{"response" or "lin_pred"}

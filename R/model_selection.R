@@ -27,7 +27,7 @@ IC <- function (ic){
 #' puts them into a tidy model comparison table.
 #'
 #' @usage compare_IC(ic_list)
-#' @param ic loo.psis, kfold or waic object
+#' @param ic_list loo.psis, kfold or waic objects
 #' @return tbl_df
 #' @author Martin Schmettow
 #' @import dplyr

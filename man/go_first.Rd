@@ -12,22 +12,22 @@ go_arrange(D, ...)
 \arguments{
 \item{D}{data frame}
 
-\item{...}{formulas, like in select, but with ~}
+\item{...}{columns to move, using dplyr::select tidyselect semantics}
 }
 \value{
 data frame
 
 go_first and go_arrange expect a column specification, similar to
-dplyr::select, but as a formula
+dplyr::select
 }
 \description{
 The referred column becomes the first, keeping the order of the others
 }
 \examples{
-D <- data_frame(x = 1:3, y = 6:4, z = c(8,9,7))
-go_first(D, ~y)
-go_first(D, ~y:z)
-go_arrange(D, ~y)
+D <- tibble::tibble(x = 1:3, y = 6:4, z = c(8,9,7))
+go_first(D, y)
+go_first(D, y:z)
+go_arrange(D, y)
 
 
 

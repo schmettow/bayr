@@ -9,9 +9,9 @@ update_by(D, by, ...)
 \arguments{
 \item{D}{data frame}
 
-\item{...}{expressions}
+\item{by}{predicate function (like dplyr::filter)}
 
-\item{filter}{predicate function (like dplyr::filter)}
+\item{...}{expressions}
 }
 \value{
 data frame
@@ -22,12 +22,12 @@ Applies mutations to the filtered group, only.
 update columns conditionally
 }
 \examples{
-D <- tribble(~group, ~value,  1, 4, 1, 9, 2, -4, 2, -9)
+D <- tibble::tibble(group = c(1, 1, 2, 2), value = c(4, 9, -4, -9))
 
-D \%>\% mutate(value = if_else(group == 1, sqrt(value), value))
+dplyr::mutate(D, value = dplyr::if_else(group == 1, sqrt(value), value))
 ## Produces NaNs, because sqrt() is evaluated before selection
 
-D \%>\% mutate_by(group == 1, value = sqrt(value))
+update_by(D, group == 1, value = sqrt(value))
 ## sqrt() is only evaluated
 
 }

@@ -12,7 +12,6 @@ AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 #' (chain, iter, parameter, value, type, order). Parameters are classified
 #' as fixef, ranef, grpef and named after a common scheme.
 #'
-#' @usage posterior(model, shape, ...)
 #' @param model Bayesian model object
 #' @param shape return tbl_post in long shape or tbl_df in wide shape
 #' @param thin thinning factor
@@ -32,6 +31,7 @@ AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 #' @author Martin Schmettow
 #' @import dplyr
 #' @importFrom knitr knit_print
+#' @importFrom stats formula
 #' @export
 
 
@@ -160,9 +160,9 @@ tbl_post.data.frame <-
 	## - identifying user_annos (all user annos)
 	## - registering user annos (explicit user annos)
 	## - keep attribute user_annos (keep user annos)
-	function(x, ...) {
-		assert_tbl_post(x)
-		out <- x
+	function(model, ...) {
+		assert_tbl_post(model)
+		out <- model
 		class(out) <- append("tbl_post", class(out))
 		out
 	}
@@ -176,8 +176,8 @@ extr_brms_par <-
 		# model <- M_tot
 
 		## use fixef and ranef parnames for check
-		pn_fe <- rownames(brms:::fixef.brmsfit(model))
-		try(pn_re <- names(brms:::ranef.brmsfit(model)), silent = T)
+		pn_fe <- rownames(brms::fixef(model))
+		try(pn_re <- names(brms::ranef(model)), silent = T)
 
 
 		pars <-

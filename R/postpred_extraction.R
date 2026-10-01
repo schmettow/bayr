@@ -9,7 +9,6 @@ Cols_pp = list("model", "Obs", "chain", "iter", "scale", "value") ## columns for
 #' MCMC predicted values are extracted from a Bayesian (regression) object
 #' and returned as a tidy tbl_post_pred object.
 #'
-#' @usage post_pred(model, scale = "obs", model_name, thin = 1)
 #' @param model Bayesian model object
 #' @param newdata new data to predict from
 #' @param scale "response" or "lin_pred"
@@ -74,7 +73,7 @@ mtx_post_pred.data.frame <-
 	## - registering user annos (explicit user annos)
 	## - keep attribute user_annos (keep user annos)
 	function(df, model_name, thin = 1, ...) {
-		if(! all(as.character(bayr:::AllCols) %in% names(df)))
+		if(! all(as.character(AllCols) %in% names(df)))
 			stop("not a valid tbl_post_pred, some columns missing")
 		out = df
 		class(out) = append("tbl_post_pred", class(out))

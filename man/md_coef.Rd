@@ -41,11 +41,11 @@ frm_coef(
 
 \item{prefix}{add prefix term with coef name (not implemented)}
 
+\item{round}{digits (2)}
+
 \item{mean_fnc}{mean function (identity)}
 
 \item{neg}{output negative estimate}
-
-\item{rounding}{digits (2)}
 }
 \value{
 markdown string

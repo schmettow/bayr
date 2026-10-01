@@ -35,10 +35,11 @@
   type = c("fixef", "ranef"),
   mean.func = identity,
   estimate = median,
-  interval = 0.95
+  interval = 0.95,
+  ...
 )
 
-\method{coef}{data.frame}(df, ...)
+\method{coef}{data.frame}(object, ...)
 
 \method{coef}{MCMCglmm}(object, estimate = median, ...)
 
@@ -102,6 +103,8 @@ grpef(object, estimate = median, ...)
 \item{interval}{credibility interval: .95}
 
 \item{...}{ignored}
+
+\item{x}{tbl_coef object}
 }
 \value{
 coefficient table with parameter name, estimate and interval

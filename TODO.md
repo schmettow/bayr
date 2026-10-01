@@ -30,18 +30,23 @@ check output.
 |---|---|
 | Package installs | ✅ fixed in Phase 0 (removed `library(tidyverse)`; globals moved to `R/globals.R`) |
 | Dependencies declared | ✅ fixed in Phase 0 (`knitr`+`plyr/purrr/rlang/tibble` added; phantom `broom.mixed` dropped; `broom` added to `Suggests`) |
-| Examples run | ❌ `go_first` example errors (`data_frame` removed from dplyr) |
-| Tests run | ❌ tests load a fixture that isn't where they look for it; dev script runs during check |
-| Docs code/doc match | ❌ 4 codoc mismatches, ~15 `\usage`/`\arguments` mismatches |
-| S3 consistency | ❌ ~15 WARNINGs |
-| `R code for possible problems` | ⚠️ NOTE (undefined globals, `:::` calls) |
+| Examples run | ✅ fixed in Phase 1 |
+| Tests run | ❌ still Phase 3 (fixture location + dev script); test deps now declared except `tidyverse` |
+| Docs code/doc match | ✅ fixed in Phase 1 |
+| S3 consistency | ✅ fixed in Phase 1 |
+| `R code for possible problems` | ✅ fixed in Phase 1 |
 | DESCRIPTION metadata | ⚠️ as-cran NOTEs (title case, "This package", stale `Date`, invalid URL) |
 
 Target for submission: **0 ERROR, 0 WARNING, 0 NOTE**.
 
-**After Phase 0 (this pass):** `checking package dependencies ... OK` and the
-package installs cleanly; the remaining check result is **4 WARNINGs, 2 NOTEs**,
-all of which are Phase 1 items.
+**After Phase 0:** `checking package dependencies ... OK` and the package
+installs cleanly.
+
+**After Phase 1 (this pass):** `Status: 1 WARNING, 1 NOTE` with tests skipped
+(tests are Phase 3). `checking examples ... OK`, and the S3, codoc,
+`Rd \usage` and "possible problems" checks are all OK. The remaining WARNING
+(`tidyverse` in tests) and NOTE (`require(broom)` + `brms:::predict.brmsfit`)
+are the two deliberately skipped items / Phase 3 work.
 
 ---
 
@@ -76,32 +81,35 @@ Verified on a fresh `R CMD build` + `R CMD check`:
 
 ---
 
-## Phase 1 — `R CMD check` ERRORs / WARNINGs
+## Phase 1 — `R CMD check` ERRORs / WARNINGs — ✅ DONE (2 items skipped)
 
-### 1.1 Examples must run (`checking examples ... ERROR`)
+### 1.1 Examples must run ✅
 
-- [ ] **`go_first` example (`R/dplyr_extensions.R` ~line 30, `man/go_first.Rd`)**
-  uses `data_frame()`, which dplyr no longer re-exports:
-  ```
-  Error in data_frame(...) : could not find function "data_frame"
-  Execution halted
-  ```
-  - Replace `data_frame(...)` with `tibble::tibble(...)` (or `tribble`).
-  - The example also calls `go_first(D, ~y)` / `go_arrange(D, ~y)`, but
-    `go_first()` passes its `...` to `dplyr::select()`, which rejects formulas:
-    ```
-    Error in dplyr::select(D, !!!cols) : Formula shorthand must be wrapped in `where()`.
-    ```
-    `go_first(D, y)` works; the `~` form does not. Decide whether the
-    documented API is the formula form (then fix the function) or the bare-name
-    form (then fix the docs). Update the roxygen source and regenerate `man/`.
+- [x] **`go_first` / `go_arrange` example** (`R/dplyr_extensions.R`,
+  `man/go_first.Rd`). Fixed by replacing `data_frame()` with `tibble::tibble()`
+  and by using the tidyselect form the implementation actually supports:
+  `go_first(D, y)`, `go_first(D, y:z)`, `go_arrange(D, y)`. `select()` rejects
+  the `~` formula shorthand in every dplyr version, so the documented formula
+  form was stale docs rather than a working API; `@param ...` was updated to
+  match. Verified: `checking examples ... OK`.
+  > ⚠️ **Decision to confirm:** I kept the current function behaviour and fixed
+  > the docs. If the formula API (`~y`) was actually intended, the function
+  > needs to be changed instead — see "Open questions".
+- [x] **`update_by` example** (`R/dplyr_extensions.R`, `man/update_by.Rd`).
+  Fixed `mutate_by()` → `update_by()`. The example is now self-contained
+  (`tibble::tibble()`, `dplyr::mutate()`, `dplyr::if_else()`, no `%>%`),
+  because examples run with only `bayr` attached and cannot see
+  imported-but-not-exported helpers such as `tribble` or `%>%`.
+- [x] No example needs a fitted model, so no `\dontrun{}` / `\donttest{}`
+  wrapping was needed.
 
-- [ ] **`update_by` example (`R/dplyr_extensions.R` ~line 102, `man/update_by.Rd`)**
-  calls `mutate_by(...)`, but the function is named `update_by(...)`. Fix the
-  example. (`tribble` is fine — it is re-exported through the dplyr import.)
+### 1.2 Codoc mismatches ✅
 
-- [ ] If any example needs a fitted model, wrap it in `\dontrun{}` /
-  `\donttest{}`, and never reference objects that are not created in the example.
+All four fixed in the roxygen source and regenerated with
+`roxygen2::roxygenise()` (RoxygenNote bumped to 7.3.1): the `as_tbl_obs`
+methods now take `...`; the hand-written `@usage` overrides in `post_pred`,
+`posterior`, `as_tbl_obs` and `re_scores` were removed; `@param newdata` was
+added to `post_pred`. `checking for code/documentation mismatches ... OK`.
 
 ### 1.2 Codoc mismatches — `\usage` must match the code (`WARNING`)
 
@@ -118,88 +126,55 @@ Regenerate docs (`devtools::document()`) after fixing. Concrete mismatches:
   Remove the `@usage` override and document all arguments.
 - [ ] `re_scores.Rd`: docs omit the `type = "ranef"` argument.
 
-### 1.3 Rd `\usage` sections — undocumented / stale arguments (`WARNING`)
+### 1.3 Rd `\usage` sections ✅
 
-Remove hand-written `@usage` tags (they are the cause of most of these) and make
-`@param` match the real signatures:
+All entries resolved by removing stale `@usage` tags and bringing `@param` in
+line with the signatures (`@param ic` → `ic_list`, `@param rounding` → `round`,
+`@param filter` → `by`, `@param model` → `object` in `fixef_ml`, plus
+`@param x` / `@param ...` / `@param scale` / `@param model_name` where methods
+and arguments were previously undocumented). The not-implemented placeholders
+`join.tbl_coef*` / `seperate.tbl_coef` and their `man/*.Rd` were deleted.
+`checking Rd \usage sections ... OK`.
 
-- [ ] `IC.Rd`: `'x' '...'` undocumented (`print`/`knit_print` methods).
-- [ ] `as_tbl_obs.Rd`: `'...'` undocumented.
-- [ ] `clu.Rd`: `'x' 'df' 'model_name'` undocumented.
-- [ ] `coef.tbl_post.Rd`: `'df' 'x'` undocumented.
-- [ ] `compare_IC.Rd`: `'x' '...' 'ic_list'` undocumented; documented arg
-  `'ic'` not in usage (rename the `@param ic` to `@param ic_list`).
-- [ ] `discard_redundant.Rd`: `'...' 'object'` undocumented.
-- [ ] `fixef_ml.Rd`: `'x'` undocumented; `'model'` documented but not in usage.
-- [ ] `join.tbl_coef.Rd`, `seperate.tbl_coef.Rd`: `'x' 'y'` undocumented,
-  `'first' 'second' 'modelnames'` not in usage — **these document
-  not-implemented placeholders; delete the functions *and* their `man/*.Rd`**
-  (see Phase 4).
-- [ ] `md_coef.Rd`: `'round'` undocumented; `'rounding'` documented but not in usage.
-- [ ] `post_pred.Rd`: `'x' '...'` undocumented.
-- [ ] `posterior.Rd`: `'x' '...'` undocumented; `'thin' 'type' 'model_name'` not in usage.
-- [ ] `re_scores.Rd`: `'type'` documented but not in usage.
-- [ ] `rescale_unit.Rd`: `'scale'` undocumented.
-- [ ] `update_by.Rd`: `'by'` undocumented; `'filter'` documented but not in usage.
+### 1.4 S3 generic / method consistency ✅
 
-### 1.4 S3 generic / method consistency (`WARNING`)
+All methods now match their generics: `as_tbl_obs.*` gained `...`;
+`clu.tbl_post` and `coef.tbl_post` gained `...`; `clu.data.frame`,
+`clu.glmerMod` and `coef.data.frame` use `object`; `discard_redundant.*` use
+`D` + `...`; `predict.tbl_post_pred/brmsfit/stanreg` use `object`;
+`tbl_post.data.frame` uses `model`.
+`checking S3 generic/method consistency ... OK`.
 
-Each method must be compatible with its generic's formals (same first-argument
-name, and include `...` when the generic has it):
+### 1.5 Dependencies in R code — ✅ mostly DONE (2 items skipped)
 
-- [ ] `as_tbl_obs.data.frame`, `as_tbl_obs.tbl_df` → `function(x, ...)`.
-- [ ] `clu.tbl_post` → add `...`; `clu.data.frame`, `clu.glmerMod` → first arg
-  should be `object` (generic is `clu(object, ...)`).
-- [ ] `coef.tbl_post` → add `...`; `coef.data.frame` → rename `df` → `object`.
-- [ ] `discard_redundant.*` → add `...` (generic is `discard_redundant(D, except, ...)`).
-- [ ] `predict.tbl_post_pred`, `predict.brmsfit`, `predict.stanreg` → rename
-  first argument `x` → `object` (generic is `stats::predict(object, ...)`).
-- [ ] `tbl_post.data.frame` → rename `x` → `model` (generic is `tbl_post(model, ...)`).
+- [x] Removed all `bayr:::` self-calls (`AllCols`, `prep_print_tbl_post`,
+  `tbl_post.data.frame`) and replaced all three `base:::print.data.frame`
+  calls with `print.data.frame()`.
+- [x] Replaced `brms:::fixef.brmsfit` / `brms:::ranef.brmsfit` with the
+  exported `brms::fixef()` / `brms::ranef()` (both are exported).
+- [ ] ⏭️ **SKIPPED — `require(broom)` in `clu.glmerMod()`.** Whether to keep
+  the `glmerMod` backend at all is still open; the `glmerMod` tidier lives in
+  `broom.mixed` (not installed here), not in `broom`. Decision needed.
+- [ ] ⏭️ **SKIPPED — `brms:::predict.brmsfit`.** The obvious replacement,
+  `stats::predict()`, would recurse into `bayr`'s own `predict.brmsfit` method.
+  Needs either `brms::posterior_predict()` (verify the returned shape first) or
+  an accepted `:::` NOTE. Decision needed.
 
-### 1.5 Dependencies in R code (`WARNING`)
+### 1.6 `R code for possible problems` ✅
 
-- [ ] Remove `require(broom)` from `clu.glmerMod()` (`R/coefficient_extraction.R`
-  line 222). `broom` is now declared in `Suggests` (Phase 0), so only the code
-  change remains: call `broom::tidy()` guarded by `requireNamespace()`. Note the
-  tidier for `glmerMod` actually comes from **broom.mixed** — decide whether to
-  support `glmerMod` at all.
-- [ ] Replace `base:::print.data.frame` with plain `print.data.frame()`
-  (`R/markup_helpers.R` lines 449, 497, 516).
-- [ ] Stop reaching into another package's internals:
-  `brms:::fixef.brmsfit`, `brms:::ranef.brmsfit` (`R/posterior_extraction.R`
-  lines 179–180) and `brms:::predict.brmsfit` (`R/postpred_extraction.R` line 92).
-  Use the exported `brms::fixef()` / `brms::ranef()` / `stats::predict()`.
-- [ ] Remove `bayr:::` self-calls (a package never needs `:::` for its own
-  objects): `bayr:::AllCols` (`R/markup_helpers.R` line 16,
-  `R/postpred_extraction.R` line 77), `bayr:::prep_print_tbl_post`
-  (`R/markup_helpers.R` line 109), `bayr:::tbl_post.data.frame`
-  (`R/posterior_manip.R` line 53).
+`R/globals.R` now declares the full set of NSE globals; the remaining
+unqualified helpers were namespace-qualified (`stringr::str_c`,
+`purrr::map_dfr`, `stringr::str_extract`); `@importFrom stats formula` and
+`@importFrom stats sd` were added.
+`checking R code for possible problems ... OK`.
 
-### 1.6 `R code for possible problems` (`NOTE`)
+### 1.7 Unstated test dependencies — ⚠️ PARTIAL
 
-- [ ] **Define all NSE globals in one place.** `R/package.R` currently declares
-  only six, duplicated, and misses dozens. Add a single
-  `utils::globalVariables(c(...))` covering at least:
-  `.chain .draw .iteration .tmp_idx Estimate Model Obs Part SD SE center chain
-  conf.high conf.low diff_IC dpar effect estimate fe_value fixef_2 group lower
-  map_dfr model nlpar nonlin prior re_1 re_entity re_factor sd str_c str_extract
-  term tidy upper`
-  (or switch to the `.data[[...]]` pronoun, which is the more future-proof fix).
-- [ ] `importFrom("stats", "formula")` (used in `posterior()` at
-  `formula(model)`) and `sd` (used in `z()`). Add via roxygen `@importFrom`.
-- [ ] `error("Not implemented")` is not a function — it should be `stop()`.
-  These are the placeholder functions `join.tbl_coef`, `join.tbl_coefcomp`,
-  `seperate.tbl_coef` (see Phase 4).
-
-### 1.7 Unstated test dependencies (`WARNING`)
-
-```
-'library' or 'require' calls not declared from: 'testthat' 'tidyverse'
-```
-
-- [ ] Add `testthat (>= 3.0.0)` to `Suggests`, plus `Config/testthat/edition: 3`.
-- [ ] The tests also load `mascutils` and `tidyverse`. `mascutils` is not on
-  CRAN — see Phase 3.
+- [x] Added `testthat (>= 3.0.0)` to `Suggests` and
+  `Config/testthat/edition: 3` to `DESCRIPTION`.
+- [ ] Remaining: `'library' or 'require' call not declared from: 'tidyverse'`
+  (the tests also use `mascutils`). Deliberately left to Phase 3, which
+  rewrites the tests and their fixtures.
 
 ---
 
@@ -262,10 +237,15 @@ The tests cannot pass as-is during `R CMD check`:
 
 ## Phase 4 — Housekeeping / artifacts
 
-- [ ] **Delete the not-implemented placeholders** `join.tbl_coef`,
-  `join.tbl_coefcomp`, `seperate.tbl_coef` (`R/coefficient_extraction.R`
-  ~lines 587–625) and their `man/join.tbl_coef.Rd`, `man/seperate.tbl_coef.Rd`.
-  They contain broken `error()` calls and generate `\usage` WARNINGs.
+- [x] **Deleted the not-implemented placeholders** `join.tbl_coef`,
+  `join.tbl_coefcomp`, `seperate.tbl_coef` (`R/coefficient_extraction.R`) and
+  their `man/join.tbl_coef.Rd`, `man/seperate.tbl_coef.Rd` (done in Phase 1.3).
+- [ ] **Silence roxygen2 7.3.1's unregistered-S3-method warnings:**
+  `knit_print.tbl_obs_old`, `knit_print.tbl_post_old`
+  (`R/markup_helpers.R`) and `mtx_post_pred.data.frame`
+  (`R/postpred_extraction.R`) look like S3 methods but are not registered.
+  Either delete the dead `*_old` functions or register them if they are meant
+  to be used.
 - [ ] **Decide the fate of the dead/partial backends.** `NAMESPACE` registers
   methods for `MCMCglmm`, `stanfit` and `glmerMod`, but:
   - there is **no `tbl_post.MCMCglmm`**, so `clu.MCMCglmm`/`coef.MCMCglmm`/
@@ -344,8 +324,10 @@ R-devel.
    intended, or should the package officially support only `brms` + `rstanarm`
    as the DESCRIPTION says? This determines whether we implement and declare
    those packages, or delete the dead methods.
-2. **`go_first`/`go_arrange` API** — formula (`~y`) or bare names (`y`)? The
-   docs and implementation disagree.
+2. **`go_first`/`go_arrange` API** — ✅ resolved provisionally in Phase 1: the
+   `~` examples were stale (never worked with `select()`), so the docs now use
+   the bare-name/tidyselect form (`go_first(D, y)`). Confirm, or the function
+   will be changed to accept `~y` instead.
 3. **Test strategy** — OK to ship small pre-computed `.rda`/`.rds` fixtures and
    skip sampler-fitting on CRAN?
 4. **`broom.mixed`** — remove the phantom `Suggests` entry, or wire up the

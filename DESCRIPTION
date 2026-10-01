@@ -20,7 +20,8 @@ Suggests:
     broom,
     brms (>= 2.0.0),
     lme4,
-    rstanarm (>= 2.14.1)
+    rstanarm (>= 2.14.1),
+    testthat (>= 3.0.0)
 Imports:
     assertthat,
     dplyr (>= 1.0.0),
@@ -32,7 +33,8 @@ Imports:
     stringr,
     tibble,
     tidyr
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Encoding: UTF-8
+Config/testthat/edition: 3
 URL: https://schmettow.github.io/New_Stats/, http://github.com/schmettow/bayr
 BugReports: https://github.com/schmettow/bayr/issues

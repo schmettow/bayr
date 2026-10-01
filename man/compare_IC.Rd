@@ -13,7 +13,11 @@
 compare_IC(ic_list)
 }
 \arguments{
-\item{ic}{loo.psis, kfold or waic object}
+\item{x}{tbl_IC_comp object}
+
+\item{...}{ignored}
+
+\item{ic_list}{loo.psis, kfold or waic objects}
 }
 \value{
 tbl_df

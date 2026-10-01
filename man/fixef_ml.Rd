@@ -17,7 +17,7 @@ fixef_ml(object, ...)
 
 \item{...}{passed on to grpef and fixef}
 
-\item{model}{model}
+\item{x}{tbl_fixef_ml object}
 }
 \value{
 coefficient table with standard deviations

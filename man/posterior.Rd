@@ -15,19 +15,30 @@
 
 \method{knit_print}{tbl_post}(x, ...)
 
-posterior(model, shape, ...)
+posterior(
+  model,
+  shape = "long",
+  thin = 1,
+  type = c("fixef", "grpef", "ranef", "disp", "shape", "cor"),
+  model_name = NA_character_,
+  ...
+)
 
 tbl_post(model, ...)
 
 assert_tbl_post(x, ...)
 
-\method{tbl_post}{data.frame}(x, ...)
+\method{tbl_post}{data.frame}(model, ...)
 
 \method{tbl_post}{brmsfit}(model, ...)
 
 \method{tbl_post}{stanreg}(model, ...)
 }
 \arguments{
+\item{x}{tbl_post object}
+
+\item{...}{ignored}
+
 \item{model}{Bayesian model object}
 
 \item{shape}{return tbl_post in long shape or tbl_df in wide shape}

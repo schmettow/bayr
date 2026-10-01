@@ -23,10 +23,11 @@ assert_clu(x)
   model = unique(object$model),
   mean.func = identity,
   estimate = median,
-  interval = 0.95
+  interval = 0.95,
+  ...
 )
 
-\method{clu}{data.frame}(df, ...)
+\method{clu}{data.frame}(object, ...)
 
 \method{clu}{MCMCglmm}(object, ...)
 
@@ -37,10 +38,11 @@ assert_clu(x)
 \method{clu}{stanreg}(object, ...)
 
 \method{clu}{glmerMod}(
-  model,
+  object,
   mean.func = identity,
-  model_name = as.character(deparse(substitute(model))),
-  interval = 0.95
+  model_name = as.character(deparse(substitute(object))),
+  interval = 0.95,
+  ...
 )
 
 \method{print}{tbl_clu}(x, ...)
@@ -52,6 +54,8 @@ assert_clu(x)
 
 \item{...}{ignored}
 
+\item{x}{a tbl_clu object}
+
 \item{model}{name of model}
 
 \item{mean.func}{function (identity)}
@@ -59,6 +63,8 @@ assert_clu(x)
 \item{estimate}{function for computing the center estimate (posterior mode)}
 
 \item{interval}{credibility interval: .95}
+
+\item{model_name}{name of the model}
 }
 \value{
 CLU table (tbl_clu) with parameter name, estimate and interval.

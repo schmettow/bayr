@@ -20,6 +20,6 @@ assert_key <- function(x, ...){
 							msg = "At least one key variable must be provided as argument")
 	assert_names(x, ...)
 	assert_that(nrow(x) == nrow(distinct(x, ...)),
-							msg = stringr::str_c("<",str_c(var_names, collapse = ","),
-													"> not unique. Duplicate combinations found."))
+							msg = stringr::str_c("<",stringr::str_c(var_names, collapse = ","),
+											"> not unique. Duplicate combinations found."))
 }

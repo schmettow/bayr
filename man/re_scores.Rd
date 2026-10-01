@@ -4,7 +4,7 @@
 \alias{re_scores}
 \title{absolute random effects scores}
 \usage{
-re_scores(tbl_post)
+re_scores(tbl_post, type = "ranef")
 }
 \arguments{
 \item{tbl_post}{posterior (tbl_post)}

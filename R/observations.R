@@ -2,8 +2,8 @@
 #'
 #' A class for tibbles with observations providing a compact output
 #'
-#' @usage as_tbl_obs(x)
 #' @param x a data frame
+#' @param ... ignored
 #' @return tbl_obs
 #'
 #' The constructor makes any data.frame or tibble class tbl_obs.
@@ -23,7 +23,7 @@ as_tbl_obs <- function(x, ...) UseMethod("as_tbl_obs", x)
 #' @export
 
 
-as_tbl_obs.tbl_df <- function(x) {
+as_tbl_obs.tbl_df <- function(x, ...) {
 	x <- mutate(x, Obs = row_number()) %>%
 		go_first(Obs)
 	class(x) <- c("tbl_obs", class(x))
@@ -34,7 +34,7 @@ as_tbl_obs.tbl_df <- function(x) {
 #' @export
 
 
-as_tbl_obs.data.frame <- function(x) {
+as_tbl_obs.data.frame <- function(x, ...) {
 	x <-
 		tibble::as_tibble(x) %>%
 		as_tbl_obs.tbl_df()

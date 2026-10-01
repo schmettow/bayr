@@ -20,17 +20,17 @@ expand_grid <-
 #' The referred column becomes the first, keeping the order of the others
 #'
 #' @param D data frame
-#' @param ... formulas, like in select, but with ~
+#' @param ... columns to move, using dplyr::select tidyselect semantics
 #' @return data frame
 #'
 #' go_first and go_arrange expect a column specification, similar to
-#' dplyr::select, but as a formula
+#' dplyr::select
 #'
 #' @examples
-#' D <- data_frame(x = 1:3, y = 6:4, z = c(8,9,7))
-#' go_first(D, ~y)
-#' go_first(D, ~y:z)
-#' go_arrange(D, ~y)
+#' D <- tibble::tibble(x = 1:3, y = 6:4, z = c(8,9,7))
+#' go_first(D, y)
+#' go_first(D, y:z)
+#' go_arrange(D, y)
 #'
 #'
 #'
@@ -92,19 +92,19 @@ left_union <-
 #'
 #'
 #' @param D data frame
-#' @param filter predicate function (like dplyr::filter)
+#' @param by predicate function (like dplyr::filter)
 #' @param ... expressions
 #' @return data frame
 #'
 #' Applies mutations to the filtered group, only.
 #'
 #' @examples
-#' D <- tribble(~group, ~value,  1, 4, 1, 9, 2, -4, 2, -9)
+#' D <- tibble::tibble(group = c(1, 1, 2, 2), value = c(4, 9, -4, -9))
 #'
-#' D %>% mutate(value = if_else(group == 1, sqrt(value), value))
+#' dplyr::mutate(D, value = dplyr::if_else(group == 1, sqrt(value), value))
 #' ## Produces NaNs, because sqrt() is evaluated before selection
 #'
-#' D %>% mutate_by(group == 1, value = sqrt(value))
+#' update_by(D, group == 1, value = sqrt(value))
 #' ## sqrt() is only evaluated
 #'
 #' @author Martin Schmettow
@@ -151,6 +151,7 @@ update_by <-
 #' @author Martin Schmettow
 #' @import dplyr
 #' @import tidyr
+#' @importFrom stats sd
 #' @export
 
 
@@ -200,6 +201,7 @@ rescale_centered <- function(x, scale = .999){
 #' @param x numerical vector
 #' @param lower lowest possible value
 #' @param upper highest possible value
+#' @param scale rescale factor
 #' @return numerical vector
 #'
 #'
@@ -308,6 +310,7 @@ reorder_levels <- function(x, positions){
 #'
 #' @param D data frame
 #' @param except vector of column names to keep
+#' @param ... ignored
 #' @return data frame
 #'
 #'
@@ -321,7 +324,7 @@ discard_redundant <-
 #' @rdname discard_redundant
 #' @export
 #'
-discard_redundant.default <- function(D, except = c()){
+discard_redundant.default <- function(D, except = c(), ...){
 	if(nrow(D) < 2) return(D)
 	colnames <- colnames(D)
 	cols_except <- colnames %in% except
@@ -334,26 +337,26 @@ discard_redundant.default <- function(D, except = c()){
 
 #' @rdname discard_redundant
 #' @export
-discard_redundant.tbl_clu <- function(object, except = c())
-	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
+discard_redundant.tbl_clu <- function(D, except = c(), ...)
+	as_tibble(D) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
 
 #' @rdname discard_redundant
 #' @export
-discard_redundant.tbl_coef <- function(object, except = c())
-	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
+discard_redundant.tbl_coef <- function(D, except = c(), ...)
+	as_tibble(D) %>% discard_redundant(except = c(except, "parameter", "center", "lower", "upper"))
 
 #' @rdname discard_redundant
 #' @export
-discard_redundant.tbl_post_pred <- function(object, except = c())
-	as_tibble(object) %>% discard_redundant(except = c(except, "Obs","value"))
+discard_redundant.tbl_post_pred <- function(D, except = c(), ...)
+	as_tibble(D) %>% discard_redundant(except = c(except, "Obs","value"))
 
 #' @rdname discard_redundant
 #' @export
-discard_redundant.tbl_predicted <- function(object, except = c())
-	as_tibble(object) %>% discard_redundant(except = c(except, "Obs", "center", "lower", "upper"))
+discard_redundant.tbl_predicted <- function(D, except = c(), ...)
+	as_tibble(D) %>% discard_redundant(except = c(except, "Obs", "center", "lower", "upper"))
 
 #' @rdname discard_redundant
 #' @export
-discard_redundant.tbl_post <- function(object, except = c())
-	as_tibble(object) %>% discard_redundant(except = c(except, "parameter", "value"))
+discard_redundant.tbl_post <- function(D, except = c(), ...)
+	as_tibble(D) %>% discard_redundant(except = c(except, "parameter", "value"))
 

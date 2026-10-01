@@ -12,22 +12,24 @@
 \usage{
 discard_redundant(D, except, ...)
 
-\method{discard_redundant}{default}(D, except = c())
+\method{discard_redundant}{default}(D, except = c(), ...)
 
-\method{discard_redundant}{tbl_clu}(object, except = c())
+\method{discard_redundant}{tbl_clu}(D, except = c(), ...)
 
-\method{discard_redundant}{tbl_coef}(object, except = c())
+\method{discard_redundant}{tbl_coef}(D, except = c(), ...)
 
-\method{discard_redundant}{tbl_post_pred}(object, except = c())
+\method{discard_redundant}{tbl_post_pred}(D, except = c(), ...)
 
-\method{discard_redundant}{tbl_predicted}(object, except = c())
+\method{discard_redundant}{tbl_predicted}(D, except = c(), ...)
 
-\method{discard_redundant}{tbl_post}(object, except = c())
+\method{discard_redundant}{tbl_post}(D, except = c(), ...)
 }
 \arguments{
 \item{D}{data frame}
 
 \item{except}{vector of column names to keep}
+
+\item{...}{ignored}
 }
 \value{
 data frame

@@ -10,7 +10,6 @@ DrawIDCols <- c("model", "chain", "iter")
 #'
 #' posterior distribution of absolute random effects
 #'
-#' @usage re_scores(tbl_post)
 #' @param tbl_post posterior (tbl_post)
 #' @param type set type of coefficient (ranef)
 #' @return tbl_post
@@ -50,7 +49,7 @@ re_scores <-
 			dplyr::mutate(value = fe_value + value,
 										type = type) %>%
 			dplyr::select(-fe_value) %>%
-			bayr:::tbl_post.data.frame()
+			tbl_post.data.frame()
 
 		return(scores)
 	}

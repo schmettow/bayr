@@ -6,14 +6,14 @@
 \alias{predict.stanreg}
 \title{Posterior predictions}
 \usage{
-\method{predict}{tbl_post_pred}(x, scale = c("resp"), center = median, interval = 0.95, ...)
+\method{predict}{tbl_post_pred}(object, scale = c("resp"), center = median, interval = 0.95, ...)
 
-\method{predict}{brmsfit}(x, scale = c("resp"), center = median, interval = 0.95, ...)
+\method{predict}{brmsfit}(object, scale = c("resp"), center = median, interval = 0.95, ...)
 
-\method{predict}{stanreg}(x, scale = c("resp"), center = median, interval = 0.95, ...)
+\method{predict}{stanreg}(object, scale = c("resp"), center = median, interval = 0.95, ...)
 }
 \arguments{
-\item{x}{regression model or tbl_postpred}
+\item{object}{regression model or tbl_postpred}
 
 \item{scale}{linpred or resp}
 

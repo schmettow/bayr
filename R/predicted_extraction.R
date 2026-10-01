@@ -8,7 +8,7 @@
 #'
 #' summary table of predicted values from predictive posterior
 #'
-#' @param x regression model or tbl_postpred
+#' @param object regression model or tbl_postpred
 #' @param scale linpred or resp
 #' @param center function for computing the center estimate (median)
 #' @param interval credibility interval: .95
@@ -24,7 +24,7 @@
 
 
 predict.tbl_post_pred <-
-	function(x,
+	function(object,
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...) {
@@ -32,7 +32,7 @@ predict.tbl_post_pred <-
 		upper <- 1-((1-interval)/2)
 
 		tbl_predicted <-
-			x %>%
+			object %>%
 			group_by(model, Obs) %>%
 			summarize(center = center(value),
 								lower = quantile(value, lower),
@@ -58,22 +58,22 @@ predict.tbl_post_pred <-
 #' @export
 
 predict.brmsfit <-
-	function(x,
+	function(object,
 					 scale = c("resp"),
 					 center =  median,
 					 interval = .95, ...)
-		post_pred(x, ...) %>% predict(scale, center, interval)
+		post_pred(object, ...) %>% predict(scale, center, interval)
 
 
 
 #' @rdname predict.tbl_post_pred
 #' @export
 
-predict.stanreg <-	function(x,
-														scale = c("resp"),
-														center =  median,
-														interval = .95, ...)
-	post_pred(x, ...) %>% predict(scale, center, interval)
+predict.stanreg <-	function(object,
+																					 scale = c("resp"),
+																					 center =  median,
+																					 interval = .95, ...)
+	post_pred(object, ...) %>% predict(scale, center, interval)
 
 
 

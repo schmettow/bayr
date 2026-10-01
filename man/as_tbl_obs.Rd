@@ -12,14 +12,16 @@
 
 \method{knit_print}{tbl_obs}(x, ...)
 
-as_tbl_obs(x)
+as_tbl_obs(x, ...)
 
-\method{as_tbl_obs}{tbl_df}(x)
+\method{as_tbl_obs}{tbl_df}(x, ...)
 
-\method{as_tbl_obs}{data.frame}(x)
+\method{as_tbl_obs}{data.frame}(x, ...)
 }
 \arguments{
 \item{x}{a data frame}
+
+\item{...}{ignored}
 }
 \value{
 tbl_obs

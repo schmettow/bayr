@@ -31,6 +31,7 @@ clu <-
   	function(object, ...) UseMethod("clu", object)
 
 #' @rdname clu
+#' @param x a tbl_clu object
 #' @export
 
 
@@ -47,7 +48,7 @@ clu.tbl_post <- function(object,
 												 model = unique(object$model),
 												 mean.func = identity,
 												 estimate = median,
-												 interval = .95){
+												 interval = .95, ...){
 	lower <- (1-interval)/2
 	upper <- 1-((1-interval)/2)
 	tbl_clu <-
@@ -122,9 +123,9 @@ clu.tbl_post <- function(object,
 
 clu.data.frame <-
 	## dirty hack! partype columns not preserved
-	function(df, ...) {
-		assert_clu(df)
-		out = df
+	function(object, ...) {
+		assert_clu(object)
+		out = object
 		class(out) = append("tbl_clu", class(out))
 		out
 	}
@@ -209,20 +210,21 @@ clu.stanreg <-
 
 
 #' @rdname clu
+#' @param model_name name of the model
 #' @export
 
 clu.glmerMod <-
-	function(model,
+	function(object,
 					 mean.func = identity,
-					 model_name = as.character(deparse(substitute(model))),
-					 interval = .95){
+					 model_name = as.character(deparse(substitute(object))),
+					 interval = .95, ...){
 		lower <- (1-interval)/2
 		upper <- 1-(1-interval)/2
 
 		require(broom)
 
 		pop_level <-
-			model %>%
+			object %>%
 			tidy(conf.int = T, conf.level = ) %>%
 			rename(parameter = term,
 						 re_factor = group,
@@ -236,12 +238,12 @@ clu.glmerMod <-
 						 upper = mean.func(upper),
 						 type = if_else(type == "fixed",
 						 							 "fixef",
-						 							 str_extract(parameter,
+													 stringr::str_extract(parameter,
 						 							 						"^cor|^sd")))
 
 		ranefs <-
-			nlme::ranef(model) %>%
-			map_dfr(as_tibble, rownames = "re_entity", .id = "re_factor") %>%
+			nlme::ranef(object) %>%
+			purrr::map_dfr(as_tibble, rownames = "re_entity", .id = "re_factor") %>%
 			pivot_longer(!starts_with("re_"),
 									 names_to = "fixef",
 									 values_to = "center") %>%
@@ -295,7 +297,7 @@ coef.tbl_post <-
 					 type = c("fixef", "ranef"), ## maybe deprecate for ~filter
 					 mean.func = identity,
 					 estimate = median,
-					 interval = .95) {
+					 interval = .95, ...) {
 		lower <- (1-interval)/2
 		upper <- 1-((1-interval)/2)
 		partype <- type
@@ -333,9 +335,9 @@ coef.tbl_post <-
 
 coef.data.frame <-
 	## dirty hack! partype columns not preserved
-	function(df, ...) {
-		if(! all(c("parameter", "center", "lower", "upper") %in% names(df))) stop("not a valid tbl_coef, some columns missing")
-		out = df
+	function(object, ...) {
+		if(! all(c("parameter", "center", "lower", "upper") %in% names(object))) stop("not a valid tbl_coef, some columns missing")
+		out = object
 		class(out) = append("tbl_coef", class(out))
 		out
 	}
@@ -427,7 +429,6 @@ fixef.stanreg <-
 #' random effects standard deviation for all random factor levels.
 #'
 #' @param object tbl_post (brms, rstanarm) object holding the posterior in long format
-#' @param model model
 #' @param ... passed on to grpef and fixef
 #' @return coefficient table with standard deviations
 #'
@@ -562,68 +563,6 @@ grpef.stanreg <-
 
 
 ########################### FUTURE ##########################
-
-#' Joining two coefficent tables (NI)
-#'
-#' NOT IMPLEMENTED
-#' creates an overview table of point estimates for models with overlapping
-#' parameter sets
-#'
-#' @param first coefficient table tbl_coef or tbl_compcoef
-#' @param second coefficient table tbl_coef
-#' @param modelnames list of model names
-#' @return data_frame with parameter names and point estimates
-#'
-#' Returns a comparative coefficient table (tbl_coefcomp).
-#' Models are shown in columns, Parameters ordered by the most complex model
-#' Models ordered by number of parameters (nesting?)
-#' Model names are taken via lazy eval, or can be given.
-#'
-#' @author Martin Schmettow
-
-join.tbl_coef <-
-	function(x, y) {
-		error("Not implemented")
-		out <- data_frame()
-		class(out) <- c(class(out), "tbl_coefcomp")
-	}
-
-
-
-join.tbl_coefcomp <-
-	function(x, y) {
-		error("Not implemented")
-		out <- data_frame()
-		class(out) <- c(class(out), "tbl_coefcomp")
-	}
-
-
-#' separating factors an group means model
-#'
-#' NOT IMPLEMENTED
-#' In a model with interaction effects only (group means contrasts)
-#' coefficient names are split into factor variables (and cleaned)
-#'
-#' @param first coefficient table tbl_coef or tbl_compcoef
-#' @param second coefficient table tbl_coef
-#' @param modelnames list of model names
-#' @return data_frame with two or more factor variables, center and CI.
-#'
-#' Returns a data_frame with parameter plit into factors and cleaned.
-#' Prepares for intercation plots
-#'
-#' @author Martin Schmettow
-
-seperate.tbl_coef <-
-	function(x, y) {
-		error("Not implemented")
-		out <- data_frame()
-		class(out) <- c("tbl_df")
-	}
-
-#' @rdname coef.tbl_post
-#' @export
-
 
 
 # resid_plot_1 <-
