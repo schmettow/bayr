@@ -36,6 +36,7 @@ check output.
 | S3 consistency | ✅ fixed in Phase 1 |
 | `R code for possible problems` | ✅ fixed in Phase 1 |
 | DESCRIPTION metadata | ✅ fixed in Phase 2 (as-cran incoming NOTE is only `Maintainer:` + `New submission`) |
+| Quality issues (Phase 5) | ✅ fixed (masking, superseded verbs, many-to-many warnings, `plyr`, imports, pkgdown scaffold) |
 
 Target for submission: **0 ERROR, 0 WARNING, 0 NOTE**.
 
@@ -60,7 +61,8 @@ Phase 1.5.)
 > Posit PPM binaries). In `dplyr` 1.2.1 `arrange_()` is now *defunct* (errors
 > instead of warning), which broke the `go_arrange` example — fixed in Phase 5.
 > Other superseded verbs (`sample_n`, `transmute_all`, `one_of`, `gather`,
-> `spread`) still work with deprecation warnings.
+> `spread`) still work with deprecation warnings; they were replaced in
+> Phase 5 as well.
 
 **After Phase 3:** full `R CMD check` (tests enabled) runs in ~50 s with
 `checking tests ... OK` (`FAIL 0 | WARN 6 | PASS 96`).
@@ -76,6 +78,18 @@ it). The 6 test WARNs are dplyr's many-to-many join notices (Phase 5).
 and the tests enabled is still **`Status: OK`**. `--as-cran` reports only
 environment artefacts (`qpdf`, `README.md`/`NEWS.md` without pandoc on `PATH`,
 `unable to verify current time`) plus the boilerplate `New submission`.
+
+**After Phase 5:** `R CMD check --no-manual` on the rebuilt tarball (tests and
+vignette enabled) is still **`Status: OK`**; the `WARN 6` many-to-many join
+notices are gone (`FAIL 0 | WARN 0 | PASS 96`). `plyr` is no longer a
+dependency, and dplyr/tidyr are imported function-by-function (see
+`R/bayr-package.R`).
+
+> ⚠️ The pkgdown site (`_pkgdown.yml`, `.github/workflows/pkgdown.yaml`) is
+> scaffolded but not yet deployed. `DESCRIPTION` therefore keeps the live book
+> URL; `--as-cran` reports `https://schmettow.github.io/bayr/` as a 404 as long
+> as it is listed. After the first push has deployed GitHub Pages, switch the
+> URL to the pkgdown site (see Phase 5).
 
 ---
 
@@ -320,33 +334,50 @@ Bugs the new tests found and that were fixed in this pass:
 
 ---
 
-## Phase 5 — Optional quality improvements (not blocking)
+## Phase 5 — Optional quality improvements ✅ DONE
 
-- [ ] `expand_grid()` (`R/dplyr_extensions.R`) shadows `tidyr::expand_grid`,
-  which is imported wholesale. `library(bayr)` will emit a masking message.
-  Consider renaming (e.g. `expand_grid_df`) or dropping it.
+- [x] **`expand_grid()` renamed to `expand_grid_df()`** (`R/dplyr_extensions.R`,
+  `man/expand_grid_df.Rd`): `library(bayr)` after `tidyr` no longer masks
+  `tidyr::expand_grid()`. The old export is gone; the rename is documented in
+  `NEWS.md`. This is a deliberate API change.
 - [x] `arrange_` → `arrange(!!!rlang::syms(...))` in `go_arrange()`
   (`arrange_()` became **defunct** in dplyr 1.2.1, so this was blocking).
 - [x] `one_of()` → `any_of()` in `discard_all_na()` (Phase 3).
-- [ ] Replace the remaining superseded APIs before CRAN (they still work with
-  deprecation warnings, but CRAN runs current packages):
-  `tidyr::gather`/`spread` → `pivot_longer`/`pivot_wider`;
-  `mutate_all`/`transmute_all` → `across()`;
-  `dplyr::sample_n` → `slice_sample()`.
-- [ ] **Silence dplyr's many-to-many join warnings** in the `tbl_post.*`
-  extraction code (`WARN 6` in the test run). The joins are intentional and
-  filtered afterwards, but dplyr 1.2.1 flags them; make the relationship
-  explicit (`relationship = "many-to-many"`) or restructure the
-  `type_mapping` join.
-- [ ] `discard_all_na()` uses `plyr::aaply(as.matrix(D), 2, ...)`, which
-  coerces mixed-type tibbles to character. Prefer a pure-dplyr
-  `select(where(~ !all(is.na(.x))))` and drop the `plyr` dependency entirely.
-- [ ] Replace bare `T`/`F` with `TRUE`/`FALSE` throughout (they are ordinary
-  variables and a common source of bugs).
-- [ ] Consider narrowing `@import dplyr` / `@import tidyr` to targeted
-  `@importFrom` to reduce the chance of future name clashes.
-- [ ] Point `URL:` at a pkgdown site and add `BugReports:` (already present) —
-  keep the GitHub links consistent.
+- [x] **Superseded verbs replaced:** `tidyr::gather()`/`spread()` →
+  `pivot_longer()`/`pivot_wider()` (`tbl_post.brmsfit`, `tbl_post.stanreg`,
+  `fixef_ml`, and the dead wide-format branch in `posterior()`);
+  `transmute_all(z)` → `mutate(across(everything(), z))` (`z_trans`);
+  `dplyr::sample_n()` → `slice_sample()` (all `print()` / `knit_print()`
+  methods).
+- [x] **Many-to-many join warning removed** (`tbl_post.brmsfit`). The
+  `expand.grid(...) %>% full_join(type_patterns, by = "type")` scaffold was a
+  parameter × pattern crossing in disguise (`"shape"` maps to three regex
+  entries) and dplyr 1.2.1 flagged it on every `posterior()` call. It is now
+  `tidyr::crossing(par_order["parameter"], type_patterns)` plus the same
+  `str_detect()` filter — no `relationship =` override and no dplyr version
+  bump needed.
+- [x] **`discard_all_na()` / `discard_redundant.default()` rewritten with tidy
+  tools** (`select(where(any_not_na))`, `purrr::map_lgl()` + `n_distinct()`)
+  instead of `plyr::aaply(as.matrix(D), 2, ...)`, which coerced mixed-type
+  tibbles to character. `plyr` was dropped from `Imports`.
+- [x] **Bare `T`/`F` replaced with `TRUE`/`FALSE`** in all `R/*.R` files
+  (function defaults, `na.rm =`, `remove =`, `row.names =`, plus the
+  commented-out prototypes).
+- [x] **Wholesale `@import dplyr` / `@import tidyr` / `@import assertthat`
+  narrowed to function-level `@importFrom`** in the new `R/bayr-package.R`
+  (dplyr incl. `%>%`, rlang `enquo`/`enquos`/`quos`, tibble, tidyr,
+  assertthat); `NAMESPACE` contains no `import()` calls any more. This
+  surfaced one new codetools NOTE (`count` used as a column in `join_by()`),
+  fixed by adding `count` to `utils::globalVariables()`.
+- [x] **pkgdown scaffold added:** `_pkgdown.yml` (bootstrap 5) and
+  `.github/workflows/pkgdown.yaml` (build + deploy to `gh-pages` on push);
+  `^_pkgdown\.yml$`/`^docs$` added to `.Rbuildignore`. `URL:`/`BugReports:`
+  stay on the **live** URLs (book + GitHub) for now: `--as-cran` checks URLs
+  and flags the not-yet-deployed pkgdown site as `Status: 404`. After the
+  first push has deployed the site, replace
+  `https://schmettow.github.io/New_Stats/` with
+  `https://schmettow.github.io/bayr/` in `DESCRIPTION` and re-run
+  `R CMD check --as-cran`.
 
 ---
 

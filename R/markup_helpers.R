@@ -84,7 +84,7 @@ print.tbl_post <-
 				tbls$n_param ," parameters  in ", tbls$n_model, " model(s)\n\n")
 		#		cat(frm, "\n\n")
 
-		print.data.frame(tbls$comb, row.names = F)
+		print.data.frame(tbls$comb, row.names = FALSE)
 
 		invisible(x)
 	}
@@ -119,7 +119,7 @@ knit_print.tbl_post <- function(x, ...) {
 
 
 # print.tbl_coef_EATME <-
-# 	function(x, digits = NULL, title = F, footnote = T,
+# 	function(x, digits = NULL, title = FALSE, footnote = TRUE,
 # 					 kable = bayr:::by_knitr()){
 # 		out <- discard_all_na(x)
 # 		if(nrow(out) > 1)	{
@@ -152,8 +152,8 @@ knit_print.tbl_post <- function(x, ...) {
 # 		if(kable) { ## prepared for knitr table output, not yet working
 # 			print(knitr::kable(out, caption = title_text))
 # 		} else {
-# 			if(title) cat(stringr::str_c(title_text, sep = "|", collapse = T), "\n***\n")
-# 			print.data.frame(out, digits = 3, row.names = F)
+# 			if(title) cat(stringr::str_c(title_text, sep = "|", collapse = TRUE), "\n***\n")
+# 			print.data.frame(out, digits = 3, row.names = FALSE)
 # 			if(footnote) cat(footnote_text)
 # 			cat("\n")
 # 			invisible(out)
@@ -180,7 +180,7 @@ print.tbl_post_pred <-
 		cat("**", cap, "\n\n")
 
 		x %>%
-			sample_n(min(n_Obs, 5)) %>%
+			slice_sample(n = min(n_Obs, 5)) %>%
 			arrange(model, Obs, chain, iter) %>%
 			print.data.frame()
 
@@ -197,7 +197,7 @@ print.tbl_predicted <-
 			stringr::str_c(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
 										 attr(x, "interval")*100, "% credibility limits (five shown below)")
 		tab <-	x %>%
-			sample_n(min(n_Obs, 5)) %>%
+			slice_sample(n = min(n_Obs, 5)) %>%
 			arrange(Obs, model) %>%
 			discard_redundant() %>%
 			discard_all_na()
@@ -222,7 +222,7 @@ knit_print.tbl_post_pred <-
 													n_iter, " samples in ", n_chain, " chains on ",
 													n_Obs, " observations. (five shown below)")
 		tab <- x %>%
-			sample_n(min(n_Obs, 5)) %>%
+			slice_sample(n = min(n_Obs, 5)) %>%
 			arrange(model, Obs, chain, iter) %>%
 			discard_redundant() %>%
 			discard_all_na()
@@ -243,7 +243,7 @@ knit_print.tbl_predicted <-
 		cap <- paste0(n_Obs, " predictions (scale: ", attr(x, "scale") ,") with ",
 									attr(x, "interval")*100, "% credibility limits (8 shown)", collapse = "")
 		tab <-	x %>%
-			sample_n(min(n_Obs, 8)) %>%
+			slice_sample(n = min(n_Obs, 8)) %>%
 			arrange(Obs, model) %>%
 			discard_redundant() %>%
 			discard_all_na()
@@ -427,7 +427,7 @@ knit_print.tbl_clu <- function (x, ...)
 
 print.tbl_obs <- function(x, ...) {
 	n <- min(8, nrow(x))
-	tab <- dplyr::sample_n(x, n)
+	tab <- dplyr::slice_sample(x, n = n)
 	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
 	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part)
 	cap <- stringr::str_c("Data set",": showing ", n, " of ", nrow(x), " observations")
@@ -443,7 +443,7 @@ knit_print.tbl_obs <- function(x, ...) {
 	#data_set <- deparse(substitute(x))
 	n <- min(8, nrow(x))
 	cap <- paste0("Data set with ", ncol(x)," variables, showing ", n, " of ", nrow(x), " observations.")
-	tab <- dplyr::sample_n(x, n)
+	tab <- dplyr::slice_sample(x, n = n)
 	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
 	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part, Obs)
 
@@ -532,12 +532,12 @@ knit_print.tbl_IC_comp <- function(x, ...) {
 
 md_coef <- function(tbl_coef, ...,
 										row = NULL,
-										center = T,
-										interval = F,
-										prefix = F,
+										center = TRUE,
+										interval = FALSE,
+										prefix = FALSE,
 										round = 2,
 										mean_fnc = identity,
-										neg = F) {
+										neg = FALSE) {
 
 
 	if(0 == sum(stringr::str_detect(class(tbl_coef),
@@ -582,11 +582,11 @@ md_coef <- function(tbl_coef, ...,
 frm_coef =
 	function(tbl_coef, ...,
 					 row = NULL,
-					 center = T,
-					 interval = T, # <--
-					 prefix = F,
+					 center = TRUE,
+					 interval = TRUE, # <--
+					 prefix = FALSE,
 					 round = 2,
-					 neg = F) {
+					 neg = FALSE) {
 		out =  md_coef(tbl_coef, ...,
 												row = row,
 												center = center,

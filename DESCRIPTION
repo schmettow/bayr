@@ -22,7 +22,6 @@ Imports:
     dplyr (>= 1.0.0),
     knitr,
     nlme,
-    plyr,
     purrr,
     rlang,
     stringr,

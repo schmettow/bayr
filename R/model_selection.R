@@ -6,7 +6,6 @@
 #' @param ic loo.psis, kfold or waic object
 #' @return tbl_df
 #' @author Martin Schmettow
-#' @import dplyr
 #' @importFrom knitr knit_print
 #' @export
 
@@ -30,7 +29,6 @@ IC <- function (ic){
 #' @param ic_list loo.psis, kfold or waic objects
 #' @return tbl_df
 #' @author Martin Schmettow
-#' @import dplyr
 #' @importFrom knitr knit_print
 #' @export
 

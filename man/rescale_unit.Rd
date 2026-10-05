@@ -7,15 +7,15 @@
 \usage{
 rescale_unit(
   x,
-  lower = min(x, na.rm = T),
-  upper = max(x, na.rm = T),
+  lower = min(x, na.rm = TRUE),
+  upper = max(x, na.rm = TRUE),
   scale = 1
 )
 
 rescale_zero_one(
   x,
-  lower = min(x, na.rm = T),
-  upper = max(x, na.rm = T),
+  lower = min(x, na.rm = TRUE),
+  upper = max(x, na.rm = TRUE),
   scale = 1
 )
 }

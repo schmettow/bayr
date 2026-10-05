@@ -23,7 +23,6 @@ DrawIDCols <- c("model", "chain", "iter")
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @export
 
 

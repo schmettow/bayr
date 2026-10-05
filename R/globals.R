@@ -3,7 +3,7 @@
 utils::globalVariables(names = c(
 	".chain", ".draw", ".iteration", ".tmp_idx",
 	"Estimate", "Model", "Obs", "Part", "SD", "SE",
-	"center", "chain", "conf.high", "conf.low",
+	"center", "chain", "conf.high", "conf.low", "count",
 	"diff_IC", "dpar", "effect", "estimate", "fe_value", "fixef_2",
 	"group", "iter", "lower",
 	"model", "new_name", "nlpar", "nonlin",

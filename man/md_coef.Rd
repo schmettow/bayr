@@ -9,23 +9,23 @@ md_coef(
   tbl_coef,
   ...,
   row = NULL,
-  center = T,
-  interval = F,
-  prefix = F,
+  center = TRUE,
+  interval = FALSE,
+  prefix = FALSE,
   round = 2,
   mean_fnc = identity,
-  neg = F
+  neg = FALSE
 )
 
 frm_coef(
   tbl_coef,
   ...,
   row = NULL,
-  center = T,
-  interval = T,
-  prefix = F,
+  center = TRUE,
+  interval = TRUE,
+  prefix = FALSE,
   round = 2,
-  neg = F
+  neg = FALSE
 )
 }
 \arguments{

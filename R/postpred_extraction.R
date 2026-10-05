@@ -24,7 +24,6 @@ Cols_pp = list("model", "Obs", "chain", "iter", "scale", "value") ## columns for
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @export
 
 
@@ -75,7 +74,7 @@ mtx_post_pred.brmsfit <-
 	function(model, model_name, newdata = NULL, thin = 1, ...){
 		n_iter <- brms::ndraws(model)
 		n_draws <- round(n_iter/thin, 0)
-		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
+		#draws <- sort(sample.int(n_iter, n_draws, replace = FALSE))
 		brms::posterior_predict(model, newdata = newdata, ndraws = n_draws, summary = FALSE)
 
 	}

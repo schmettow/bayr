@@ -17,8 +17,6 @@
 #' @param ... ignored
 #' @return CLU table (tbl_clu) with parameter name, estimate and interval.
 #' @author Martin Schmettow
-#' @import dplyr
-#' @import assertthat
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
 #' @importFrom stats coef median quantile
@@ -111,8 +109,8 @@ clu.tbl_post <- function(object,
 # 		tbl_post %>%
 # 		group_by(parameter) %>%
 # 		summarize(center = median(value),
-# 							lower = quantile(value, .05, na.rm = T),
-# 							upper = quantile(value, .95, na.rm = T))
+# 							lower = quantile(value, .05, na.rm = TRUE),
+# 							upper = quantile(value, .95, na.rm = TRUE))
 # 	class(out) = append("tbl_clu", class(out))
 # 	out
 # }
@@ -157,7 +155,7 @@ clu.stanreg <-
 # 		upper <- 1-(1-interval)/2
 #
 # 		model %>%
-# 			tidy(conf.int = T, conf.level = ) %>%
+# 			tidy(conf.int = TRUE, conf.level = ) %>%
 # 			rename(parameter = term,
 # 						 re_factor = group,
 # 						 type = effect,
@@ -272,7 +270,6 @@ clu.glmerMod <-
 #' The standard center function is the posterior median
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
 #' @importFrom stats coef median quantile
@@ -396,7 +393,6 @@ fixef.stanreg <-
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @export
 
 
@@ -407,7 +403,7 @@ fixef_ml <-
 			grpef(model, ...) %>%
 			select(model, fixef, re_factor, SD = center) %>%
 			mutate(re_factor = stringr::str_c("SD_", re_factor)) %>%
-			spread(re_factor, SD)
+			pivot_wider(names_from = re_factor, values_from = SD)
 
 		out <-
 			bayr::fixef(model, ...)  %>%

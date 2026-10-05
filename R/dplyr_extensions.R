@@ -1,18 +1,19 @@
 
-#' dplyrified expand.grid
+#' Tibble-returning expand.grid
 #'
-#' works like expand.grid, but returns a tibble data_frame
+#' works like expand.grid, but returns a tibble. Named `expand_grid_df()` to
+#' avoid masking `tidyr::expand_grid()`.
 #'
 #' @param ... factors
-#' @return data_frame
+#' @return tibble
 #'
 #' @author Martin Schmettow
 #' @export
 
 
-expand_grid <-
+expand_grid_df <-
 	function(...)
-		expand.grid(stringsAsFactors = F, ...) %>% tibble::as_tibble()
+		expand.grid(stringsAsFactors = FALSE, ...) %>% tibble::as_tibble()
 
 
 #' Moving column to first position
@@ -149,8 +150,6 @@ update_by <-
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
-#' @import tidyr
 #' @importFrom stats sd
 #' @export
 
@@ -158,12 +157,12 @@ update_by <-
 z_trans <- function(D,  ...){
 	col_spec <- quos(...)
 	df_z <- dplyr::select(D, !!!col_spec) %>%
-		transmute_all(z)
+		mutate(across(everything(), z))
 	names(df_z) <- stringr::str_c("z", names(df_z), sep = "")
 	bind_cols(D, df_z)
 }
 
-z <- function(x) (x - mean(x, na.rm = T))/sd(x, na.rm = T)
+z <- function(x) (x - mean(x, na.rm = TRUE))/sd(x, na.rm = TRUE)
 
 #' @rdname z_trans
 #' @export
@@ -181,13 +180,11 @@ z_score <- z_trans
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
-#' @import tidyr
 #' @export
 
 
 rescale_centered <- function(x, scale = .999){
-	mean_x <- mean(x, na.rm = T)
+	mean_x <- mean(x, na.rm = TRUE)
 	x_center <- x - mean_x
 	x_shrink <- x_center * scale
 	out <- x_shrink + mean_x
@@ -206,14 +203,12 @@ rescale_centered <- function(x, scale = .999){
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
-#' @import tidyr
 #' @export
 
 
 rescale_unit     <- function(x,
-														 lower = min(x, na.rm = T),
-														 upper = max(x, na.rm = T), scale = 1){
+														 lower = min(x, na.rm = TRUE),
+														 upper = max(x, na.rm = TRUE), scale = 1){
 	x_to_zero <- x - lower
 	x_to_one <- x_to_zero/(upper -lower)
 	out <- rescale_centered(x_to_one, scale = scale)
@@ -243,10 +238,7 @@ rescale_zero_one <- rescale_unit
 
 discard_all_na <-
 	function(D){
-		filter = which(plyr::aaply(as.matrix(D), 2, any_not_na))
-		var_non_na = colnames(D)[filter]
-		out = select(D, any_of(var_non_na))
-		out
+		select(D, where(any_not_na))
 	}
 
 all_na <-
@@ -291,9 +283,8 @@ reorder_levels <- function(x, positions){
 # discard_redundant <- function(D){
 #   if(nrow(D) < 2) return(D)
 #
-#   a <- as.matrix(D)
-#   nonred <- plyr::aaply(a, 2, function(v) length(unique(v)) > 1)
-#   D[, c(nonred)]
+#   keep <- purrr::map_lgl(D, ~ n_distinct(.x) > 1)
+#   D[, keep]
 # }
 
 
@@ -326,12 +317,9 @@ discard_redundant <-
 #'
 discard_redundant.default <- function(D, except = c(), ...){
 	if(nrow(D) < 2) return(D)
-	colnames <- colnames(D)
-	cols_except <- colnames %in% except
-	cols_nonred <- plyr::aaply(as.matrix(D), 2, function(v) length(unique(v)) > 1)
-	cols_keep   <- cols_except | cols_nonred
-
-	D[, c(cols_keep)]
+	varies <- purrr::map_lgl(D, ~ n_distinct(.x) > 1)
+	keep   <- names(D) %in% except | varies
+	select(D, all_of(names(D)[keep]))
 }
 
 

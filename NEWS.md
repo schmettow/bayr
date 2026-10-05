@@ -16,6 +16,13 @@ First release prepared for CRAN.
 
 * Requires `brms (>= 2.16.0)`.
 * Removed the unused `MCMCglmm` methods.
+* Renamed `expand_grid()` to `expand_grid_df()` so that `library(bayr)` no
+  longer masks `tidyr::expand_grid()`.
+* Dropped the `plyr` dependency; `discard_all_na()` and `discard_redundant()`
+  now use tidy implementations.
+* Replaced superseded tidyverse calls (`gather()`/`spread()`,
+  `mutate_all()`/`transmute_all()`, `sample_n()`) with their current
+  equivalents, and narrowed the dplyr/tidyr imports to the functions used.
 * Prediction for `brms` models now uses the public
   `brms::posterior_predict()`.
 * Documented the intended overloading of the `brms`/`rstanarm` methods and

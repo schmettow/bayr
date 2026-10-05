@@ -18,7 +18,6 @@
 #' The standard center function is the posterior median
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @importFrom stats median quantile predict
 #' @export
 

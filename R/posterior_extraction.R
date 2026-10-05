@@ -29,7 +29,6 @@ AllCols = c("model", "chain", "iter", "order", ParameterIDCols, "value")
 #'
 #'
 #' @author Martin Schmettow
-#' @import dplyr
 #' @importFrom knitr knit_print
 #' @importFrom stats formula
 #' @export
@@ -80,7 +79,7 @@ posterior <-
 				out %>%
 				dplyr::mutate(parameter = stringr::str_c(model, nonlin, fixef, re_factor, re_entity, sep = "_")) %>%
 				dplyr::select(-order, -type) %>%
-				tidyr::spread(parameter, value)
+				tidyr::pivot_wider(names_from = parameter, values_from = value)
 		}
 
 		## Attention: Attributes are not preserved!
@@ -139,7 +138,7 @@ assert_tbl_post <-
 # 		filter(stringr::str_detect(parameter, "^r_")) %>%
 # 		tidyr::separate(col = parameter,
 # 										into = c("r_", "re_factor", "re_entity", "fixef"),
-# 										remove = F,
+# 										remove = FALSE,
 # 										extra = "merge") %>%
 # 		mutate(fixef = stringr::str_remove(fixef, ".$")) %>%
 # 		select(all_of(ParameterIDCols))
@@ -219,7 +218,6 @@ extr_brms_par <-
 		pars %>%
 			filter(!stringr::str_detect(parameter, "_$")) %>%
 			mutate(re_entity = NA_character_) %>%
-			#mutate_all(funs(ifelse(. == "", NA_character_, .))) %>%
 			mutate(across(where(is.character), ~ ifelse(.x == "", NA_character_, .x))) %>%
 			distinct() %>%
 			select(all_of(ParameterIDCols))
@@ -247,7 +245,8 @@ tbl_post.brmsfit <-
 
 		samples_long <-
 			samples %>%
-			tidyr::gather(parameter, value, -iter, -chain) %>%
+			tidyr::pivot_longer(cols = -c(iter, chain),
+														 names_to = "parameter", values_to = "value") %>%
 			mutate(parameter = as.character(parameter))
 
 		par_order <-
@@ -268,12 +267,10 @@ tbl_post.brmsfit <-
 							"^lp__",    "mcmc",
 							"^cor_",    "cor")
 
+		## each parameter is matched against every regex pattern; the join is a
+		## plain crossing, so do it before matching instead of joining on type
 		type_mapping <-
-			expand.grid(type = unique(type_patterns$type),
-									parameter = par_order$parameter) %>%
-			mutate(parameter = as.character(parameter),
-						 type = as.character(type)) %>%
-			full_join(type_patterns, by = "type") %>%
+			tidyr::crossing(par_order["parameter"], type_patterns) %>%
 			mutate(match = stringr::str_detect(parameter, pattern)) %>%
 			filter(match) %>%
 			select(parameter, type, pattern)
@@ -293,7 +290,7 @@ tbl_post.brmsfit <-
 		par_out <-
 			filter(par_all, type %in% c("fixef", "disp", "grpef"))
 
-		#if(any(par_all$type == "disp", na.rm = T)){
+		#if(any(par_all$type == "disp", na.rm = TRUE)){
 		par_disp <-
 			par_all %>%
 			filter(type == "disp") %>%
@@ -305,7 +302,7 @@ tbl_post.brmsfit <-
 		par_out <- bind_rows(par_out, par_disp)
 		#}
 
-		if(any(par_all$type == "ranef", na.rm = T)){
+		if(any(par_all$type == "ranef", na.rm = TRUE)){
 			par_re <-
 				par_all %>%
 				select(parameter, type) %>%
@@ -313,12 +310,12 @@ tbl_post.brmsfit <-
 				tidyr::extract(parameter,
 											 into = c("re_1", "re_entity","fixef"),
 											 "^r_(.*)\\[(.+),(.+)\\]$",
-											 remove = F) %>%
-				tidyr::extract(re_1,
+											 remove = FALSE) %>%
+					tidyr::extract(re_1,
 											 into = c("re_factor","nonlin"),
 											 "^(.+)(?:__(.+))$",
 											 #fill = "left",
-											 remove = F) %>%
+											 remove = FALSE) %>%
 				## hotfix for when there is no nonlin
 				mutate(re_factor = ifelse(is.na(re_factor), re_1, re_factor)) %>%
 				select(all_of(ParameterIDCols))
@@ -397,7 +394,8 @@ tbl_post.stanreg <-
 			as_tibble() %>%
 			mutate(chain = NA_integer_,
 						 iter = row_number()) %>%
-			tidyr::gather("parameter", "value", -chain, -iter) %>%
+			tidyr::pivot_longer(cols = -c(chain, iter),
+												names_to = "parameter", values_to = "value") %>%
 			mutate(parameter = stringr::str_replace(parameter, "\\(Intercept\\)", "Intercept"),
 						 parameter = stringr::str_replace(parameter, "sigma", "sigma_resid"))
 
@@ -449,7 +447,7 @@ tbl_post.stanreg <-
 				tidyr::extract(parameter,
 											 into = c("fixef", "re_factor", "re_entity"),
 											 "^b\\[(.+) (.+):(.+)\\]$",
-											 remove = F) %>%
+											 remove = FALSE) %>%
 				mutate(nonlin = NA_character_) %>%
 				select(all_of(ParameterIDCols))
 
@@ -460,7 +458,7 @@ tbl_post.stanreg <-
 				tidyr::extract(parameter,
 											 into = c("re_factor", "fixef", "fixef_2"),
 											 "^Sigma\\[(.+?):(.+),(.+)\\]$",
-											 remove = F) %>%
+											 remove = FALSE) %>%
 				## pulling variance and correlations apart
 				mutate(fixef_2 = if_else(fixef_2 == "(Intercept)", "Intercept", fixef_2),
 							 type = if_else(fixef == fixef_2, "grpef", "corr")) %>%

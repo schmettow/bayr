@@ -58,8 +58,8 @@ test_that("go_first() and go_arrange() reorder columns", {
 	expect_equal(go_arrange(D, y)$y, c(4, 5, 6))
 })
 
-test_that("expand_grid() returns a tibble", {
-	G <- expand_grid(a = 1:2, b = c("x", "y"))
+test_that("expand_grid_df() returns a tibble", {
+	G <- expand_grid_df(a = 1:2, b = c("x", "y"))
 
 	expect_s3_class(G, "tbl_df")
 	expect_equal(names(G), c("a", "b"))
