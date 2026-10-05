@@ -88,7 +88,7 @@ mtx_post_pred.brmsfit <-
 		n_iter <- brms::ndraws(model)
 		n_draws <- round(n_iter/thin, 0)
 		#draws <- sort(sample.int(n_iter, n_draws, replace = F))
-		brms:::predict.brmsfit(model, newdata = newdata, ndraws = n_draws, summary = F)
+		brms::posterior_predict(model, newdata = newdata, ndraws = n_draws, summary = FALSE)
 
 	}
 

@@ -60,12 +60,15 @@ verify current time` (environmental, not a package issue).
 > Other superseded verbs (`sample_n`, `transmute_all`, `one_of`, `gather`,
 > `spread`) still work with deprecation warnings.
 
-**After Phase 3:** full `R CMD check` (tests enabled) passes in ~50 s with
-`Status: 1 NOTE` (`brms:::predict.brmsfit`) and `checking tests ... OK`
-(`FAIL 0 | WARN 6 | PASS 82`). With `--as-cran` (tests enabled) the result is
-`Status: 3 NOTEs`: incoming feasibility (`New submission`), the environmental
-time-stamp NOTE and the `brms:::` NOTE. The `tidyverse` tests WARNING and the
-top-level-file NOTE are gone.
+**After Phase 3:** full `R CMD check` (tests enabled) runs in ~50 s with
+`checking tests ... OK` (`FAIL 0 | WARN 6 | PASS 96`).
+
+**After removing the last `:::` (this pass):** plain `R CMD check` reports
+**`Status: OK`** — no ERRORs, WARNINGs or NOTEs. With `--as-cran` the remaining
+`3 NOTEs` are all non-package: `New submission` (boilerplate), `unable to verify
+current time` (environmental) and `README.md ... cannot be checked without
+'pandoc'` (pandoc is not installed in this sandbox; CRAN check machines have
+it). The 6 test WARNs are dplyr's many-to-many join notices (Phase 5).
 
 ---
 
@@ -164,7 +167,7 @@ All methods now match their generics: `as_tbl_obs.*` gained `...`;
 `tbl_post.data.frame` uses `model`.
 `checking S3 generic/method consistency ... OK`.
 
-### 1.5 Dependencies in R code — ✅ mostly DONE (2 items skipped)
+### 1.5 Dependencies in R code ✅
 
 - [x] Removed all `bayr:::` self-calls (`AllCols`, `prep_print_tbl_post`,
   `tbl_post.data.frame`) and replaced all three `base:::print.data.frame`
@@ -177,10 +180,15 @@ All methods now match their generics: `as_tbl_obs.*` gained `...`;
   (the empty `conf.level = ` argument was a bug and was dropped). `broom` was
   swapped for `broom.mixed` in `Suggests`. Runtime-tested on a `glmer()`
   binomial model; returns fixed, SD and random-effect rows as expected.
-- [ ] ⏭️ **SKIPPED — `brms:::predict.brmsfit`.** The obvious replacement,
-  `stats::predict()`, would recurse into `bayr`'s own `predict.brmsfit` method.
-  Needs either `brms::posterior_predict()` (verify the returned shape first) or
-  an accepted `:::` NOTE. Decision needed.
+- [x] **`brms:::predict.brmsfit` → `brms::posterior_predict()`** (Option B).
+  `stats::predict()` would have recursed into `bayr`'s own `predict.brmsfit`,
+  and the unexported brms method could change without notice. brms's own
+  `predict.brmsfit` is a thin wrapper over the public `posterior_predict()`
+  (`prepare_predictions()` + `posterior_predict(..., summary = summary)`) and
+  both return the same matrix shape, so the call now passes
+  `ndraws = n_draws, summary = FALSE`. This removes the last `:::` NOTE.
+  `Suggests: brms` floor raised to `(>= 2.16.0)` (already required by the
+  `as_draws_df()` call in `tbl_post.brmsfit()`).
 
 ### 1.6 `R code for possible problems` ✅
 
@@ -294,8 +302,10 @@ Bugs the new tests found and that were fixed in this pass:
   was removed and `^cran-comments\.(Rmd|md)$`, `^AGENTS\.md$`, `^TODO\.md$`,
   `^data-raw$` and `^\.github$` were added. The fixture now lives under
   `tests/` (Phase 3), so no `M_1.Rda` entry is needed.
-- [ ] **Add `NEWS.md`** (CRAN likes a changelog; makes release notes easy) and a
-  `README.md` / `README.Rmd` for the GitHub landing page.
+- [x] **`README.md` added**, including the note that overloading the
+  `brms`/`rstanarm` `predict()`/`coef()` methods is intended behaviour and that
+  the load order decides which implementation wins.
+- [ ] **Add `NEWS.md`** (CRAN likes a changelog; makes release notes easy).
 - [ ] **Add a `LICENSE` note?** Not required for `GPL-3`, but consider
   `License: GPL (>= 3)` for explicitness. Current `GPL-3` is accepted.
 - [ ] **Optional but strong for a submission: a getting-started vignette**
