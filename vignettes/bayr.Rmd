@@ -54,9 +54,9 @@ all observations into the report.
 
 ```{r fit}
 M_1 <- stan_glm(outcome ~ Condition, data = Exp,
-                chains = 2, iter = 500, seed = 42, refresh = 0)
+                chains = 1, iter = 200, seed = 42, refresh = 0)
 M_2 <- stan_glm(outcome ~ Condition + age, data = Exp,
-                chains = 2, iter = 500, seed = 42, refresh = 0)
+                chains = 1, iter = 200, seed = 42, refresh = 0)
 ```
 
 ## Parameter estimates
