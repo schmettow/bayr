@@ -51,7 +51,9 @@ tests) is Phase 3; the NOTE is now only `brms:::predict.brmsfit`.
 (tests skipped). With `--as-cran` the incoming-feasibility NOTE contains only
 `Maintainer:` and `New submission`; the extra as-cran NOTEs are `M_1.Rda` at
 top level (Phase 3), `brms:::predict.brmsfit` (Phase 1.5 skip) and `unable to
-verify current time` (environmental, not a package issue).
+verify current time` (environmental, not a package issue). (The `M_1.Rda` and
+`brms:::predict.brmsfit` NOTEs have since been resolved — see Phase 3 and
+Phase 1.5.)
 
 > **Environment note:** while wiring up `glmerMod`, the user library was
 > upgraded (`dplyr` 1.2.1, `rlang` 1.3.0, `broom.mixed` 0.2.9.7 installed via
@@ -103,7 +105,7 @@ Verified on a fresh `R CMD build` + `R CMD check`:
 
 ---
 
-## Phase 1 — `R CMD check` ERRORs / WARNINGs — ✅ DONE (2 items skipped)
+## Phase 1 — `R CMD check` ERRORs / WARNINGs ✅ DONE
 
 ### 1.1 Examples must run ✅
 
@@ -132,21 +134,6 @@ All four fixed in the roxygen source and regenerated with
 methods now take `...`; the hand-written `@usage` overrides in `post_pred`,
 `posterior`, `as_tbl_obs` and `re_scores` were removed; `@param newdata` was
 added to `post_pred`. `checking for code/documentation mismatches ... OK`.
-
-### 1.2 Codoc mismatches — `\usage` must match the code (`WARNING`)
-
-Regenerate docs (`devtools::document()`) after fixing. Concrete mismatches:
-
-- [ ] `as_tbl_obs.Rd`: code `function(x, ...)`, docs `function(x)` — the
-  methods `as_tbl_obs.data.frame` / `as_tbl_obs.tbl_df` omit `...`.
-- [ ] `post_pred.Rd`: docs say `scale = "obs"`, `function(model, scale,
-  model_name, thin = 1)`; code is
-  `function(model, scale = "resp", model_name = deparse(substitute(model)), newdata = NULL, thin = 1, ...)`.
-  Remove the hand-written `@usage` and let roxygen generate it; add `@param newdata`.
-- [ ] `posterior.Rd`: hand-written `@usage posterior(model, shape, ...)`
-  hides `thin`, `type`, `model_name`, and the `shape = "long"` default.
-  Remove the `@usage` override and document all arguments.
-- [ ] `re_scores.Rd`: docs omit the `type = "ranef"` argument.
 
 ### 1.3 Rd `\usage` sections ✅
 
