@@ -21,7 +21,7 @@
 #' @import assertthat
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
-#' @importFrom stats coef median fitted quantile
+#' @importFrom stats coef median quantile
 #' @importFrom knitr knit_print
 #' @export
 
@@ -138,12 +138,6 @@ clu.brmsfit <-
 	function(object, ...)
 		tbl_post(object) %>% clu()
 
-#' @rdname clu
-#' @export
-
-clu.stanfit <-
-	function(object, ...)
-		tbl_post(object) %>% clu()
 
 #' @rdname clu
 #' @export
@@ -264,8 +258,7 @@ clu.glmerMod <-
 
 #' Coefficient extraction
 #'
-#' summary table of fixed, random or group-level coefficients and fitted values (eta,
-#' only stanfit models) from posterior
+#' summary table of fixed, random or group-level coefficients from posterior
 #'
 #' @param object tbl_post (brms, rstanarm) object holding the posterior in long format
 #' @param model model
@@ -282,7 +275,7 @@ clu.glmerMod <-
 #' @import dplyr
 #' @importFrom nlme fixef
 #' @importFrom nlme ranef
-#' @importFrom stats coef median fitted quantile
+#' @importFrom stats coef median quantile
 #' @importFrom knitr knit_print
 #' @export
 
@@ -346,12 +339,6 @@ coef.brmsfit <-
 	function(object, estimate = median, ...)
 		tbl_post(object) %>% coef(estimate = estimate, ...)
 
-#' @rdname coef.tbl_post
-#' @export
-
-coef.stanfit <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% coef(estimate = estimate, ...)
 
 #' @rdname coef.tbl_post
 #' @export
@@ -386,12 +373,6 @@ fixef.brmsfit <-
 		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.stanfit <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 #' @rdname coef.tbl_post
 #' @export
@@ -470,12 +451,6 @@ ranef.brmsfit <-
 		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 
-#' @rdname coef.tbl_post
-#' @export
-
-ranef.stanfit <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate, ...)
 
 #' @rdname coef.tbl_post
 #' @export
@@ -512,12 +487,6 @@ grpef.brmsfit <-
 		tbl_post(object) %>% grpef(estimate = estimate)
 
 
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.stanfit <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
 
 
 #' @rdname coef.tbl_post

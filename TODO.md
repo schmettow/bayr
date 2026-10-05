@@ -72,6 +72,11 @@ current time` (environmental) and `README.md ... cannot be checked without
 'pandoc'` (pandoc is not installed in this sandbox; CRAN check machines have
 it). The 6 test WARNs are dplyr's many-to-many join notices (Phase 5).
 
+**After Phase 4:** the full check *with the vignette built* (pandoc, see below)
+and the tests enabled is still **`Status: OK`**. `--as-cran` reports only
+environment artefacts (`qpdf`, `README.md`/`NEWS.md` without pandoc on `PATH`,
+`unable to verify current time`) plus the boilerplate `New submission`.
+
 ---
 
 ## Phase 0 — Blockers ✅ DONE
@@ -261,7 +266,7 @@ Bugs the new tests found and that were fixed in this pass:
 
 ---
 
-## Phase 4 — Housekeeping / artifacts ✅ DONE (vignette optional, still open)
+## Phase 4 — Housekeeping / artifacts ✅ DONE
 
 - [x] **Deleted the not-implemented placeholders** `join.tbl_coef`,
   `join.tbl_coefcomp`, `seperate.tbl_coef` (`R/coefficient_extraction.R`) and
@@ -277,11 +282,11 @@ Bugs the new tests found and that were fixed in this pass:
   `predicted.MCMCglmm` prototype). There was no `tbl_post.MCMCglmm`, so the
   methods could never work; the `@param object` docs now read
   "(brms, rstanarm)".
-- [ ] **`stanfit` methods still open** — `clu`/`coef`/`fixef`/`ranef`/`grpef`
-  methods for the `stanfit` class remain registered, but there is no
-  `tbl_post.stanfit` and `rstan` is not in `Suggests`. Same decision needed as
-  for MCMCglmm: implement + declare, or remove. (`glmerMod` is confirmed in
-  scope — completion tracked in Phase 6.)
+- [x] **`stanfit` methods removed** (`clu`/`coef`/`fixef`/`ranef`/`grpef`, the
+  commented-out `predicted.stanfit` prototype and the now-unused
+  `importFrom(stats, fitted)`). There was no `tbl_post.stanfit`, so they could
+  never work. With that, the backend scope is settled: `brms`, `rstanarm` and
+  `glmerMod` (Phase 6).
 - [x] **`cran-comments.Rmd` replaced by a current `cran-comments.md`**
   (`git mv`, content rewritten): local test environment, the 0/0/0 check
   results, a note on the intended S3 overloading and on the conditional use of
@@ -304,9 +309,14 @@ Bugs the new tests found and that were fixed in this pass:
   > ⚠️ This relicenses the package from GPL-3 to MIT — please confirm you hold
   > the rights to all of the code (DESCRIPTION lists a single author; first
   > commit 2016-03-07).
-- [ ] **Optional but strong for a submission: a getting-started vignette**
-  (`vignettes/bayr.Rmd`) showing `posterior()` → `fixef()` → `md_coef()` on a
-  small model. This is often the first thing CRAN reviewers/community look for.
+- [x] **Getting-started vignette added** (`vignettes/bayr.Rmd`, "Getting
+  started with bayr"), following the *fitting regression models* section of
+  <https://schmettow.github.io/New_Stats/gsr.html#fitting>: simulated data →
+  `as_tbl_obs()` → two `rstanarm::stan_glm()` fits → `clu()`, `fixef()`,
+  `md_coef()`, `posterior()`, `predict()`. The chunks are skipped when
+  `rstanarm` is unavailable; `VignetteBuilder: knitr` and `Suggests: rmarkdown`
+  were added. Builds to `inst/doc/bayr.html` and is rebuilt cleanly during
+  check.
 
 ---
 
@@ -387,12 +397,20 @@ R-devel.
 > time` is an environment artefact (no reliable time source in this sandbox),
 > not a package issue.
 
+> **Building the vignette needs pandoc.** It is not on `PATH` in this sandbox,
+> but RStudio bundles one — point `rmarkdown` at it instead of installing
+> pandoc by setting
+> `RSTUDIO_PANDOC="C:/Users/SchmettowM/AppData/Local/Programs/RStudio/resources/app/bin/quarto/bin/tools"`
+> before `R CMD build` / `R CMD check`. Two local-only artefacts then remain:
+> `README.md`/`NEWS.md` cannot be checked without pandoc *on `PATH`*, and
+> `'qpdf' is needed for checks on size reduction of PDFs`. CRAN check machines
+> have both installed.
+
 ## Open questions for you
 
-1. **Scope of backends** — `glmerMod` is in scope (kept; completion tracked in
-   Phase 6); `MCMCglmm` has been removed. Still open: rstan's `stanfit` class,
-   for which methods are registered but no `tbl_post` method exists and `rstan`
-   is not declared. Keep and implement, or remove?
+1. ~~Scope of backends~~ — ✅ resolved: `MCMCglmm` and `stanfit` methods removed
+   (neither could work without a `tbl_post` method), `glmerMod` kept with its
+   completion tracked in Phase 6.
 2. **`go_first`/`go_arrange` API** — ✅ resolved provisionally in Phase 1: the
    `~` examples were stale (never worked with `select()`), so the docs now use
    the bare-name/tidyselect form (`go_first(D, y)`). Confirm, or the function

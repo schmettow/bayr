@@ -6,7 +6,6 @@
 \alias{clu.tbl_post}
 \alias{clu.data.frame}
 \alias{clu.brmsfit}
-\alias{clu.stanfit}
 \alias{clu.stanreg}
 \alias{clu.glmerMod}
 \alias{print.tbl_clu}
@@ -29,8 +28,6 @@ assert_clu(x)
 \method{clu}{data.frame}(object, ...)
 
 \method{clu}{brmsfit}(object, ...)
-
-\method{clu}{stanfit}(object, ...)
 
 \method{clu}{stanreg}(object, ...)
 

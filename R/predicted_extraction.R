@@ -78,7 +78,3 @@ predict.stanreg <-	function(object,
 
 
 
-# predicted.stanfit <-
-# 	function(x, center =  median, ...)
-# 		tbl_post_pred(x) %>% coef(center =  estimate, ...)
-

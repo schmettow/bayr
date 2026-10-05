@@ -4,22 +4,18 @@
 \alias{coef.tbl_post}
 \alias{coef.data.frame}
 \alias{coef.brmsfit}
-\alias{coef.stanfit}
 \alias{coef.stanreg}
 \alias{fixef}
 \alias{fixef.tbl_post}
 \alias{fixef.brmsfit}
-\alias{fixef.stanfit}
 \alias{fixef.stanreg}
 \alias{ranef}
 \alias{ranef.tbl_post}
 \alias{ranef.brmsfit}
-\alias{ranef.stanfit}
 \alias{ranef.stanreg}
 \alias{grpef}
 \alias{grpef.tbl_post}
 \alias{grpef.brmsfit}
-\alias{grpef.stanfit}
 \alias{grpef.stanreg}
 \alias{print.tbl_coef}
 \alias{knit_print.tbl_coef}
@@ -39,8 +35,6 @@
 
 \method{coef}{brmsfit}(object, estimate = median, ...)
 
-\method{coef}{stanfit}(object, estimate = median, ...)
-
 \method{coef}{stanreg}(object, estimate = median, ...)
 
 fixef(object, estimate = median, ...)
@@ -48,8 +42,6 @@ fixef(object, estimate = median, ...)
 \method{fixef}{tbl_post}(object, estimate = median, ...)
 
 \method{fixef}{brmsfit}(object, estimate = median, ...)
-
-\method{fixef}{stanfit}(object, estimate = median, ...)
 
 \method{fixef}{stanreg}(object, estimate = median, ...)
 
@@ -59,8 +51,6 @@ ranef(object, estimate = median, ...)
 
 \method{ranef}{brmsfit}(object, estimate = median, ...)
 
-\method{ranef}{stanfit}(object, estimate = median, ...)
-
 \method{ranef}{stanreg}(object, estimate = median, ...)
 
 grpef(object, estimate = median, ...)
@@ -68,8 +58,6 @@ grpef(object, estimate = median, ...)
 \method{grpef}{tbl_post}(object, estimate = median, ...)
 
 \method{grpef}{brmsfit}(object, estimate = median, ...)
-
-\method{grpef}{stanfit}(object, estimate = median, ...)
 
 \method{grpef}{stanreg}(object, estimate = median, ...)
 
@@ -100,8 +88,7 @@ coefficient table with parameter name, estimate and interval
 The standard center function is the posterior median
 }
 \description{
-summary table of fixed, random or group-level coefficients and fitted values (eta,
-only stanfit models) from posterior
+summary table of fixed, random or group-level coefficients from posterior
 }
 \author{
 Martin Schmettow

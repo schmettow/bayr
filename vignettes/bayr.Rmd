@@ -1,0 +1,125 @@
+---
+title: "Getting started with bayr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with bayr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+## The examples need rstanarm (Suggests); skip them if it is not installed.
+knitr::opts_chunk$set(eval = requireNamespace("rstanarm", quietly = TRUE))
+```
+
+`bayr` turns the results of Bayesian regression models into tidy tables that
+plug directly into `knitr`/Markdown reports. This vignette follows the
+"fitting regression models" section of *New Statistics for Design Researchers*:
+we simulate a small experiment, estimate two models and report their
+parameters.
+
+## Setting up
+
+```{r libraries}
+library(rstanarm)
+library(bayr)
+```
+
+Load `bayr` *after* `rstanarm` (or `brms`): `bayr` registers `predict()` and
+`coef()` methods for the model classes of those packages, and the package that
+is loaded last provides the methods (see the README for details).
+
+## A simulated experiment
+
+```{r data}
+set.seed(42)
+N_Obs <- 20
+Exp <- tibble::tibble(
+  Obs = seq_len(N_Obs),
+  Condition = rep(c("Experimental", "Control"), N_Obs / 2),
+  age = runif(N_Obs, 18, 35),
+  mu = 200 + (Condition == "Control") * 50 + age * 1,
+  outcome = rnorm(N_Obs, mu, 10)
+)
+Exp <- as_tbl_obs(Exp)
+Exp
+```
+
+`as_tbl_obs()` tags the data frame as a table of observations. Its print method
+shows a handful of randomly drawn rows with a table caption instead of dumping
+all observations into the report.
+
+## Fitting the models
+
+```{r fit}
+M_1 <- stan_glm(outcome ~ Condition, data = Exp,
+                chains = 2, iter = 500, seed = 42, refresh = 0)
+M_2 <- stan_glm(outcome ~ Condition + age, data = Exp,
+                chains = 2, iter = 500, seed = 42, refresh = 0)
+```
+
+## Parameter estimates
+
+```{r clu-1}
+clu(M_1)
+```
+
+```{r clu-2}
+clu(M_2)
+```
+
+`clu()` returns a `tbl_clu`: a tibble with the posterior median (`center`) and
+the credibility limits (`lower`, `upper`) for every parameter. It prints as a
+formatted table and can still be processed with the usual tidy tools.
+
+The population-level effects alone:
+
+```{r fixef}
+fixef(M_2)
+```
+
+## Inline reporting
+
+For numbers in running text, `md_coef()` formats a single estimate with its
+interval:
+
+```{r md-coef}
+C_2 <- clu(M_2)
+cat(md_coef(C_2, fixef == "age", interval = TRUE))
+```
+
+The result is a plain markdown string, so it can be embedded directly in
+running text.
+
+## The posterior in long format
+
+The underlying draws are available as a tidy posterior, one row per draw:
+
+```{r posterior}
+P_2 <- posterior(M_2)
+P_2
+```
+
+`posterior()` returns a `tbl_post`, so it can be filtered and summarized like
+any other tibble:
+
+```{r posterior-filter}
+dplyr::filter(P_2, type == "fixef")
+```
+
+## Predictions
+
+```{r predict}
+predict(M_2)
+```
+
+`predict()` returns a `tbl_predicted`: one row per observation, with center and
+credibility limits.
+
+## Where to go next
+
+* `?posterior`, `?clu`, `?coef` and `?md_coef` — the extraction and reporting
+  functions.
+* `?predict.tbl_post_pred` — posterior predictive draws and their summaries.
+* `?IC` and `?compare_IC` — information criteria for model comparison.
