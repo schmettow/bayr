@@ -261,30 +261,32 @@ Bugs the new tests found and that were fixed in this pass:
 
 ---
 
-## Phase 4 — Housekeeping / artifacts
+## Phase 4 — Housekeeping / artifacts ✅ DONE (vignette optional, still open)
 
 - [x] **Deleted the not-implemented placeholders** `join.tbl_coef`,
   `join.tbl_coefcomp`, `seperate.tbl_coef` (`R/coefficient_extraction.R`) and
   their `man/join.tbl_coef.Rd`, `man/seperate.tbl_coef.Rd` (done in Phase 1.3).
-- [ ] **Silence roxygen2 7.3.1's unregistered-S3-method warnings:**
-  `knit_print.tbl_obs_old`, `knit_print.tbl_post_old`
+- [x] **Silenced roxygen2's unregistered-S3-method warnings** by deleting the
+  three dead functions: `knit_print.tbl_obs_old`, `knit_print.tbl_post_old`
   (`R/markup_helpers.R`) and `mtx_post_pred.data.frame`
-  (`R/postpred_extraction.R`) look like S3 methods but are not registered.
-  Either delete the dead `*_old` functions or register them if they are meant
-  to be used.
-- [ ] **Decide the fate of the dead/partial backends.** `NAMESPACE` registers
-  methods for `MCMCglmm`, `stanfit` and `glmerMod`, but:
-  - there is **no `tbl_post.MCMCglmm`**, so `clu.MCMCglmm`/`coef.MCMCglmm`/
-    `fixef.MCMCglmm` can never work; and
-  - `MCMCglmm`, `rstan`/`stanfit` are not in `Suggests`, and the docs say
-    support is "currently: brms and rstanarm".
-  Either implement + declare these backends, or remove the methods to match the
-  documented scope. (`clu.glmerMod` is confirmed in scope — it uses
-  `broom.mixed` for quick lme4 model checks.)
-- [ ] **`cran-comments.Rmd` is stale** (dated 2016, "Windows 7", "R 3.2.3",
-  GPL noise) and is excluded from the build. Replace with a current
-  `cran-comments.md` that reflects the actual test environments and check
-  results for the submission.
+  (`R/postpred_extraction.R`). The latter was also broken — it validated against
+  the posterior `AllCols` schema instead of `Cols_pp` — and was unreachable
+  because no `mtx_post_pred.data.frame` method was registered.
+- [x] **MCMCglmm backend removed** (`clu`/`coef`/`fixef`/`ranef`/`grpef`
+  methods, their NAMESPACE registrations and the commented-out
+  `predicted.MCMCglmm` prototype). There was no `tbl_post.MCMCglmm`, so the
+  methods could never work; the `@param object` docs now read
+  "(brms, rstanarm)".
+- [ ] **`stanfit` methods still open** — `clu`/`coef`/`fixef`/`ranef`/`grpef`
+  methods for the `stanfit` class remain registered, but there is no
+  `tbl_post.stanfit` and `rstan` is not in `Suggests`. Same decision needed as
+  for MCMCglmm: implement + declare, or remove. (`glmerMod` is confirmed in
+  scope — completion tracked in Phase 6.)
+- [x] **`cran-comments.Rmd` replaced by a current `cran-comments.md`**
+  (`git mv`, content rewritten): local test environment, the 0/0/0 check
+  results, a note on the intended S3 overloading and on the conditional use of
+  `Suggests` packages, and the downstream-dependencies statement. A marker is
+  left for the win-builder / R-devel results to be added before submitting.
 - [x] **`.Rbuildignore` tidied** (Phase 2 pass): the duplicated `^.*\.Rproj$`
   was removed and `^cran-comments\.(Rmd|md)$`, `^AGENTS\.md$`, `^TODO\.md$`,
   `^data-raw$` and `^\.github$` were added. The fixture now lives under
@@ -292,9 +294,16 @@ Bugs the new tests found and that were fixed in this pass:
 - [x] **`README.md` added**, including the note that overloading the
   `brms`/`rstanarm` `predict()`/`coef()` methods is intended behaviour and that
   the load order decides which implementation wins.
-- [ ] **Add `NEWS.md`** (CRAN likes a changelog; makes release notes easy).
-- [ ] **Add a `LICENSE` note?** Not required for `GPL-3`, but consider
-  `License: GPL (>= 3)` for explicitness. Current `GPL-3` is accepted.
+- [x] **`NEWS.md` added** with the 0.9.8 release notes (new `clu()` support for
+  lme4, the `md_coef()` fix, the `MCMCglmm` removal, the brms floor and the
+  rebuilt tests).
+- [x] **License changed to MIT**: `License: MIT + file LICENSE` in
+  `DESCRIPTION` plus the `LICENSE` file
+  (`YEAR: 2016-2026`, `COPYRIGHT HOLDER: Martin Schmettow`), and the README
+  updated.
+  > ⚠️ This relicenses the package from GPL-3 to MIT — please confirm you hold
+  > the rights to all of the code (DESCRIPTION lists a single author; first
+  > commit 2016-03-07).
 - [ ] **Optional but strong for a submission: a getting-started vignette**
   (`vignettes/bayr.Rmd`) showing `posterior()` → `fixef()` → `md_coef()` on a
   small model. This is often the first thing CRAN reviewers/community look for.
@@ -331,6 +340,34 @@ Bugs the new tests found and that were fixed in this pass:
 
 ---
 
+## Phase 6 — Complete the `glmerMod` interface (backlog, post-CRAN)
+
+`clu.glmerMod()` is kept as a working stub: it tidies `lme4` fits via
+`broom.mixed`, so a model structure can be checked quickly without refitting
+the same model in `brms`/`rstanarm`. The rest of the interface is not
+implemented yet.
+
+- [ ] `coef.glmerMod()` / `fixef.glmerMod()` — population-level effects with
+  intervals (`broom.mixed::tidy(conf.int = TRUE)`), mapped to the `tbl_coef`
+  column scheme (`model`, `type`, `nonlin`, `fixef`, `re_factor`, `re_entity`,
+  `center`, `lower`, `upper`).
+- [ ] `grpef.glmerMod()` — group-level SDs/correlations, currently emitted by
+  `clu.glmerMod()` as `type == "sd"` / `"cor"` rows; standardise to `grpef`.
+- [ ] `ranef.glmerMod()` — random-effect modes; `lme4::ranef()` returns a named
+  list of data frames (one per grouping factor) and needs reshaping to the long
+  `tbl_coef` scheme (see the commented-out `clu.glm` prototype).
+- [ ] Make `assert_clu()` accept the lme4 output (`re_entity` is currently a
+  character column there) and check whether `assert_coef()` is needed.
+- [ ] Verify the `print()` / `knit_print()` paths for the produced tables.
+- [ ] Tests: extend the single `clu()` smoke test on `lme4::cbpp`
+  (`tests/testthat/test-par-tables.R`) to cover the new methods.
+- [ ] Docs: mention `glmerMod` in `clu()`'s `@param object`; consider a "quick
+  model checks with lme4" section in the vignette.
+- [ ] Decide whether `posterior()` / `post_pred()` should support `glmerMod` at
+  all (they are Bayesian-specific; currently not supported).
+
+---
+
 ## Suggested verification workflow (repeat until clean)
 
 ```sh
@@ -352,15 +389,17 @@ R-devel.
 
 ## Open questions for you
 
-1. **Scope of backends** — `glmerMod` is confirmed in scope (kept, using
-   `broom.mixed`). Still open: MCMCglmm / rstan (`stanfit`), for which there is
-   no working `tbl_post` method and no declared dependency. Keep and implement,
-   or delete?
+1. **Scope of backends** — `glmerMod` is in scope (kept; completion tracked in
+   Phase 6); `MCMCglmm` has been removed. Still open: rstan's `stanfit` class,
+   for which methods are registered but no `tbl_post` method exists and `rstan`
+   is not declared. Keep and implement, or remove?
 2. **`go_first`/`go_arrange` API** — ✅ resolved provisionally in Phase 1: the
    `~` examples were stale (never worked with `select()`), so the docs now use
    the bare-name/tidyselect form (`go_first(D, y)`). Confirm, or the function
    will be changed to accept `~y` instead.
-3. **Test strategy** — OK to ship small pre-computed `.rda`/`.rds` fixtures and
-   skip sampler-fitting on CRAN?
+3. **Test strategy** — ✅ resolved provisionally in Phase 3: the suite ships a
+   pre-computed `brms`/`rstanarm` fixture (`tests/testthat/M_1.Rda`) plus a
+   dependency-free synthetic `tbl_post`, and no sampler runs during
+   `R CMD check`.
 4. ~~`broom.mixed`~~ — ✅ resolved: declared in `Suggests` and used for the
    `glmerMod` tidier.

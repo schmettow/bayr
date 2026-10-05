@@ -67,18 +67,6 @@ mtx_post_pred <-
 	}
 
 
-mtx_post_pred.data.frame <-
-	## IDEA: write methods for
-	## - identifying user_annos (all user annos)
-	## - registering user annos (explicit user annos)
-	## - keep attribute user_annos (keep user annos)
-	function(df, model_name, thin = 1, ...) {
-		if(! all(as.character(AllCols) %in% names(df)))
-			stop("not a valid tbl_post_pred, some columns missing")
-		out = df
-		class(out) = append("tbl_post_pred", class(out))
-		out
-	}
 
 #' @rdname post_pred
 #' @export

@@ -107,26 +107,6 @@ knit_print.tbl_post <- function(x, ...) {
 
 
 
-knit_print.tbl_post_old <- function(x, ...) {
-	tbls <- prep_print_tbl_post(x)
-	# res <- paste0("\n\n** tbl_post: ", tbls$n_iter,
-	# 							" samples in ", tbls$n_chain, " chains\n\n",
-	# 							collapse ="\n")
-
-	if(nrow(tbls$effects)) res <- c(res, knitr::kable(tbls$effects, format = "markdown",
-																										cap = "Coefficients"), "\n")
-	if(nrow(tbls$disp)) res <- c(res, knitr::kable(tbls$disp, format = "markdown",
-																								 cap = "Dispersion"), "\n")
-	if(nrow(tbls$shape)) res <- c(res, knitr::kable(tbls$shape, format = "markdown",
-																									cap = "Shape"), "\n")
-	if(nrow(tbls$cor)) res <- c(res, knitr::kable(tbls$cor, format = "markdown",
-																								cap = "Correlations"), "\n")
-
-	out <- paste0(res, collapse = "\n")
-
-	knitr::asis_output(out)
-
-}
 
 
 
@@ -475,22 +455,6 @@ knit_print.tbl_obs <- function(x, ...) {
 
 
 
-knit_print.tbl_obs_old <- function(x, ...) {
-	#data_set <- deparse(substitute(x))
-	n <- min(8, nrow(x))
-	tab <- dplyr::sample_n(x, n)
-	if("Obs" %in% colnames(tab)) tab <- dplyr::arrange(tab, Obs)
-	if("Part" %in% colnames(tab)) tab <- dplyr::arrange(tab, Part)
-	cap <- stringr::str_c("Data set with ", ncol(x)," variables. Showing ", n, " of ", nrow(x), " observations.")
-
-	out <- knitr::kable(tab, caption = cap, format = "markdown")
-	knitr::asis_output(out)
-	#
-	# res = paste(c("", "", knitr::kable(tab, format = "markdown", ...)),
-	#             collapse = "\n")
-	# knitr::asis_output(res)
-	invisible(tab)
-}
 
 
 ################# IC ########################

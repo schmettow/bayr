@@ -3,25 +3,21 @@
 \name{coef.tbl_post}
 \alias{coef.tbl_post}
 \alias{coef.data.frame}
-\alias{coef.MCMCglmm}
 \alias{coef.brmsfit}
 \alias{coef.stanfit}
 \alias{coef.stanreg}
 \alias{fixef}
 \alias{fixef.tbl_post}
-\alias{fixef.MCMCglmm}
 \alias{fixef.brmsfit}
 \alias{fixef.stanfit}
 \alias{fixef.stanreg}
 \alias{ranef}
 \alias{ranef.tbl_post}
-\alias{ranef.MCMCglmm}
 \alias{ranef.brmsfit}
 \alias{ranef.stanfit}
 \alias{ranef.stanreg}
 \alias{grpef}
 \alias{grpef.tbl_post}
-\alias{grpef.MCMCglmm}
 \alias{grpef.brmsfit}
 \alias{grpef.stanfit}
 \alias{grpef.stanreg}
@@ -41,8 +37,6 @@
 
 \method{coef}{data.frame}(object, ...)
 
-\method{coef}{MCMCglmm}(object, estimate = median, ...)
-
 \method{coef}{brmsfit}(object, estimate = median, ...)
 
 \method{coef}{stanfit}(object, estimate = median, ...)
@@ -52,8 +46,6 @@
 fixef(object, estimate = median, ...)
 
 \method{fixef}{tbl_post}(object, estimate = median, ...)
-
-\method{fixef}{MCMCglmm}(object, estimate = median, ...)
 
 \method{fixef}{brmsfit}(object, estimate = median, ...)
 
@@ -65,8 +57,6 @@ ranef(object, estimate = median, ...)
 
 \method{ranef}{tbl_post}(object, estimate = median, ...)
 
-\method{ranef}{MCMCglmm}(object, estimate = median, ...)
-
 \method{ranef}{brmsfit}(object, estimate = median, ...)
 
 \method{ranef}{stanfit}(object, estimate = median, ...)
@@ -76,8 +66,6 @@ ranef(object, estimate = median, ...)
 grpef(object, estimate = median, ...)
 
 \method{grpef}{tbl_post}(object, estimate = median, ...)
-
-\method{grpef}{MCMCglmm}(object, estimate = median, ...)
 
 \method{grpef}{brmsfit}(object, estimate = median, ...)
 
@@ -90,7 +78,7 @@ grpef(object, estimate = median, ...)
 \method{knit_print}{tbl_coef}(x, ...)
 }
 \arguments{
-\item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}
+\item{object}{tbl_post (brms, rstanarm) object holding the posterior in long format}
 
 \item{model}{model}
 

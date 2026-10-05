@@ -13,7 +13,7 @@ Description: Provides a unified, tidy interface for reporting Bayesian
     processing chains. Methods for coefficients, predictions and information
     criteria make it easy to produce publication-ready output in
     'knitr'/'Markdown' reports.
-License: GPL-3
+License: MIT + file LICENSE
 URL: https://schmettow.github.io/New_Stats/, https://github.com/schmettow/bayr
 BugReports: https://github.com/schmettow/bayr/issues
 Depends: R (>= 3.6.1)

@@ -5,7 +5,6 @@
 \alias{assert_clu}
 \alias{clu.tbl_post}
 \alias{clu.data.frame}
-\alias{clu.MCMCglmm}
 \alias{clu.brmsfit}
 \alias{clu.stanfit}
 \alias{clu.stanreg}
@@ -29,8 +28,6 @@ assert_clu(x)
 
 \method{clu}{data.frame}(object, ...)
 
-\method{clu}{MCMCglmm}(object, ...)
-
 \method{clu}{brmsfit}(object, ...)
 
 \method{clu}{stanfit}(object, ...)
@@ -50,7 +47,7 @@ assert_clu(x)
 \method{knit_print}{tbl_clu}(x, ...)
 }
 \arguments{
-\item{object}{tbl_post (brms, MCMCglmm) object holding the posterior in long format}
+\item{object}{tbl_post (brms, rstanarm) object holding the posterior in long format}
 
 \item{...}{ignored}
 

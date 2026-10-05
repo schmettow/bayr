@@ -9,7 +9,7 @@
 #' center-lower-upper table
 #'
 #' returns a summary table for estimates with median (center) and 95% limits'
-#' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
+#' @param object tbl_post (brms, rstanarm) object holding the posterior in long format
 #' @param model name of model
 #' @param mean.func function (identity)
 #' @param estimate function for computing the center estimate (posterior mode)
@@ -130,13 +130,6 @@ clu.data.frame <-
 		out
 	}
 
-
-#' @rdname clu
-#' @export
-
-clu.MCMCglmm <-
-	function(object, ...)
-		tbl_post(object) %>% clu()
 
 #' @rdname clu
 #' @export
@@ -274,7 +267,7 @@ clu.glmerMod <-
 #' summary table of fixed, random or group-level coefficients and fitted values (eta,
 #' only stanfit models) from posterior
 #'
-#' @param object tbl_post (brms, MCMCglmm) object holding the posterior in long format
+#' @param object tbl_post (brms, rstanarm) object holding the posterior in long format
 #' @param model model
 #' @param type type of coefficient: fixef (grpef, ranef)
 #' @param mean.func function (identity)
@@ -345,13 +338,6 @@ coef.data.frame <-
 	}
 
 
-#' @rdname coef.tbl_post
-#' @export
-
-coef.MCMCglmm <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% coef(estimate = estimate, ...)
-
 
 #' @rdname coef.tbl_post
 #' @export
@@ -390,13 +376,6 @@ fixef.tbl_post <-
 	function(object, estimate = median, ...)
 		coef(object, type = "fixef", estimate = estimate, ...) %>%
 	select(-parameter)
-
-#' @rdname coef.tbl_post
-#' @export
-
-fixef.MCMCglmm <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% fixef(estimate = estimate, ...)
 
 
 #' @rdname coef.tbl_post
@@ -486,13 +465,6 @@ ranef.tbl_post <-
 #' @rdname coef.tbl_post
 #' @export
 
-ranef.MCMCglmm <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% ranef(estimate = estimate, ...)
-
-#' @rdname coef.tbl_post
-#' @export
-
 ranef.brmsfit <-
 	function(object, estimate = median, ...)
 		tbl_post(object) %>% ranef(estimate = estimate, ...)
@@ -531,13 +503,6 @@ grpef.tbl_post <-
 		coef(object, type = "grpef", estimate = estimate, ...) %>%
 	select(-parameter)
 
-
-#' @rdname coef.tbl_post
-#' @export
-
-grpef.MCMCglmm <-
-	function(object, estimate = median, ...)
-		tbl_post(object) %>% grpef(estimate = estimate)
 
 #' @rdname coef.tbl_post
 #' @export

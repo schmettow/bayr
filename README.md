@@ -70,4 +70,4 @@ predict(post_pred(fit))
 
 ## License
 
-GPL-3
+MIT
